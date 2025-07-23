@@ -5,7 +5,7 @@ FROM node:22.17.1 AS build
 WORKDIR /app
 
 # Copy only package files to install dependencies first
-COPY package.json package-lock.json ./
+COPY my-react-app/package.json my-react-app/package-lock.json ./
 
 # Install dependencies cleanly and reproducibly
 RUN npm ci
