@@ -11,7 +11,8 @@ COPY my-react-app/package.json my-react-app/package-lock.json ./
 RUN npm ci
 
 # Copy the rest of the source code
-COPY . .
+COPY my-react-app ./
+COPY docker ./
 
 # Build the production app
 RUN npm run build
