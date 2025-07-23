@@ -11,10 +11,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build Docker Image
-        working-directory: ${{github.workspace}}
-        run: docker build -f docker/Dockerfile -t ahmedadelabouhussein/web_app:latest .
+      - name: Print working directory (for debug)
+        run: pwd
 
+      - name: List files (for debug)
+        run: ls -R
+
+      - name: Build Docker Image
+        run: docker build -f docker/Dockerfile -t ahmedadelabouhussein/web_app:latest .
+      
       - name: Log in to DockerHub
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 

@@ -1,16 +1,15 @@
 name: Deploy Vite React App to GitHub Pages
-
 on:
   push:
     branches:
       - master
-
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    #strategy:
+      #matrix:
+        #os: [ubuntu-latest, windows-latest, macos-latest]
+    #runs-on: ${ matrix.os } // add {} later when using matrix 
 
     steps:
       - name: Checkout Code
