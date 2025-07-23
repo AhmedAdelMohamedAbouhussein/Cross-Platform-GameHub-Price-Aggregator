@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker Image
-        run: docker build ../docker/ -t ahmedadelabouhussein/web_app:latest
+        run: docker build -f docker/Dockerfile -t ahmedadelabouhussein/web_app:latest .
 
       - name: Log in to DockerHub
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
