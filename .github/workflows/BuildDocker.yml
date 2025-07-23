@@ -1,0 +1,20 @@
+name: Build and Publish image to DockerHub
+
+on:
+    workflow_dispatch:
+
+jobs:
+    publish_image:
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: Checkout Code
+          uses: actions/checkout@v4
+        - name: build image
+          run: |
+            docker build ./docker/ -t ahmedadelabouhussein/web_app:latest
+
+        - name: Log in to DockerHub
+          run: |
+            docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+            docker push ahmedadelabouhussein/web_app:latest
