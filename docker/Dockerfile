@@ -5,13 +5,13 @@ FROM node:22.17.1 AS build
 WORKDIR /app
 
 # Copy only package files to install dependencies first
-COPY my-react-app/package.json my-react-app/package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 
 # Install dependencies cleanly and reproducibly
 RUN npm ci
 
 # Copy the rest of the source code
-COPY my-react-app ./
+COPY frontend ./
 COPY docker ./
 
 # Build the production app

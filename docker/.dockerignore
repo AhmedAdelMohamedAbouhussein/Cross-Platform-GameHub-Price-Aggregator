@@ -1,7 +1,7 @@
-my-react-app/node_modules/*
-my-react-app/ignore/*
+frontend/node_modules/*
+frontend/ignore/*
 
 .vscode/*
 
-my-react-app/.gitignore
+frontend/.gitignore
 .github/*
