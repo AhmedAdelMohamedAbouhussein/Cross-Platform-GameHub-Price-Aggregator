@@ -1,0 +1,42 @@
+.stickyHeader {
+    /*position: sticky;*/
+    top: 0;
+    margin-bottom: 40px;
+    background: linear-gradient(to right, #2c3e50, #3498db);
+    padding: 10px 20px;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    color: white;
+}
+
+.headerContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.navLinks {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+.navLinks li a {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.navLinks li a:hover {
+    color: #ffd700; /* gold on hover */
+}
+
+h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
