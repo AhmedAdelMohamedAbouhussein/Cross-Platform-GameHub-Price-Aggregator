@@ -1,0 +1,70 @@
+.signupContainer {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(90deg, rgba(22, 12, 89, 1) 0%, rgba(9, 9, 121, 1) 27%, rgba(0, 198, 255, 1) 100%);
+  background-size: 200% 200%;
+  animation: gradientAnimation 10s ease infinite;
+}
+@keyframes gradientAnimation 
+{
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.signupForm {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Keep zoomed-in effect when focused or hovered */
+.signupForm:hover,
+.signupForm:focus-within {
+  transform: translateY(-12px) scale(1.03);
+  box-shadow:
+    0 30px 40px rgba(0, 0, 0, 0.25),
+    0 12px 15px rgba(0, 0, 0, 0.15);
+}
+
+.signupTitle {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.signupInput {
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: border 0.3s ease;
+}
+
+.signupInput:focus {
+  background-color: #fef1f2;
+  outline: none;
+}
+
+.signupButton {
+  padding: 0.75rem;
+  background-color: #0072ff;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.signupButton:hover {
+  background-color: #e85c10;
+}

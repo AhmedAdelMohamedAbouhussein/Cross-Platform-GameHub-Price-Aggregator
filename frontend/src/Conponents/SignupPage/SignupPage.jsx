@@ -1,0 +1,46 @@
+import React, { useState } from "react";
+import styles from "./SignupPage.module.css"; // Reusing same CSS as Login
+import Header from "../Header/Header.jsx";
+import Footer from "../Footer/Footer.jsx";
+
+function SignupPage() {
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: ""
+  });
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    alert(
+      `Signing up with\nUsername: ${formData.username}\nEmail: ${formData.email}`
+    );
+    // Add signup API logic here
+  };
+
+  return (
+    <>
+      <Header />
+      <div className={styles.signupContainer}>
+        <form className={styles.signupForm} onSubmit={handleSubmit}>
+          <h2 className={styles.signupTitle}>Sign Up</h2>
+          <input type="text" name="username" placeholder="Username" className={styles.signupInput} value={formData.username} onChange={handleChange} required/>
+          <input type="email" name="email" placeholder="Email" className={styles.signupInput} value={formData.email} onChange={handleChange} required/>
+          <input type="password" name="password" placeholder="Password" className={styles.signupInput} value={formData.password} onChange={handleChange} required/>
+          <button type="submit" className={styles.signupButton}> Sign Up
+          </button>
+        </form>
+      </div>
+      <Footer />
+    </>
+  );
+}
+
+export default SignupPage;

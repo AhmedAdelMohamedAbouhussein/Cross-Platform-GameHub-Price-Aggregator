@@ -1,7 +1,6 @@
 .stickyHeader {
     /*position: sticky;*/
     top: 0;
-    margin-bottom: 40px;
     background: linear-gradient(to right, #2c3e50, #3498db);
     padding: 10px 20px;
     z-index: 1000;
