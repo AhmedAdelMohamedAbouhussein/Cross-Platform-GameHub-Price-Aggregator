@@ -16,3 +16,28 @@
 .subtitle {
   font-size: 1.5rem;
 }
+
+
+.buttonContainer {
+  display: flex;
+  justify-content: center; /* center the buttons */
+  gap: 20px; /* spacing between buttons */
+  padding: 20px;
+}
+.landingButtons{
+  padding: 12px 24px;
+  font-size: 16px;
+  background: linear-gradient(90deg, #00c6ff, #0072ff);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landingButtons:hover 
+{  
+  background: rgb(34, 34, 163);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}

@@ -69,3 +69,12 @@
 .loginButton:hover {
   background-color: #e85c10;
 }
+
+.googleLoginWrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px; /* optional spacing */
+  transform: scale(1.2);
+  transform-origin: center;
+}
+

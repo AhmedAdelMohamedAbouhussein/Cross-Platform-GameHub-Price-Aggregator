@@ -68,3 +68,12 @@
 .signupButton:hover {
   background-color: #e85c10;
 }
+
+.googleSignupWrapper
+{
+    display: flex;
+  justify-content: center;
+  margin-top: 15px; /* optional spacing */
+  transform: scale(1.2);
+  transform-origin: center;
+}
