@@ -49,7 +49,7 @@ function LoginPage() {
           <div className={styles.googleLoginWrapper}>
             <GoogleLogin 
               onSuccess={credentialResponse => {  console.log(credentialResponse); 
-                                                  console.log(jwtDecode(credentialResponse)); 
+                                                  console.log(jwtDecode(credentialResponse.credential)); 
                                                 }}
               onError={() => { console.log('Login Failed');}}
             />

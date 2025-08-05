@@ -1,0 +1,33 @@
+.aside {
+  position: relative;
+  width: 60px; /* Width when collapsed */
+  height: 100vh;
+  background-color: #2c3e50;
+  transition: width 0.3s ease;
+  overflow: hidden;
+}
+
+.aside.open {
+  width: 250px; /* Width when expanded */
+}
+
+.sidebarHandle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 10px; /* Width of the handle */
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.content {
+  padding: 20px;
+  color: white;
+  opacity: 0; /* Hide content initially */
+  transition: opacity 0.3s ease;
+}
+
+.aside.open .content {
+  opacity: 1; /* Show content when expanded */
+}

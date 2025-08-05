@@ -1,5 +1,4 @@
 import PropTypes from "prop-types";
-import Button from "../Buttons/Buttons.jsx";
 import styles from './Card.module.css'; // Assuming you have a CSS module for styles
 
 function Card(props) 
@@ -15,7 +14,6 @@ function Card(props)
             <img src={image} alt={props.title + " picture"} className={styles.cardImage}></img>
             <h2 className={styles.classTitle}>{props.title}</h2>
             <p className={styles.cardText}>{description}</p>
-            <Button buttonName="Add to cart"/>
         </div>
     );
 }

@@ -47,7 +47,7 @@ function SignupPage()
           <div className={styles.googleSignupWrapper}>
             <GoogleLogin 
               onSuccess={credentialResponse => {  console.log(credentialResponse); 
-                                                  console.log(jwtDecode(credentialResponse)); 
+                                                  console.log(jwtDecode(credentialResponse.credential)); 
                                                 }}
               onError={() => { console.log('Login Failed');}}
             />
