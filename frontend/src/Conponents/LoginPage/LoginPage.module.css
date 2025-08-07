@@ -23,6 +23,7 @@
   flex-direction: column;
   width: 300px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+   gap: 0.srem; /* Adds vertical spacing between children */
 }
 
 .loginForm:hover,
@@ -36,6 +37,7 @@
 
 
 .title {
+  font-size: 30px;
   text-align: center;
   margin-bottom: 1.5rem;
   color: #333;
@@ -56,6 +58,7 @@
 }
 
 .loginButton {
+  font-size: 18px;
   padding: 0.75rem;
   background-color: #0072ff;
   color: white;
@@ -78,3 +81,36 @@
   transform-origin: center;
 }
 
+.googleLoginButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  background-color: #ffffff;
+  color: #444;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+}
+
+.googleLoginButton:hover {
+  background-color: #f5f5f5;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.googleLoginButton img {
+  width: 20px;
+  height: 20px;
+}
+
+.signupPrompt {
+  font-size: 18px;
+  text-align: center;
+}

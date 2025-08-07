@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import {GoogleLogin/*, googleLogout*/} from '@react-oauth/google';
-import { jwtDecode } from 'jwt-decode';
+import { useState } from "react";
+import {useGoogleLogin} from '@react-oauth/google';
+import axios from 'axios';
+import { Link } from 'react-router-dom'; 
 
-import styles from "./SignupPage.module.css"; // Reusing same CSS as Login
+import styles from "./SignupPage.module.css"; 
 import Header from "../Header/Header.jsx";
 import Footer from "../Footer/Footer.jsx";
 
@@ -20,21 +21,33 @@ function SignupPage()
     e.preventDefault();
     alert(`Signing up with\nUsername: ${formData.username}\nEmail: ${formData.email}`);
   };
-  /*
-    e: The event triggered by the input change.
-    e.target.name: The name attribute of the input (e.g., "email" or "password").
-    e.target.value: The value the user typed.
-    setFormData(...): Updates the state using the previous values, while replacing only the field that changed.
-  */
+  
+  const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
 
-  /*function handleLogout () 
-  {
-    googleLogout();
-    alert("Logged out successfully");
-    setFormData({ username: "", email: "", password: "" });
-  }*/
+  const googleLogin = useGoogleLogin({
+    onSuccess: async ({ code }) => {
+      try 
+      {
+        const response = await axios.post(`${BACKEND_URL}/auth/google`, {
+          code,
+        
+        });
+        const { tokens, userInfo } = response.data;
+
+        console.log('Access Token:', tokens);
+        console.log('User Info:', userInfo);
+
+      } 
+      catch (error) 
+      {
+        console.error('Login error:', error);
+      }
+    },
+  flow: 'auth-code',
+  });
 
   return (
+
     <>
       <Header />
       <div className={styles.signupContainer}>
@@ -45,13 +58,9 @@ function SignupPage()
           <input type="password" name="password" placeholder="Password" className={styles.signupInput} value={formData.password} onChange={handleChange} required/>
           <button type="submit" className={styles.signupButton}> Sign Up </button>
           <div className={styles.googleSignupWrapper}>
-            <GoogleLogin 
-              onSuccess={credentialResponse => {  console.log(credentialResponse); 
-                                                  console.log(jwtDecode(credentialResponse.credential)); 
-                                                }}
-              onError={() => { console.log('Login Failed');}}
-            />
+            <button type="button" className={styles.googleSignupButton} onClick={() => googleLogin()}> <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google icon" /> Sign in with Google </button>
           </div>
+          <p className={styles.loginPrompt}>Already have an account? <Link to="/login" className={styles.loginLink}>Login</Link></p>
         </form>
       </div>
       <Footer />

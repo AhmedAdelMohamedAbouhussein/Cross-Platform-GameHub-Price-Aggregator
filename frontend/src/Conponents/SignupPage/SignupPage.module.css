@@ -23,6 +23,7 @@
   flex-direction: column;
   width: 320px;
   transition: transform 0.4s ease, box-shadow 0.4s ease;
+  gap: 0.3rem; /* Adds vertical spacing between children */
 }
 
 /* Keep zoomed-in effect when focused or hovered */
@@ -35,6 +36,7 @@
 }
 
 .signupTitle {
+  font-size: 30px;
   text-align: center;
   margin-bottom: 1.5rem;
   color: #333;
@@ -55,6 +57,7 @@
 }
 
 .signupButton {
+  font-size: 18px;
   padding: 0.75rem;
   background-color: #0072ff;
   color: white;
@@ -76,4 +79,38 @@
   margin-top: 15px; /* optional spacing */
   transform: scale(1.2);
   transform-origin: center;
+}
+
+.googleSignupButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  background-color: #ffffff;
+  color: #444;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+}
+
+.googleSignupButton:hover {
+  background-color: #f5f5f5;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.googleSignupButton img {
+  width: 20px;
+  height: 20px;
+}
+
+.loginPrompt {
+  font-size: 18px;
+  text-align: center;
 }
