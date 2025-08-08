@@ -8,10 +8,6 @@ dotenv.config();
 
 const router = express.Router();
 
-// Apply CORS and JSON middleware to the router
-router.use(cors());
-router.use(express.json());
-
 const oAuth2Client = new OAuth2Client( process.env.CLIENT_ID, process.env.CLIENT_SECRET, 'postmessage',);
 
 router.post('/', async (req, res) => 
