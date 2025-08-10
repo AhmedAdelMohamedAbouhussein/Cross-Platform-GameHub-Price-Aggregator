@@ -15,7 +15,7 @@ router.get('/topselling', async (req, res) =>
         const response = await axios.get('https://store.steampowered.com/api/featuredcategories');
         const formattedGames = response.data.top_sellers.items.map((game) => [
             game.header_image,
-            `/games/${encodeURIComponent(game.name)}`, // ✅ Encode name for URL
+            `/games/${encodeURIComponent(game.name)}`,
         ]);
         
         res.status(200).json(formattedGames);
@@ -100,6 +100,20 @@ router.get('/landingpage', async (req, res) =>
     {
         console.log('Error fetching top sellers:', error.message);
         res.status(500).json({ error: 'Failed to fetch top-selling games' });
+    }
+});
+
+router .get('/:gameName', async (req, res) => 
+{
+    const gameName = req.params.gameName;
+    const response = await axious.get(`https://api.rawg.io/api/games?${gameName}&key=${process.env.RAWG_API_KEY}`); 
+    if (response.status === 200) 
+    {
+        return res.status(200).json(response.data);
+    } 
+    else 
+    {
+        return res.status(response.status).json({ error: 'Game not found' });
     }
 });
 
