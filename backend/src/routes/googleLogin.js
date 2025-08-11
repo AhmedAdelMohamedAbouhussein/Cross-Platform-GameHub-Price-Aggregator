@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import { google } from 'googleapis';
 import { OAuth2Client, UserRefreshClient } from 'google-auth-library';
 import dotenv from 'dotenv';
@@ -10,7 +9,7 @@ const router = express.Router();
 
 const oAuth2Client = new OAuth2Client( process.env.CLIENT_ID, process.env.CLIENT_SECRET, 'postmessage',);
 
-router.post('/', async (req, res) => 
+router.post('/', async (req, res, next) => 
 {
     try 
     {
@@ -33,12 +32,12 @@ router.post('/', async (req, res) =>
     } 
     catch (error) 
     {
-        console.error('Error exchanging code for tokens:', error);
-        res.status(500).json({ error: 'Failed to authenticate user' });
+        const err = new Error('Error during Google login:');
+        next(err); 
     }
 });
 
-router.post('/refresh-token', async (req, res) => {
+router.post('/refresh-token', async (req, res, next) => {
     try 
     {
         const user = new UserRefreshClient(
@@ -51,8 +50,8 @@ router.post('/refresh-token', async (req, res) => {
     } 
     catch (error) 
     {
-        console.error('Error refreshing access token:', error);
-        res.status(500).json({ error: 'Failed to refresh token' });
+        const err = new Error('Error refreshing Google token:');
+        next(err);
     }
 });
 

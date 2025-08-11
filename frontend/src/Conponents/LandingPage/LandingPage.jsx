@@ -19,9 +19,7 @@ function LandingPage() {
       {
         const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
         const response = await axios.get(`${BACKEND_URL}/games/landingpage`);
-        console.log(response.data);
         setGames(response.data);
-        
       } 
       catch (error) 
       {
@@ -61,7 +59,7 @@ function LandingPage() {
       <div className={styles.landingContainer}>
         <div className={styles.GameImageContainer} ref={scrollRef}>
           {games.map(([src, redirect], index) => (
-            <img key={index} className={styles.gameImage} src={src} alt={`Top selling game ${index + 1}`} loading="lazy" onClick={() => {navigate(redirect)}} />
+            <img key={index} className={styles.gameImage} src={src} alt={`Top selling game ${index + 1}`} loading="lazy" onClick={() => {navigate(`/games/${redirect}`)}} />
             ))
           }
         </div>
