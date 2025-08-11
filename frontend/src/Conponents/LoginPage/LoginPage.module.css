@@ -23,7 +23,7 @@
   flex-direction: column;
   width: 300px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-   gap: 0.srem; /* Adds vertical spacing between children */
+  gap: 0.5rem; /* Adds vertical spacing between children */
 }
 
 .loginForm:hover,
@@ -113,4 +113,12 @@
 .signupPrompt {
   font-size: 18px;
   text-align: center;
+}
+
+
+.checkboxContainer {
+  display: flex;
+  justify-content: space-between; /* spread items horizontally */
+  align-items: center;            /* align vertically in the center */
+  margin-bottom: 10px;
 }

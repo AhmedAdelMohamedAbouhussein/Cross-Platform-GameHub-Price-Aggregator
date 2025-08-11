@@ -12,6 +12,7 @@ function LoginPage() {
     email: "",
     password: ""
   });
+  const [isChecked, setIsChecked] = useState(false);
 
   const handleChange = (e) => 
   {
@@ -24,12 +25,17 @@ function LoginPage() {
     alert(`Signing up with\nUsername: ${formData.username}\nEmail: ${formData.email}`);
   };
 
+  const rememberCheckBox = (e) =>
+  {
+    setIsChecked(e.target.checked);
+  }
+
   const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
   const googleLogin = useGoogleLogin({
     onSuccess: async ({ code }) => {
       try 
       {
-        const response = await axios.post(`${BACKEND_URL}/auth/google`, {
+        const response = await axios.post(`${BACKEND_URL}/auth/google/access-token`, {
           code,
         
         });
@@ -55,11 +61,17 @@ function LoginPage() {
           <h2 className={styles.title}>Login</h2>
           <input type="email" name="email" placeholder="Email" className={styles.input} value={formData.email} onChange={handleChange} required/>
           <input type="password" name="password" placeholder="Password" className={styles.input} value={formData.password} onChange={handleChange} required/>
+          
+            <div className={styles.checkboxContainer}>
+              <span><input type="checkbox" checked={isChecked} onChange={rememberCheckBox}/>Remember Me</span>
+              <Link to="/forgotPassword" className={styles.forgotPasswordLink}>Forgot password</Link>
+            </div>
+
           <button type="submit" className={styles.loginButton}>Login</button>        
           <div className={styles.googleLoginWrapper}>
             <button type="button" className={styles.googleLoginButton} onClick={() => googleLogin()}> <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google icon" /> Sign in with Google </button>
           </div>
-          <p className={styles.signupPrompt}>Don't have an account? <Link to="/signup" className={styles.signupLink}>Sign up</Link></p>
+          <p className={styles.signupPrompt}>Don't have an account? <Link to="/signup">Sign up</Link></p>
         </form>
       </div>
       <Footer />

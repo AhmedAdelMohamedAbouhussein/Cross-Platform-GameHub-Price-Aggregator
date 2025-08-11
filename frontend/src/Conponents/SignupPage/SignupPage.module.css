@@ -23,7 +23,7 @@
   flex-direction: column;
   width: 320px;
   transition: transform 0.4s ease, box-shadow 0.4s ease;
-  gap: 0.3rem; /* Adds vertical spacing between children */
+  gap: 0.5rem; /* Adds vertical spacing between children */
 }
 
 /* Keep zoomed-in effect when focused or hovered */

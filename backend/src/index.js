@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import posts from './routes/posts.js';
 import googleLogin from './routes/googleLogin.js';
 import games from './routes/games.js';
 import logger from './middleware/logger.js';
@@ -18,7 +17,6 @@ app.use(cors()); // ⬅️ Helps avoid CORS issues from frontend
 
 app.use(logger);
 
-app.use('/api/posts', posts);
 app.use('/auth/google', googleLogin);
 app.use('/games', games);
 

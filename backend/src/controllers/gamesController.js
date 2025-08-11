@@ -2,7 +2,7 @@ import axios from 'axios';
 import gameImages from '../assets/landingPageURLs.js';
 
 // @desc  get topselling games from Steam API
-// @roure  Get /games/topselling
+// @route  Get /games/topselling
 
 export const getTopSellers = async (req, res, next) => 
 {
@@ -38,39 +38,48 @@ export const getTopSellers = async (req, res, next) =>
     }
 };
 
-// @desc  get game details by name
+// @desc  Get game details by name
 // @route  GET /games/:gameName
 export const getGameDetails = async (req, res, next) => 
 {
     const gameName = req.params.gameName;
+
     if (!gameName || gameName.trim() === '') 
     {
-        const err = new Error('Game name is required');
-        err.status = 400; 
-        return next(err);
+        return next(new Error('Game name is required'));
     }
+
     try 
     {
-        const response = await axios.get(`https://api.rawg.io/api/games?search=${(gameName)}&key=${process.env.RAWG_API_KEY}`)
-        
+        const PREFERRED = ["Steam", "Epic Games", "PlayStation Store", "Microsoft Store", "Xbox Store", "Nintendo Store", "EA App (Origin)"];
+
+        const response = await axios.get(`https://api.rawg.io/api/games?search=${encodeURIComponent(gameName)}&key=${process.env.RAWG_API_KEY}`);
+
         if (response.status === 200 && response.data.count > 0) 
         {
-            res.status(200).json(response.data);
-        }
+            const filtered = response.data.results.filter(game => game.stores?.some(s => PREFERRED.includes(s.store.name)))
+                .map(game => ({
+                    id: game.id,
+                    name: game.name,
+                    released: game.released,
+                    image: game.background_image,
+                    stores: game.stores
+                ?.filter(s => PREFERRED.includes(s.store.name)).map(s => s.store.name)
+                }));
+
+        return res.json(filtered);
+        } 
         else 
         {
-            const err = new Error('Game not found');
-            err.status = 404; 
-            next(err);
+        return next(new Error('Game not found'));
         }
     } 
     catch (error) 
     {
-        const err = new Error('Failed to fetch game details');
-        err.status = 500; 
-        next(err);
+        return next(new Error('Failed to fetch game details'));
     }
-}
+};
+
 
 // @desc  get landing page game images
 // @route  GET /games/landingpage
