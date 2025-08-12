@@ -1,8 +1,14 @@
 import { google } from 'googleapis';
-import { UserRefreshClient } from 'google-auth-library';
+import { UserRefreshClient, OAuth2Client } from 'google-auth-library';
 
 // @desc  get access token from Google
 // @route  POST /auth/google/access-token
+
+const CI = process.env.GOOGLE_CLIENT_ID;
+const CS = process.env.GOOGLE_CLIENT_SECRET;
+
+const oAuth2Client = new OAuth2Client( CI, CS, 'postmessage');
+
 export const getAccessToken = async (req, res, next) => 
 {
     try 

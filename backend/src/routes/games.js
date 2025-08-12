@@ -1,12 +1,10 @@
 import express from 'express';
-import dotenv from 'dotenv';
 import {getTopSellers, getLandingPageImages, getGameDetails} from '../controllers/gamesController.js';
 
-dotenv.config();
 const router = express.Router();
 
 router.get('/', (req, res) => {
-    res.status(400).json({ error: 'category or Game name is required' });
+    res.status(404).json({ error: 'category or Game name is required' });
 });
 
 
