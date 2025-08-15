@@ -28,20 +28,33 @@ app.use('/auth/google', googleLogin);
 app.use('/games', games);
 app.use('/steam', steam)
 
-app.post('/api/addusers', async (req, res, next) => {
+app.post('/api/users', async (req, res, next) => {
     try 
     {
         const user = await userModel.create(req.body);        
-        res.status(200).json(user);
+        res.status(200).json({message: "User added successfully"});
     } 
     catch (error) 
     {
-        console.error(error); // Log the error for debugging
+        console.error(error); 
         const err = new Error("Wasn't able to add user");
-        err.status = 400; // Set a status code for the error
+        err.status = 400; 
         next(err);
     }
 });
+app.get('/api/users', async (req, res, next) => {
+    try 
+    {
+        const users = await userModel.find();        
+        res.status(200).json(users);
+    } 
+    catch (error) 
+    {
+        console.error(error);
+        const err = new Error("Wasn't able to get user list");
+        next(err);
+    }
+})
 
 app.use(notfound);
 app.use(errorHandeler);
