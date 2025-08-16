@@ -36,19 +36,19 @@ export const hardDeleteUser = async (req, res, next) => {
     try {
         const { email } = req.params;
 
-        const deletedUser = await userModel.findOne({ email, isDeleted: true });
-        if (!deletedUser) 
-        {
-            return res.status(404).json({ message: "partially Deleted user not found" });
+        // Find the user first
+        const user = await userModel.findOne({ email, isDeleted: true });
+        if (!user) {
+            return res.status(404).json({ message: "Deleted user not found" });
         }
 
-        await userModel.deleteOne({email: email});
+        // Call deleteOne on the document instance to trigger pre('deleteOne') middleware
+        await user.deleteOne();
 
-        res.status(200).json( {message: "User Permenantly deleted successfully", email: email});
+        res.status(200).json({ message: "User permanently deleted successfully", email });
     } 
-    catch (error) 
-    {
+    catch (error) {
         console.error(error);
-        next(new Error("Error when trying to restore user"));
+        next(new Error("Error when trying to permanently delete user"));
     }
 }

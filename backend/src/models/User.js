@@ -133,4 +133,23 @@ UserSchema.methods.comparePassword = function (candidatePassword) {
     return bcrypt.compare(candidatePassword, this.password);
 };
 
+
+UserSchema.pre('deleteOne', { document: true, query: false }, async function(next) {
+    try {
+        const userId = this._id;
+
+        // Remove this user from all friends arrays
+        await this.model('User').updateMany(
+            { friends: userId },
+            { $pull: { friends: userId } }
+        );
+
+        next();
+    } catch (error) 
+    {
+        next(error);
+    }
+});
+
+
 export default mongoose.model('User', UserSchema);
