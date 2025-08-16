@@ -37,7 +37,6 @@ function LoginPage() {
       {
         const response = await axios.post(`${BACKEND_URL}/auth/google/access-token`, {
           code,
-        
         });
         const { tokens, userInfo } = response.data;
 

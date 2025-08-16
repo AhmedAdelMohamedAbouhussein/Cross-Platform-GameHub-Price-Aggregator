@@ -1,6 +1,6 @@
 import express from 'express';
-import { getallsteaminfo } from '../controllers/steam/allSteamInfo.js';
-import { syncWithSteam } from '../controllers/steam/sync.js';
+import { getallsteaminfo } from '../controllers/allSteamInfo.js';
+import { syncWithSteam } from '../controllers/sync.js';
 
 const router = express.Router();
 
