@@ -50,21 +50,31 @@ const UserSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
+        trim: true,
+        minlength: 2,
+        maxlength: 50
     },
     email: { 
         type: String, 
         required: true, 
         unique: true, 
         lowercase: true, 
-        trim: true 
+        trim: true,
+        match: [/^\S+@\S+\.\S+$/, "Invalid email format"]
     },
     password: { 
         type: String, 
-        select: false 
-    }, // not required anymore
-    isVerified: { 
-        type: Boolean, 
-        default: false },
+        minlength: 8, 
+        select: false,
+        validate: 
+        {
+            validator: function (v) 
+            {
+                return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(v);
+            },
+            message: "Password must contain at least 1 uppercase, 1 lowercase, and 1 number"
+        }
+    },
     isDeleted: { 
         type: Boolean, 
         default: false 
@@ -82,19 +92,14 @@ const UserSchema = new mongoose.Schema({
         default: 'user' 
     },
     steamId: { 
-        type: String, 
-        unique: true, 
-        sparse: true,
+        type: String,
         default: null
     },
     xboxId: { 
-        type: String, 
-        unique: true, 
-        sparse: true, //	Applies unique index only to docs with a value
+        type: String,
         default: null
     },
-    xboxAccessToken: 
-    { 
+    xboxAccessToken: { 
         type: String, 
         set: encrypt, 
         get: decrypt,
@@ -102,8 +107,8 @@ const UserSchema = new mongoose.Schema({
     },
     xboxRefreshToken: { 
         type: String, 
-        set: encrypt, //Transforms a value before saving
-        get: decrypt, //Transforms a value when reading
+        set: encrypt, 
+        get: decrypt,
         default: null
     },
     signupDate: { 
@@ -115,9 +120,21 @@ const UserSchema = new mongoose.Schema({
     friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, 
 { 
-    timestamps: true, toJSON: { getters: true }, toObject: { getters: true } 
+    timestamps: true, 
+    toJSON: { getters: true }, 
+    toObject: { getters: true } 
 });
 
+// ✅ Explicit unique indexes with valid partial filters
+UserSchema.index(
+    { steamId: 1 },
+    { unique: true, partialFilterExpression: { steamId: { $type: "string" } } }
+);
+
+UserSchema.index(
+    { xboxId: 1 },
+    { unique: true, partialFilterExpression: { xboxId:  { $type: "string" } } }
+);
 // Hash password before saving if present
 UserSchema.pre('save', async function (next) {
     if (!this.isModified('password') || !this.password) return next();

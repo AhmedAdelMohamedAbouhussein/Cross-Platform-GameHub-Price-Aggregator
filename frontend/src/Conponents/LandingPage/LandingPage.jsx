@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import styles from "./LandingPage.module.css";
 import Header from "../Header/Header.jsx";
 import Footer from "../Footer/Footer.jsx";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-function LandingPage() {
+function LandingPage() 
+{
   const navigate = useNavigate();
   const scrollRef = useRef(null);
   const [games, setGames] = useState([]);
 
-// ✅ Fetch top-selling games on mount
+  // ✅ Fetch top-selling games on mount
   useEffect(() => 
   {
     async function getTopSellers() 
@@ -68,14 +69,22 @@ function LandingPage() {
           <h1 className={styles.title}>Welcome to My GameHub</h1>
           <p className={styles.subtitle}>Manage your games and explore their features</p>
 
-          <div className={styles.buttonContainer}>
-            <button className={styles.landingButtons} onClick={() => {navigate("/login");}}> Login </button>
-            <button className={styles.landingButtons} onClick={() => {navigate("/signup");}}> Sign Up </button>
+          <div className={styles.cardContainer}>
+            <div className={styles.card} onClick={() => navigate("/mygames")}>
+              <div className={styles.cardIcon}>📚</div>
+              <h2>My GameHub</h2>
+              <p>View and manage your owned games in a personalized hub</p>
+            </div>
+
+            <div className={styles.card} onClick={() => navigate("/library")}>
+              <div className={styles.cardIcon}>🎮</div>
+              <h2>Browse Game</h2>
+              <p>Browse games across platforms and compare prices</p>
+            </div>
           </div>
         </div>
+
       </div>
-
-
       <Footer />
     </>
   );

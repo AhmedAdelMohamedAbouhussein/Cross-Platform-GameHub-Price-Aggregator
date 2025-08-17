@@ -1,16 +1,15 @@
 .landingContainer {
-  height: 170vh;
+  height: 170svh;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  background: linear-gradient(to right, #4b6cb7, #182848);
-  color: white;
+  background:  #182848;
 }
 
 .GameImageContainer {
   width: 80%;
-  height: 70vh;
+  height: 70svh;
   display: flex;
   justify-content: center;
   gap: 20px;
@@ -50,57 +49,163 @@
   z-index: 1;
 }
 
-.contentContainer
-{
-  width: 80%;
-  height: 70vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  gap: 20px;
-  border-radius: 30px;
-  padding: 20px;
-}
 
-@keyframes moveBackground {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: -1000px 0;
-  }
+.contentContainer {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 50px 20px;
+  text-align: center;
 }
 
 .title {
-  font-size: 5rem;
+  font-size: 4rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, #00c6ff, #0072ff);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
-  font-size: 2.5rem;
+  font-size: 1.8rem;
+  color: #c0c0c0;
 }
 
-
-.buttonContainer {
+.cardContainer {
   display: flex;
-  justify-content: center; /* center the buttons */
-  gap: 50px; /* spacing between buttons */
-  padding: 20px;
-}
-.landingButtons{
-  padding: 12px 24px;
-  font-size: 30px;
-  background: linear-gradient(90deg, #00c6ff, #0072ff);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px;
 }
 
-.landingButtons:hover 
-{  
-  background: rgb(34, 34, 163);
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+.card {
+  width: 280px;
+  min-height: 180px;
+  padding: 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+.cardIcon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  padding: 15px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(1.2);
+
+  /* Animated rainbow glow using text-shadow */
+  text-shadow:
+    0 0 5px red,
+    0 0 10px orange,
+    0 0 15px yellow,
+    0 0 20px green,
+    0 0 25px cyan,
+    0 0 30px blue,
+    0 0 35px magenta;
+  animation: rainbowShadow 3s linear infinite;
+  transition: transform 0.3s ease;
+}
+
+@keyframes rainbowShadow {
+  0% {
+    text-shadow:
+      0 0 5px red,
+      0 0 10px orange,
+      0 0 15px yellow,
+      0 0 20px green,
+      0 0 25px cyan,
+      0 0 30px blue,
+      0 0 35px magenta;
+  }
+  25% {
+    text-shadow:
+      0 0 5px orange,
+      0 0 10px yellow,
+      0 0 15px green,
+      0 0 20px cyan,
+      0 0 25px blue,
+      0 0 30px magenta,
+      0 0 35px red;
+  }
+  50% {
+    text-shadow:
+      0 0 5px yellow,
+      0 0 10px green,
+      0 0 15px cyan,
+      0 0 20px blue,
+      0 0 25px magenta,
+      0 0 30px red,
+      0 0 35px orange;
+  }
+  75% {
+    text-shadow:
+      0 0 5px green,
+      0 0 10px cyan,
+      0 0 15px blue,
+      0 0 20px magenta,
+      0 0 25px red,
+      0 0 30px orange,
+      0 0 35px yellow;
+  }
+  100% {
+    text-shadow:
+      0 0 5px red,
+      0 0 10px orange,
+      0 0 15px yellow,
+      0 0 20px green,
+      0 0 25px cyan,
+      0 0 30px blue,
+      0 0 35px magenta;
+  }
+}
+
+
+
+.card h2 {
+  font-size: 1.7rem;
+  margin-bottom: 10px;
+}
+
+.card p {
+  font-size: 1.2rem;
+  color: #d0d0d0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card {
+    width: 90%;
+    min-height: 150px;
+  }
+
+  .title {
+    font-size: 2.8rem;
+  }
+
+  .subtitle {
+    font-size: 1.4rem;
+  }
+
+  .cardIcon {
+    font-size: 2.5rem;
+    padding: 12px;
+  }
 }

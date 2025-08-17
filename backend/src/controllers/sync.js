@@ -39,7 +39,8 @@ passport.use(
         }
     }));
 
-
+// @desc  get steamdi and steam info
+// @route GET /sync/steam
 export const syncWithSteam = async (req, res, next) => 
 {
     try 
