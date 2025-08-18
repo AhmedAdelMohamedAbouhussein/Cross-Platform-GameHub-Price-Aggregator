@@ -46,7 +46,7 @@ function LoginPage() {
       } 
       catch (error) 
       {
-        console.error('Login error:', error);
+        console.error('Login error:', error.response?.data || error.message);
       }
     },
   flow: 'auth-code',

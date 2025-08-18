@@ -1,5 +1,5 @@
 import express from 'express';
-import {getTopSellers, getLandingPageImages, getGameDetails} from '../controllers/gamesController.js';
+import {getTopSellers, getLandingPageImages, getOneGameDetails} from '../controllers/gamesController.js';
 
 const router = express.Router();
 
@@ -12,6 +12,6 @@ router.get('/topselling', getTopSellers);
 
 router.get('/landingpage', getLandingPageImages);
 
-router .get('/:gameName', getGameDetails);
+router .get('/:gameName', getOneGameDetails);
 
 export default router;

@@ -1,15 +1,18 @@
 import axios from 'axios';
 import passport from "passport";
 import SteamStrategy from "passport-steam";
+import config from '../config.js'
 import userModel from "../models/User.js"; //TODO
 
+const APP_BACKEND_URL = config.appUrl;
+const STEAM_API_KEY = config.steam.apiKey
 // Configure passport strategy ONCE (not inside your controller)
 passport.use(
     new SteamStrategy(
     {
-        returnURL: `${process.env.APP_BACKEND_URL}/steam/return`,
-        realm: process.env.APP_BACKEND_URL,
-        apiKey: process.env.STEAM_API_KEY,
+        returnURL: `${APP_BACKEND_URL}/steam/return`,
+        realm: APP_BACKEND_URL,
+        apiKey: STEAM_API_KEY,
     },
     async function (identifier, profile, done) 
     {
@@ -23,7 +26,7 @@ passport.use(
             {
                 params: 
                 {
-                    key: process.env.STEAM_API_KEY,
+                    key: STEAM_API_KEY,
                     steamids: steamId,
                 },
             });

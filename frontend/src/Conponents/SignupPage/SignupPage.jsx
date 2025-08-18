@@ -9,26 +9,54 @@ import Footer from "../Footer/Footer.jsx";
 
 function SignupPage() 
 {
+  const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
   const [formData, setFormData] = useState({ username: "", email: "", password: ""});
+  const [errorMessage, setErrorMessage] = useState(""); // <-- state for errors
+
 
   const handleChange = (e) => 
   {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value,}));
   };
 
-  const handleSubmit = (e) => 
+  const handleSubmit = async (e) => 
   {
     e.preventDefault();
-    alert(`Signing up with\nUsername: ${formData.username}\nEmail: ${formData.email}`);
+    const { username, email, password } = formData; // destructure formData
+
+    try 
+    {
+      const response = await axios.post(`${BACKEND_URL}/api/users/adduser`, {
+        name: username,
+        email: email,
+        password: password
+    });
+
+    setErrorMessage("User signed up successfully");
+    console.log('Signup success:', response.data);
+    }
+    catch (error) 
+    {
+      if (error.response) 
+      {
+        // Backend responded with an error
+        setErrorMessage(error.response.data.message || "Something went wrong");
+        console.error(error.response.data);
+      } 
+      else 
+      {
+        // Network error or no response
+        setErrorMessage("Network error: Unable to reach server");
+        console.error(error);
+      }
+    }
   };
-  
-  const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
 
   const googleLogin = useGoogleLogin({
     onSuccess: async ({ code }) => {
       try 
       {
-        const response = await axios.post(`${BACKEND_URL}/auth/google`, {
+        const response = await axios.post(`${BACKEND_URL}/auth/google/access-token`, {
           code,
         
         });
@@ -56,6 +84,17 @@ function SignupPage()
           <input type="text" name="username" placeholder="Username" className={styles.signupInput} value={formData.username} onChange={handleChange} required/>
           <input type="email" name="email" placeholder="Email" className={styles.signupInput} value={formData.email} onChange={handleChange} required/>
           <input type="password" name="password" placeholder="Password" className={styles.signupInput} value={formData.password} onChange={handleChange} required/>
+          
+          {errorMessage && (
+  <div style={{ color: "red" }}>
+    {typeof errorMessage === "string" ? errorMessage : errorMessage.message}
+    {errorMessage.restoreLink && (
+      <div>
+        <a href={errorMessage.restoreLink}>Restore Account</a>
+      </div>
+    )}
+  </div>
+)}
           <button type="submit" className={styles.signupButton}> Sign Up </button>
           <div className={styles.googleSignupWrapper}>
             <button type="button" className={styles.googleSignupButton} onClick={() => googleLogin()}> <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google icon" /> Sign in with Google </button>

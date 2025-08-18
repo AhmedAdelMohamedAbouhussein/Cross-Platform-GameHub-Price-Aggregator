@@ -40,7 +40,7 @@ export const getTopSellers = async (req, res, next) =>
 
 // @desc  Get game details by name
 // @route  GET /games/:gameName
-export const getGameDetails = async (req, res, next) => 
+export const getOneGameDetails = async (req, res, next) => 
 {
     const gameName = req.params.gameName;
 

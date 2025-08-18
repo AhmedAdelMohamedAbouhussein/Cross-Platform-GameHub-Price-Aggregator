@@ -1,10 +1,11 @@
 import axios from 'axios';
+import config from '../config.js'; 
 
 export const getallsteaminfo = async (req, res, next) => {
     try 
     {
-        const STEAM_API_KEY = process.env.STEAM_API_KEY;
-        const STEAM_ID = req.params.steamid;
+        const STEAM_API_KEY = config.steam.apiKey;
+        const STEAM_ID = ' ';
         
         const steamLibrary = await axios.get(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${STEAM_ID}&include_appinfo=true&format=json`); //GET Owned Games
 

@@ -1,13 +1,12 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import dotenv from 'dotenv';
+import config from '../config.js';
 
-dotenv.config(); 
-
-const algorithm = process.env.ALGORITHM;
-const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, 'hex'); // 32 bytes key
-const IV_LENGTH = parseInt(process.env.IV_LENGTH, 10);
+const algorithm = config.security.algorithm;
+const ENCRYPTION_KEY = Buffer.from(config.security.encryptionKey, 'hex'); // 32 bytes key
+const IV_LENGTH = config.security.ivLength;
+const BCRYPT_SALT_ROUNDS = config.security.bcryptSaltRounds
 
 function encrypt(text) {
     if (!text) return null;
@@ -138,7 +137,7 @@ UserSchema.index(
 // Hash password before saving if present
 UserSchema.pre('save', async function (next) {
     if (!this.isModified('password') || !this.password) return next();
-    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10);
+    const saltRounds = BCRYPT_SALT_ROUNDS;
     const salt = await bcrypt.genSalt(saltRounds);
     this.password = await bcrypt.hash(this.password, salt);
     next();
