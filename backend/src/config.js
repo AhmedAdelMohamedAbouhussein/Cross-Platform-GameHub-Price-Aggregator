@@ -4,6 +4,7 @@ dotenv.config(); // load env variables once
 export default 
 {
     nodeEnv: process.env.NODE_ENV,
+    sessionSecret: process.env.SESSION_SECRET,
     port: process.env.PORT,
     appUrl: process.env.APP_BACKEND_URL,
     mongoLocal: process.env.LOCAL_MONGO_URL,

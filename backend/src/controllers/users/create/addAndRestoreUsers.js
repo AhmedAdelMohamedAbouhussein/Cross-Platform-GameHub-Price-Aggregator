@@ -1,9 +1,11 @@
 import userModel from '../../../models/User.js'
+import config from '../../../config.js'
 
 // @desc  
 // @route  POST /api/users/adduser
 export const addUser = async (req, res, next) => 
 {
+    const APP_BACKEND_URL = config.appUrl
     try 
     {
         const { email, name } = req.body;
@@ -29,12 +31,12 @@ export const addUser = async (req, res, next) =>
         if (deletedUser) 
         {
             // Send a friendly message suggesting restore
-            return res.status(409).json( {message: "This email is associated with a deleted account. Would you like to restore it?", restoreLink: `/api/users/${email}/restore`, permanentdelete: `/api/users/${email}/restore`});
+            return res.status(409).json( {message: "This email is associated with a deleted account. Would you like to restore your old account or permanently delete it?", restoreLink: `${APP_BACKEND_URL}/api/users/${email}/restore`, permanentDelete: `${APP_BACKEND_URL}/api/users/${email}/restore`});
         }
 
         // Otherwise, create new user
         const newUser = await userModel.create(req.body);
-        res.status(201).json(newUser);
+        res.status(201).json({message: "User signed up successfully redirecting to login Page....."});
 
     } 
     catch (error)

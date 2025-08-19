@@ -144,9 +144,11 @@ UserSchema.pre('save', async function (next) {
 });
 
 // Compare passwords only if password exists
-UserSchema.methods.comparePassword = function (candidatePassword) {
+UserSchema.methods.comparePassword = async function (candidatePassword) {
     if (!this.password) return false;
-    return bcrypt.compare(candidatePassword, this.password);
+    const ismatch = await bcrypt.compare(candidatePassword, this.password);
+
+    return ismatch;
 };
 
 

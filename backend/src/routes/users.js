@@ -1,6 +1,6 @@
 import express from 'express';
 import {addUser, restoreUser} from '../controllers/users/create/addAndRestoreUsers.js'
-import {getUserByID, getUserByEmail} from '../controllers/users/record/getUser.js'
+import {getUserByID, loginUser} from '../controllers/users/record/getUser.js'
 import {updateUser} from '../controllers/users/update/updateUserInfo.js'
 import {softDeletUser, hardDeleteUser} from '../controllers/users/delete/softAndHardDeleteUser.js'
 
@@ -11,7 +11,7 @@ router.post('/adduser', addUser)
 router.patch('/:email/restore', restoreUser)
 
 router.get('/getbyid/:id', getUserByID)
-router.get('/getbymail/:email', getUserByEmail)
+router.post('/login', loginUser)
 
 router.put('/update/:email', updateUser);
 

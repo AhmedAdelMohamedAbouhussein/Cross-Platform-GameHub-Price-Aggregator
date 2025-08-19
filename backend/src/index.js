@@ -20,7 +20,9 @@ import userModel from './models/User.js'
 const app = express();
 const PORT = config.port;
 const MONGO_URL = config.mongoLocal;
-const APP_BACKEND_URL = config.appUrl
+const APP_BACKEND_URL = config.appUrl;
+const NODE_ENV = config.nodeEnv;
+const SESSION_SECRET = config.sessionSecret;
 
 //middleware
 app.use(express.json()); 
@@ -28,7 +30,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors()); // ⬅️ Helps avoid CORS issues from frontend //TODO
 app.use(logger);
 app.use(session({   // Session middleware
-    secret: process.env.SESSION_SECRET || 'fallback-secret', // should be long and secure in production
+    secret: SESSION_SECRET, 
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
@@ -50,6 +52,20 @@ app.use('/steam', steam);
 app.use('/api/users', usersCRUD);
 app.use('/sync', sync);
 
+app.use('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Failed to log out');
+        }
+
+        // Clear the cookie in the browser
+        res.clearCookie('connect.sid'); // or whatever your session cookie name is
+        res.json({ success: true, message: 'Logged out successfully' });
+    });
+});
+
+
 //middleware
 app.use(notfound);
 app.use(errorHandeler);
@@ -59,7 +75,7 @@ mongoose.connect(MONGO_URL)
     {
         console.log('Connected to MongoDB');
         
-        if (process.env.NODE_ENV !== 'production') 
+        if (NODE_ENV !== 'production') 
         {
             mongoose.set('autoIndex', true);
             await userModel.init();

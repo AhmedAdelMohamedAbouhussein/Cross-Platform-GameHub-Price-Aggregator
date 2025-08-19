@@ -49,6 +49,42 @@
   outline: none;
 }
 
+.passwordWrapper
+{
+  position: relative; /* allows absolute children */
+  border: 1px solid #ccc;
+  border-radius: 12px;
+}
+
+.passwordInput {
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: none;
+}
+.passwordInput:focus 
+{
+  background-color: #fef1f2;
+  outline: none;
+}
+
+.passwordToggle 
+{
+  position: absolute;
+  right: 0%; /* space from the left edge */
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: #000000;
+  background-color: #ffffff;
+  transition: color 0.3s ease;
+  border: none;
+  border-radius: 12px;
+}
+.passwordToggle:hover {
+  color: #0072ff; /* matches your signup button */
+}
+
+
 .signupButton {
   font-size: 18px;
   padding: 0.75rem;
