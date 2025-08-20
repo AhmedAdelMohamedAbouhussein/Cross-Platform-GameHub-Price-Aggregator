@@ -3,6 +3,7 @@ dotenv.config(); // load env variables once
 
 export default 
 {
+    frontendUrl: process.env.APP_FRONTEND_URL,
     nodeEnv: process.env.NODE_ENV,
     sessionSecret: process.env.SESSION_SECRET,
     port: process.env.PORT,

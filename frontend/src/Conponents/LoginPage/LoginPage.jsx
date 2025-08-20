@@ -1,7 +1,8 @@
 import { useState } from "react";
+
 import {useGoogleLogin} from '@react-oauth/google';
 import axios from 'axios';
-import { Link } from 'react-router-dom'; 
+import { useNavigate, Link } from 'react-router-dom'; 
 import { FiEye, FiEyeOff, FiRotateCcw, FiTrash} from "react-icons/fi";
 
 import styles from "./LoginPage.module.css";
@@ -11,6 +12,7 @@ import Footer from "../Footer/Footer.jsx";
 function LoginPage() 
 {
   const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({email: "", password: ""});
   const [isChecked, setIsChecked] = useState(false);
@@ -29,13 +31,20 @@ function LoginPage()
     
     try 
     {
-      const response = await axios.post(`${BACKEND_URL}/api/users/login`, {
-        email: email.trim(),
-        password: password
-      });
-
-      setFeedback({ type: "success", message: response.data.message || "User logged in successfully" });
+      const response = await axios.post(`${BACKEND_URL}/api/users/login`, 
+        {email: email.trim(), password: password },
+        { withCredentials: true } // 🔑 so cookies/sessions work
+      );
+      
+      const { message, redirectUrl } = response.data;
+      setFeedback({ type: "success", message:message || "User logged in successfully" });
       console.log('Signup success:', response.data.message);
+
+      if (redirectUrl) 
+      {
+        setTimeout(() => navigate(redirectUrl), 2000);
+      }
+
     }
     catch (error) 
     {

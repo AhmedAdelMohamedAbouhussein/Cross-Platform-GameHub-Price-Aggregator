@@ -2,6 +2,7 @@ import userModel from "../../../models/User.js";
 import config from '../../../config.js'
 
 const APP_BACKEND_URL = config.appUrl;
+
 // @desc   Get user by ID
 // @route  GET /api/users/getbyid/:id
 export const getUserByID = async (req, res, next) => 
@@ -66,20 +67,23 @@ export const loginUser = async (req, res, next) =>
             req.session.isLoggedIn = true;
             req.session.userId = user._id;
 
-            return res.status(200).json({ message: "Login successful" });
+            return res.status(200).json({
+                message: "Login successful redirecting to Landing Page",
+                redirectUrl: `/`
+            });
         }
 
         // Check deleted user
         const deletedUser = await userModel.findOne({ email, isDeleted: true });
         if (deletedUser) 
         {
-            //const isMatch = await deletedUser.comparePassword(password);
-            //if (!isMatch) 
-            //{
-                //const err = new Error("Invalid Password");
-                //err.status = 401;
-                //return next(err);
-            //}
+            const isMatch = await deletedUser.comparePassword(password);
+            if (!isMatch) 
+            {
+                const err = new Error("Invalid Password");
+                err.status = 401;
+                return next(err);
+            }
 
             return res.status(409).json({
                 message:

@@ -27,7 +27,10 @@ const SESSION_SECRET = config.sessionSecret;
 //middleware
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true }));
-app.use(cors()); // ⬅️ Helps avoid CORS issues from frontend //TODO
+app.use(cors({
+  origin: "http://localhost:5173",  // your frontend URL
+  credentials: true                 // ✅ needed for cookies/sessions
+}));
 app.use(logger);
 app.use(session({   // Session middleware
     secret: SESSION_SECRET, 
@@ -41,6 +44,8 @@ app.use(session({   // Session middleware
     cookie: 
     {
         httpOnly: true,
+        secure: false, // set true only if using HTTPS
+        sameSite: "lax" // or "none" if cross-domain with HTTPS
         //maxAge: 1000 * 60 * 60 * 24, // 1 day
     }
 }));
