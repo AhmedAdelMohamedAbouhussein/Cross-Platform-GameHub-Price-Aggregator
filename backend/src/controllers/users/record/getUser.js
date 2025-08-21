@@ -43,6 +43,7 @@ export const loginUser = async (req, res, next) =>
     {
         const email = req.body.email; 
         const password = req.body.password;
+        const rememberMe = Boolean(req.body.rememberMe);
 
         if (!email || !password) 
         {
@@ -51,6 +52,9 @@ export const loginUser = async (req, res, next) =>
         return next(err);
         }
 
+        const ONE_DAY = 1000 * 60 * 60 * 24;
+        const SEVEN_DAYS = ONE_DAY * 7;
+        
         // Check active user
         const user = await userModel.findOne({ email, isDeleted: false }).select('+password');
 
@@ -64,12 +68,23 @@ export const loginUser = async (req, res, next) =>
                 return next(err);
             }
             
-            req.session.isLoggedIn = true;
+            //req.session.isLoggedIn = true; //may use layter if i set cookies and sessions to guests
             req.session.userId = user._id;
+            //req.session.role = user.role; //may use later if i add admin  
 
-            return res.status(200).json({
-                message: "Login successful redirecting to Landing Page",
-                redirectUrl: `/`
+            req.session.cookie.maxAge = rememberMe ? SEVEN_DAYS : ONE_DAY;
+
+            return req.session.save(err => 
+            {
+                if (err) 
+                {
+                    console.error("Session save error:", err);
+                    const err = new Error("Failed to save session");
+                    return next(err);
+                }
+                return res.status(200).json({
+                    message: "Login successful redirecting to Landing Page......"
+                });
             });
         }
 
@@ -89,19 +104,19 @@ export const loginUser = async (req, res, next) =>
                 message:
                     "This email is associated with a deleted account. Would you like to restore your old account or permanently delete it?",
                 restoreLink: `${APP_BACKEND_URL}/api/users/${email}/restore`,
-                permanentDelete: `${APP_BACKEND_URL}/api/users/${email}/delete`,
+                permanentDelete: `${APP_BACKEND_URL}/api/users/${email}/permanentDelete`,
             });
         }
 
         // No user found at all
         const err = new Error("Invalid Email");
         err.status = 404;
-        next(err);
+        return next(err);
     }
     catch (error) 
     {
         console.error(error);
         const err = new Error("Error when trying to login");
-        next(err);
+        return next(err);
     }
 };

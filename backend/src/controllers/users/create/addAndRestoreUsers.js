@@ -31,7 +31,7 @@ export const addUser = async (req, res, next) =>
         if (deletedUser) 
         {
             // Send a friendly message suggesting restore
-            return res.status(409).json( {message: "This email is associated with a deleted account. Would you like to restore your old account or permanently delete it?", restoreLink: `${APP_BACKEND_URL}/api/users/${email}/restore`, permanentDelete: `${APP_BACKEND_URL}/api/users/${email}/restore`});
+            return res.status(409).json( {message: "This email is associated with a deleted account. Would you like to restore your old account or permanently delete it?", restoreLink: `${APP_BACKEND_URL}/api/users/${email}/restore`, permanentDelete: `${APP_BACKEND_URL}/api/users/${email}/permanentDelete`});
         }
 
         // Otherwise, create new user

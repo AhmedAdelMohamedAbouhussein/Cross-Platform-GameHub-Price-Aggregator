@@ -1,11 +1,12 @@
 import express from 'express';
 import cors from 'cors';
-import mongoose from 'mongoose';
 import session from 'express-session';
+import mongoose from 'mongoose';
 import MongoStore  from 'connect-mongo';
+
 import config from './config.js'
 
-import googleLogin from './routes/googleLogin.js';
+import Auth from './routes/Auth.js';
 import games from './routes/games.js';
 import steam from './routes/steam.js';
 import sync from './routes/sync.js'
@@ -38,38 +39,23 @@ app.use(session({   // Session middleware
     saveUninitialized: false,
     store: MongoStore.create({
         mongoUrl: MONGO_URL,
-        collectionName: 'sessions',
-        //ttl: 14 * 24 * 60 * 60, // 14 days
+        collectionName: 'sessions'
     }),
     cookie: 
     {
         httpOnly: true,
-        secure: false, // set true only if using HTTPS
-        sameSite: "lax" // or "none" if cross-domain with HTTPS
-        //maxAge: 1000 * 60 * 60 * 24, // 1 day
+        secure: config.nodeEnv === "production", // set true only if using HTTPS
+        sameSite: config.nodeEnv === "production" ? "none" : "lax",
+        maxAge: 1000 * 60 * 60 * 24 // 1 day in ms
     }
 }));
 
 //routes
-app.use('/auth/google', googleLogin);
+app.use('/api/auth', Auth);
 app.use('/games', games);
 app.use('/steam', steam);
 app.use('/api/users', usersCRUD);
 app.use('/sync', sync);
-
-app.use('/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) {
-            console.error(err);
-            return res.status(500).send('Failed to log out');
-        }
-
-        // Clear the cookie in the browser
-        res.clearCookie('connect.sid'); // or whatever your session cookie name is
-        res.json({ success: true, message: 'Logged out successfully' });
-    });
-});
-
 
 //middleware
 app.use(notfound);

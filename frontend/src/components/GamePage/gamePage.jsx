@@ -2,9 +2,12 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+import LoadingScreen from '../LoadingScreen/LoadingScreen'
+
 const GamePage = () => 
 {
-    const {gameName } = useParams(); 
+    const {gameName } = useParams();
+    
     const [gameData, setGameData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -30,7 +33,7 @@ const GamePage = () =>
         fetchGame();
     }, [gameName]);
 
-    if (loading) return <p>Loading...</p>;
+    if (loading) return <LoadingScreen/>;
     if (error) return <p>{error}</p>;
 
     return (

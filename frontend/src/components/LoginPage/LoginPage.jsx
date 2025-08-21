@@ -1,18 +1,28 @@
-import { useState } from "react";
-
+import { useState, useContext } from "react";
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {useGoogleLogin} from '@react-oauth/google';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom'; 
+
 import { FiEye, FiEyeOff, FiRotateCcw, FiTrash} from "react-icons/fi";
 
 import styles from "./LoginPage.module.css";
 import Header from "../Header/Header.jsx";
 import Footer from "../Footer/Footer.jsx";
+import AuthContext from "../../contexts/AuthContext.jsx";
 
 function LoginPage() 
 {
   const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
+  const API_BASE =import.meta.env.MODE === "development"? ""  : BACKEND_URL;
+  
   const navigate = useNavigate();
+  const location = useLocation(); // 🔑 get previous location   //TODO
+
+  const from = location.state?.from?.pathname;
+  const redirectTo = (!from || ["/login", "/signup"].includes(from)) ? "/" : from;
+
+
+  const { fetchUser } = useContext(AuthContext); // 👈 get from context  
 
   const [formData, setFormData] = useState({email: "", password: ""});
   const [isChecked, setIsChecked] = useState(false);
@@ -23,6 +33,16 @@ function LoginPage()
   {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value,}));
   };
+  
+  const handleLoginSuccess = async (message) => 
+  {
+    setFeedback({ type: "success", message: message || "User logged in successfully" });
+    setTimeout(async () => 
+    {
+      await fetchUser();
+      navigate(redirectTo, { replace: true });
+    }, 2000);
+  };
 
   const handleSubmit = async (e) => 
   {
@@ -31,20 +51,14 @@ function LoginPage()
     
     try 
     {
-      const response = await axios.post(`${BACKEND_URL}/api/users/login`, 
-        {email: email.trim(), password: password },
+      const response = await axios.post(`${API_BASE}/api/users/login`, 
+        {email: email.trim(), password: password , rememberMe: isChecked},
         { withCredentials: true } // 🔑 so cookies/sessions work
       );
       
-      const { message, redirectUrl } = response.data;
-      setFeedback({ type: "success", message:message || "User logged in successfully" });
-      console.log('Signup success:', response.data.message);
+      handleLoginSuccess(response.data.message);
 
-      if (redirectUrl) 
-      {
-        setTimeout(() => navigate(redirectUrl), 2000);
-      }
-
+      
     }
     catch (error) 
     {
@@ -64,6 +78,38 @@ function LoginPage()
       }
     }
   };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async ({ code }) => {
+      try 
+      {
+        const response = await axios.post(`${API_BASE}/api/auth/google/login`, 
+          {code, rememberMe: isChecked},
+          { withCredentials: true } // 🔑 so cookies/sessions work
+        );
+
+        handleLoginSuccess(response.data.message);
+      } 
+      catch (error) 
+      {
+        if (error.response?.data) 
+        {
+          const { message, restoreLink, permanentDelete } = error.response.data;
+
+          setFeedback({ type: "error", message: message || "Something went wrong", restoreLink, permanentDelete,});
+        }
+        else 
+        {
+          // Network or unknown error
+          setFeedback({
+            type: "error",
+            message: "Network error: Unable to reach server",
+          });
+        }
+      }
+    },
+  flow: 'auth-code',
+  });
 
   function renderFeedback(fb) 
   {
@@ -91,27 +137,6 @@ function LoginPage()
   {
     setIsChecked(e.target.checked);
   }
-
-  const googleLogin = useGoogleLogin({
-    onSuccess: async ({ code }) => {
-      try 
-      {
-        const response = await axios.post(`${BACKEND_URL}/auth/google/access-token`, {
-          code,
-        });
-        const { tokens, userInfo } = response.data;
-
-        console.log('Access Token:', tokens);
-        console.log('User Info:', userInfo);
-
-      } 
-      catch (error) 
-      {
-        console.error('Login error:', error.response?.data || error.message);
-      }
-    },
-  flow: 'auth-code',
-  });
 
   return (
     <>

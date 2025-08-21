@@ -6,8 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff, FiRotateCcw, FiTrash} from "react-icons/fi";
 
 import styles from "./SignupPage.module.css"; 
-import Header from "../Header/Header.jsx";
-import Footer from "../Footer/Footer.jsx";
+import Header from "../Header/Header";
+import Footer from "../Footer/Footer";
 
 function SignupPage() 
 {
@@ -21,6 +21,13 @@ function SignupPage()
   const handleChange = (e) => 
   {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value,}));
+  };
+
+  const handleSignupSuccess = async (message) => 
+  {
+      setFeedback({ type: "success", message: message || "User signed up successfully redirecting to login Page....." });
+      setTimeout(() => { navigate('/login'); }, 2000);
+      console.log('Signup success:', message);
   };
 
   function validateForm({ username, email, password }) 
@@ -65,9 +72,7 @@ function SignupPage()
         password: password
       });
 
-      setFeedback({ type: "success", message: response.data.message || "User signed up successfully redirecting to login Page....." });
-      setTimeout(() => { navigate('/login'); }, 2000);
-      console.log('Signup success:', response.data.message);
+      handleSignupSuccess(response.data.message);
 
     }
     catch (error) 
@@ -93,19 +98,28 @@ function SignupPage()
     onSuccess: async ({ code }) => {
       try 
       {
-        const response = await axios.post(`${BACKEND_URL}/auth/google/access-token`, {
+        const response = await axios.post(`${BACKEND_URL}/api/auth/google/signup`, {
           code,
-        
         });
-        const { tokens, userInfo } = response.data;
 
-        console.log('Access Token:', tokens);
-        console.log('User Info:', userInfo);
-
+        handleSignupSuccess(response.data.message);
       } 
       catch (error) 
       {
-        console.error('Login error:', error);
+        if (error.response?.data) 
+        {
+          const { message, restoreLink, permanentDelete } = error.response.data;
+
+          setFeedback({ type: "error", message: message || "Something went wrong", restoreLink, permanentDelete,});
+        }
+        else 
+        {
+          // Network or unknown error
+          setFeedback({
+            type: "error",
+            message: "Network error: Unable to reach server",
+          });
+        }
       }
     },
   flow: 'auth-code',

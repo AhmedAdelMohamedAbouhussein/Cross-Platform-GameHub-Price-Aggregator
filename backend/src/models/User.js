@@ -102,13 +102,15 @@ const UserSchema = new mongoose.Schema({
         type: String, 
         set: encrypt, 
         get: decrypt,
-        default: null 
+        default: null,
+        select: false
     },
     xboxRefreshToken: { 
         type: String, 
         set: encrypt, 
         get: decrypt,
-        default: null
+        default: null,
+        select: false
     },
     signupDate: { 
         type: Date, 
@@ -124,6 +126,18 @@ const UserSchema = new mongoose.Schema({
     toObject: { getters: true } 
 });
 
+UserSchema.set('toJSON', 
+{
+    transform: function(doc, ret, options) //doc → the original Mongoose document
+    { 
+        delete ret.password; //delete ret.field → removes that field before sending it to the client This applies globally whenever .toJSON() is called (e.g., res.json(user))
+        delete ret.xboxAccessToken;
+        delete ret.xboxRefreshToken;
+        return ret; //ret → the plain JavaScript object that will be returned
+    }
+});
+
+
 // ✅ Explicit unique indexes with valid partial filters
 UserSchema.index(
     { steamId: 1 },
@@ -134,6 +148,7 @@ UserSchema.index(
     { xboxId: 1 },
     { unique: true, partialFilterExpression: { xboxId:  { $type: "string" } } }
 );
+
 // Hash password before saving if present
 UserSchema.pre('save', async function (next) {
     if (!this.isModified('password') || !this.password) return next();

@@ -1,20 +1,30 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useContext } from "react";
+import AuthContext from "./contexts/AuthContext";
 
-import LandingPage from "./Conponents/LandingPage/LandingPage.jsx";
-import LoginPage from "./Conponents/LoginPage/LoginPage.jsx";
-import SignupPage from "./Conponents/SignupPage/SignupPage.jsx";
+import LandingPage from "./components/LandingPage/LandingPage";
+import LoginPage from "./components/LoginPage/LoginPage";
+import SignupPage from "./components/SignupPage/SignupPage";
+import GamePage from "./components/GamePage/gamePage";
+import MainPage from "./components/LibraryPage/LibraryPage";
 
-import GamePage from "./Conponents/GamePage/gamePage.jsx";
-import MainPage from "./Conponents/LibraryPage/LibraryPage.jsx";
-function App()
+function App() 
 {
-    return(
+    const { user } = useContext(AuthContext);
+    const location = useLocation(); // 🔑 current location
+
+    return (
     <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/games/:gameName" element={<GamePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/library" element={<MainPage />} />
+        {/* Public pages */}
+        <Route path="/" element = {<LandingPage />}/>
+        <Route path="/games/:gameName" element = {<GamePage />}/>
+
+        {/* Auth pages */}
+        <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" replace />}/>
+        <Route path="/signup" element={!user ? <SignupPage /> : <Navigate to="/" replace />}/>
+
+        {/* Private pages */}
+        <Route path="/library" element={user ? <MainPage /> : <Navigate to="/login" replace state={{ from: location }} />}/> //TODO
     </Routes>
     );
 }

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import Header from "../Header/Header.jsx";
-import Footer from "../Footer/Footer.jsx";
-import Aside from '../Aside/Aside.jsx';
-import Card from '../Card/Card.jsx';
+import Header from "../Header/Header";
+import Footer from "../Footer/Footer";
+import Aside from '../Aside/Aside';
+import Card from '../Card/Card';
 import styles from './LibraryPage.module.css';
 
 function MainPage() {

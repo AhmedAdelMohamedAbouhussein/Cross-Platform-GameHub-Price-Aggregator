@@ -1,0 +1,45 @@
+.loadingContainer 
+{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+    color: #fff;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.spinner 
+{
+    width: 60px;
+    height: 60px;
+    border: 6px solid rgba(255, 255, 255, 0.2);
+    border-top: 6px solid #ff4757; /* GameHub highlight color */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+.title 
+{
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0;
+    letter-spacing: 2px;
+}
+
+.subtitle 
+{
+    font-size: 1rem;
+    opacity: 0.8;
+    margin-top: 5px;
+}
+
+@keyframes spin 
+{
+    to 
+    {
+        transform: rotate(360deg);
+    }
+}
