@@ -40,7 +40,7 @@ export const addUser = async (req, res, next) =>
         // Otherwise, create new user
         const newUser = await userModel.create(req.body);
 
-        await sendOtpToUser({ userId: newUser._id, email: newUser.email});
+        await sendOtpToUser({ userId: newUser._id, email: newUser.email, purpose: "email_verification"});
 
         res.status(201).json({message: "User signed up successfully, verification OTP sent", userId: newUser._id});
 

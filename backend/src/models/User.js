@@ -145,9 +145,33 @@ const UserSchema = new mongoose.Schema({
                 default: Date.now,
                 select: false
             }
+        },
+        restoreAccount: { 
+            count: { 
+                type: Number, 
+                default: 0,
+                select: false
+            },
+            lastReset: { 
+                type: Date, 
+                default: Date.now,
+                select: false
+            }
+        },
+        permanentlyDeleteAccount: { 
+            count: { 
+                type: Number, 
+                default: 0,
+                select: false
+            },
+            lastReset: { 
+                type: Date, 
+                default: Date.now,
+                select: false
+            }
         }
     }
-}, 
+},
 { 
     timestamps: true, 
     toJSON: { getters: true }, 
@@ -172,6 +196,16 @@ UserSchema.set('toJSON',
             {
                 delete ret.resendCount.passwordReset.count;
                 delete ret.resendCount.passwordReset.lastReset;
+            }
+            if(ret.resendCount.restoreAccount)
+            {
+                delete ret.resendCount.restoreAccount.count;
+                delete ret.resendCount.restoreAccount.lastReset;
+            }
+            if(ret.resendCount.permanentlyDeleteAccount)
+            {
+                delete ret.resendCount.permanentlyDeleteAccount.count;
+                delete ret.resendCount.permanentlyDeleteAccount.lastReset;
             }
         }
         return ret; //ret → the plain JavaScript object that will be returned

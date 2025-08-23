@@ -1,6 +1,8 @@
+import crypto from "crypto";
+
 import OtpSchema from '../../models/Otp.js'
 import userModel from '../../models/User.js'
-
+import PasswordResetToken from "../../models/PasswordResetToken.js";
 
 // @desc   Verify user's OTP
 // @route  POST /api/mail/verifyOtp
@@ -8,22 +10,25 @@ export const verifyOtp = async (req, res, next) =>
 {
     try 
     {
-        const { userId, otp } = req.body;
+        const { userId, otp, purpose } = req.body;
 
-        if (!userId || !otp) 
+        if (!userId || !otp || !purpose) 
         {
             const error = new Error("Missing OTP or userId");
             error.status = 400;
             return next(error);
         }
 
-        const user = await userModel.findById(userId);
-        if(user.isVerified)
+        if (purpose === "email_verification") 
         {
-            return res.json({ message: "user already verified", verified: true});
+            const user = await userModel.findById(userId);
+            if(user.isVerified)
+            {
+                return res.json({ message: "user already verified", verified: true});
+            }
         }
-        
-        const userOtpVerification = await OtpSchema.findOne({ userId, purpose: "email_verification" }) .sort({ createdAt: -1 });
+
+        const userOtpVerification = await OtpSchema.findOne({ userId, purpose: purpose }) .sort({ createdAt: -1 });
 
         if (!userOtpVerification) 
         {
@@ -68,21 +73,72 @@ export const verifyOtp = async (req, res, next) =>
             return next(error);
         }
 
-        // Mark user verified
-        await userModel.updateOne({ _id: userId, isDeleted: false }, { isVerified: true, 'resendCount.emailVerification.count': 0 , 'resendCount.emailVerification.lastReset': new Date()});
 
-        // Delete OTP after success
-        await OtpSchema.deleteOne({ _id: userOtpVerification._id });
+        if (purpose === "email_verification") 
+        {
+            await userModel.updateOne({ _id: userId, isDeleted: false }, { isVerified: true, 'resendCount.emailVerification.count': 0 , 'resendCount.emailVerification.lastReset': new Date()});
+            
+            // Delete OTP after success
+            await OtpSchema.deleteOne({ _id: userOtpVerification._id });
 
-        return res.json({
-            message: "OTP verified successfully",
-            userId,
-            verified: true
-        });
+            return res.json({
+                message: "Email verified successfully",
+                userId,
+                verified: true
+            });
+        } 
+        else if (purpose === "password_reset") 
+        {
+            await userModel.updateOne({ _id: userId, isDeleted: false }, {'resendCount.passwordReset.count': 0 , 'resendCount.passwordReset.lastReset': new Date()});
+            
+            // Delete OTP after success
+            await OtpSchema.deleteOne({ _id: userOtpVerification._id });
+
+            // Generate a secure random token (plain)
+            const plainToken = crypto.randomBytes(32).toString("hex");
+
+            //delete old tokens
+            await PasswordResetToken.deleteMany({ userId: userId});
+
+            // Save hashed version in DB
+            await PasswordResetToken.createToken(userId, plainToken);
+
+            return res.json({
+                message: "OTP verified successfully. Use this token to reset your password.",
+                userId,
+                verified: true,
+                resetToken: plainToken, // ⚠️ send plain token only once
+            });
+        }
+        else if (purpose === "restore_account") 
+        {
+            await userModel.updateOne({ _id: userId }, { isDeleted: false, 'resendCount.restoreAccount.count': 0 , 'resendCount.restoreAccount.lastReset': new Date()});
+        
+            // Delete OTP after success
+            await OtpSchema.deleteOne({ _id: userOtpVerification._id });
+
+            return res.json({
+                message: "Account restored successfully",
+                userId,
+                verified: true
+            });
+        }
+        else if (purpose === "permanently_delete_account") 
+        {
+            await userModel.findByIdAndDelete(userId);
+        
+            // Delete OTP after success
+            await OtpSchema.deleteOne({ _id: userOtpVerification._id });
+
+            return res.json({
+                message: "Account permanentlt deleted successfully",
+                userId,
+                verified: true
+            });
+        }
     } 
     catch (error) 
     {
-        const err = new Error( "Couldn't verify email");
-        next(err)
+        next(error);
     }
 };

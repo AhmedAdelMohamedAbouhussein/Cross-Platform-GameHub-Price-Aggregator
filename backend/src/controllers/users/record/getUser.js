@@ -74,7 +74,7 @@ export const loginUser = async (req, res, next) =>
                 return res.status(409).json({
                     message:
                         "Please verify your account to login",
-                    verifyLink: `/verifyaccount?userId=${user._id}&email=${encodeURIComponent(user.email)}`,
+                    verifyLink: `/verifyaccount?userId=${user._id}&email=${encodeURIComponent(user.email)}&purpose=email_verification`,
             });
             }
 

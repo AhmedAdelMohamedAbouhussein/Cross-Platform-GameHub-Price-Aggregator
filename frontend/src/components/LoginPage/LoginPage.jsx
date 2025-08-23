@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {useGoogleLogin} from '@react-oauth/google';
 import axios from 'axios';
 
-import { FiEye, FiEyeOff, FiRotateCcw, FiTrash} from "react-icons/fi";
+import { FiEye, FiEyeOff, FiRotateCcw, FiTrash, FiMail} from "react-icons/fi";
 
 import styles from "./LoginPage.module.css";
 import Header from "../Header/Header.jsx";
@@ -131,19 +131,19 @@ function LoginPage()
 
         {fb.verifyLink && (
             <div>
-                <a href={fb.verifyLink} style={{ color: "blue" }}>Verify Account</a>
+                <Link to = {fb.verifyLink} style={{ color: "blue" }}><FiMail/>Verify Account</Link>
             </div>
         )}
 
         {fb.restoreLink && (
           <div>
-            <a href={fb.restoreLink}><FiRotateCcw/>Restore Account</a>
+            <Link to = {fb.restoreLink}><FiRotateCcw/>Restore Account</Link>
           </div>
         )}
 
         {fb.permanentDelete && (
           <div style={{ marginTop: "5px" }}>
-            <a href={fb.permanentDelete} style={{ color: "red" }}><FiTrash />Permanently Delete Account</a>
+            <Link to = {fb.permanentDelete} style={{ color: "red" }}><FiTrash />Permanently Delete Account</Link>
           </div>
         )}
       </div>

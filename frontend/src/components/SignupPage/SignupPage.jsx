@@ -70,7 +70,7 @@ function SignupPage()
       const userId =  response.data.userId;
 
       setFeedback({ type: "success", message: message || "User signed up successfully redirecting to verification Page....." });
-      setTimeout(() => { navigate(`/verifyaccount?userId=${userId}&email=${encodeURIComponent(email)}`); }, 2000);
+      setTimeout(() => { navigate(`/verifyaccount?userId=${userId}&email=${encodeURIComponent(email)}&purpose=email_verification`); }, 2000);
       console.log('Signup success:', message);
 
     }

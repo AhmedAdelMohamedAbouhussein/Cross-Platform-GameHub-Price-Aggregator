@@ -9,7 +9,8 @@ const OtpSchema  = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId, // usually reference the User model
         ref: "User",
-        required: true
+        required: true,
+        index: true
     },
     otp: { 
         type: String, 
@@ -62,7 +63,5 @@ OtpSchema.methods.compareOtp = async function (candidateOtp) {
     return ismatch;
 };
 // Add index
-
-OtpSchema.index({ userId: 1, purpose: 1, createdAt: -1 });
 
 export default mongoose.model('Otp', OtpSchema );
