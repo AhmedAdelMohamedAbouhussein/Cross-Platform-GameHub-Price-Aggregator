@@ -116,7 +116,7 @@ export const googleSignup = async (req, res, next) =>
         }
 
         // Otherwise, create new user
-        const newUser = await userModel.create({name: username, email: useremail});
+        await userModel.create({name: username, email: useremail, isVerified: true});
         res.status(201).json({message: "User signed up successfully redirecting to login Page....."});
 
     } 

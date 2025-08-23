@@ -23,12 +23,6 @@ function SignupPage()
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value,}));
   };
 
-  const handleSignupSuccess = async (message) => 
-  {
-      setFeedback({ type: "success", message: message || "User signed up successfully redirecting to login Page....." });
-      setTimeout(() => { navigate('/login'); }, 2000);
-      console.log('Signup success:', message);
-  };
 
   function validateForm({ username, email, password }) 
   {
@@ -72,7 +66,12 @@ function SignupPage()
         password: password
       });
 
-      handleSignupSuccess(response.data.message);
+      const message = response.data.message;
+      const userId =  response.data.userId;
+
+      setFeedback({ type: "success", message: message || "User signed up successfully redirecting to verification Page....." });
+      setTimeout(() => { navigate(`/verifyaccount?userId=${userId}&email=${encodeURIComponent(email)}`); }, 2000);
+      console.log('Signup success:', message);
 
     }
     catch (error) 
@@ -102,7 +101,11 @@ function SignupPage()
           code,
         });
 
-        handleSignupSuccess(response.data.message);
+          const message = response.data.message;
+      
+        setFeedback({ type: "success", message: message || "User signed up successfully redirecting to login Page....." });
+        setTimeout(() => { navigate('/login'); }, 2000);
+        console.log('Signup success:', message);
       } 
       catch (error) 
       {

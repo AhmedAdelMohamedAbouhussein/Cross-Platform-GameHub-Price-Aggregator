@@ -2,6 +2,7 @@ import userModel from "../../../models/User.js";
 import config from '../../../config.js'
 
 const APP_BACKEND_URL = config.appUrl;
+const APP_FRONTEND_URL = config.frontendUrl;
 
 // @desc   Get user by ID
 // @route  GET /api/users/getbyid/:id
@@ -68,10 +69,18 @@ export const loginUser = async (req, res, next) =>
                 return next(err);
             }
             
+            if(user.isVerified === false)
+            {
+                return res.status(409).json({
+                    message:
+                        "Please verify your account to login",
+                    verifyLink: `/verifyaccount?userId=${user._id}&email=${encodeURIComponent(user.email)}`,
+            });
+            }
+
             //req.session.isLoggedIn = true; //may use layter if i set cookies and sessions to guests
             req.session.userId = user._id;
             //req.session.role = user.role; //may use later if i add admin  
-
             req.session.cookie.maxAge = rememberMe ? SEVEN_DAYS : ONE_DAY;
 
             return req.session.save(err => 

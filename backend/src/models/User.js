@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+
 import config from '../config.js';
 
 const algorithm = config.security.algorithm;
@@ -8,7 +9,8 @@ const ENCRYPTION_KEY = Buffer.from(config.security.encryptionKey, 'hex'); // 32 
 const IV_LENGTH = config.security.ivLength;
 const BCRYPT_SALT_ROUNDS = config.security.bcryptSaltRounds
 
-function encrypt(text) {
+function encrypt(text) 
+{
     if (!text) return null;
     try 
     {
@@ -78,7 +80,7 @@ const UserSchema = new mongoose.Schema({
         type: Boolean, 
         default: false 
     },
-    googleLoggedIn: { 
+    isVerified: { 
         type: Boolean, 
         default: false 
     },
@@ -119,6 +121,32 @@ const UserSchema = new mongoose.Schema({
     ownedGames: [{ type: String }],
     wishlist: [{ type: String }],
     friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    resendCount: {
+        emailVerification: { 
+            count: { 
+                type: Number, 
+                default: 0,
+                select: false
+            },
+            lastReset: { 
+                type: Date, 
+                default: Date.now,
+                select: false
+            },
+        },
+        passwordReset: { 
+            count: { 
+                type: Number, 
+                default: 0,
+                select: false
+            },
+            lastReset: { 
+                type: Date, 
+                default: Date.now,
+                select: false
+            }
+        }
+    }
 }, 
 { 
     timestamps: true, 
@@ -133,6 +161,19 @@ UserSchema.set('toJSON',
         delete ret.password; //delete ret.field → removes that field before sending it to the client This applies globally whenever .toJSON() is called (e.g., res.json(user))
         delete ret.xboxAccessToken;
         delete ret.xboxRefreshToken;
+        if (ret.resendCount) 
+        {
+            if(ret.resendCount.emailVerification)
+            {
+                delete ret.resendCount.emailVerification.count;
+                delete ret.resendCount.emailVerification.lastReset;
+            }
+            if(ret.resendCount.passwordReset)
+            {
+                delete ret.resendCount.passwordReset.count;
+                delete ret.resendCount.passwordReset.lastReset;
+            }
+        }
         return ret; //ret → the plain JavaScript object that will be returned
     }
 });
@@ -152,11 +193,27 @@ UserSchema.index(
 // Hash password before saving if present
 UserSchema.pre('save', async function (next) {
     if (!this.isModified('password') || !this.password) return next();
-    const saltRounds = BCRYPT_SALT_ROUNDS;
-    const salt = await bcrypt.genSalt(saltRounds);
+
+    const salt = await bcrypt.genSalt(BCRYPT_SALT_ROUNDS);
     this.password = await bcrypt.hash(this.password, salt);
     next();
 });
+
+UserSchema.pre(['findOneAndUpdate', 'updateOne'], async function (next) {
+    let update = this.getUpdate();
+
+    // Normalize if $set exists
+    if (update.$set && update.$set.password) {
+        const salt = await bcrypt.genSalt(BCRYPT_SALT_ROUNDS);
+        update.$set.password = await bcrypt.hash(update.$set.password, salt);
+    } else if (update.password) {
+        const salt = await bcrypt.genSalt(BCRYPT_SALT_ROUNDS);
+        update.password = await bcrypt.hash(update.password, salt);
+    }
+
+    next();
+});
+
 
 // Compare passwords only if password exists
 UserSchema.methods.comparePassword = async function (candidatePassword) {

@@ -57,16 +57,27 @@ function LoginPage()
       );
       
       handleLoginSuccess(response.data.message);
-
       
     }
     catch (error) 
     {
       if (error.response?.data) 
       {
-        const { message, restoreLink, permanentDelete } = error.response.data;
+        console.log( error.response.data)
+        const { message, verifyLink, restoreLink, permanentDelete } = error.response.data;
 
-        setFeedback({ type: "error", message: message || "Something went wrong", restoreLink, permanentDelete,});
+        if(verifyLink)
+        {
+          setFeedback({ type: "error", message: message || "Something went wrong",  verifyLink: verifyLink});
+        }
+        else if(restoreLink && permanentDelete)
+        {
+          setFeedback({ type: "error", message: message || "Something went wrong", restoreLink, permanentDelete,});
+        }
+        else
+        {
+          setFeedback({ type: "error", message: message || "Something went wrong"});
+        }
       }
       else 
       {
@@ -117,6 +128,12 @@ function LoginPage()
     return (
       <div style={{ color: fb.type === "error" ? "red" : "green" }}>
         <p>{fb.message}</p>
+
+        {fb.verifyLink && (
+            <div>
+                <a href={fb.verifyLink} style={{ color: "blue" }}>Verify Account</a>
+            </div>
+        )}
 
         {fb.restoreLink && (
           <div>

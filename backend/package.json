@@ -21,6 +21,7 @@
     "google-auth-library": "^10.2.1",
     "googleapis": "^155.0.0",
     "mongoose": "^8.17.1",
+    "nodemailer": "^7.0.5",
     "passport": "^0.7.0",
     "passport-steam": "^1.0.18"
   },

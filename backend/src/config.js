@@ -42,4 +42,9 @@ export default
         ivLength: parseInt(process.env.IV_LENGTH, 10),
         bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS, 10),
     },
+    gmail:
+    {
+        gmail: process.env.GMAIL,
+        password: process.env.GMAIL_PASSWORD
+    }
 };

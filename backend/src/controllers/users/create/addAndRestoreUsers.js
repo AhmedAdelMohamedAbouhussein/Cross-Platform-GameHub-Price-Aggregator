@@ -1,11 +1,12 @@
+
 import userModel from '../../../models/User.js'
 import config from '../../../config.js'
+import { sendOtpToUser } from '../../nodeMailer/sendOtp.js'
 
 // @desc  
 // @route  POST /api/users/adduser
 export const addUser = async (req, res, next) => 
 {
-    const APP_BACKEND_URL = config.appUrl
     try 
     {
         const { email, name } = req.body;
@@ -16,6 +17,8 @@ export const addUser = async (req, res, next) =>
             err.status = 400;
             return next(err);
         }
+        
+        const APP_BACKEND_URL = config.appUrl
 
         // Check if an active user already exists
         const activeUser = await userModel.findOne({ email, isDeleted: false });
@@ -36,15 +39,16 @@ export const addUser = async (req, res, next) =>
 
         // Otherwise, create new user
         const newUser = await userModel.create(req.body);
-        res.status(201).json({message: "User signed up successfully redirecting to login Page....."});
+
+        await sendOtpToUser({ userId: newUser._id, email: newUser.email});
+
+        res.status(201).json({message: "User signed up successfully, verification OTP sent", userId: newUser._id});
 
     } 
     catch (error)
     {
         console.error(error);
-        const err = new Error("Wasn't able to add user");
-        err.status = 400;
-        next(err);
+        next(error);
     }
 }
 

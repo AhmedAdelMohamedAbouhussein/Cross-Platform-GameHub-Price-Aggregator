@@ -9,14 +9,16 @@ import config from './config.js'
 import Auth from './routes/Auth.js';
 import games from './routes/games.js';
 import steam from './routes/steam.js';
-import sync from './routes/sync.js'
-import usersCRUD from './routes/users.js' 
+import sync from './routes/sync.js';
+import usersCRUD from './routes/users.js';
+import NodeMailer from './routes/nodeMailer.js';
 
 import logger from './middleware/logger.js';
 import errorHandeler from './middleware/error.js';
 import notfound from './middleware/notfound.js';
 
 import userModel from './models/User.js'
+import OtpSchema from './models/Otp.js';
 
 const app = express();
 const PORT = config.port;
@@ -56,6 +58,7 @@ app.use('/games', games);
 app.use('/steam', steam);
 app.use('/api/users', usersCRUD);
 app.use('/sync', sync);
+app.use('/api/mail', NodeMailer);
 
 //middleware
 app.use(notfound);
@@ -70,6 +73,7 @@ mongoose.connect(MONGO_URL)
         {
             mongoose.set('autoIndex', true);
             await userModel.init();
+            await OtpSchema.init();
         } 
         else 
         {

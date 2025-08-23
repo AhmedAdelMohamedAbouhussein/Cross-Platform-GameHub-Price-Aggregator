@@ -5,6 +5,8 @@ import AuthContext from "./contexts/AuthContext";
 import LandingPage from "./components/LandingPage/LandingPage";
 import LoginPage from "./components/LoginPage/LoginPage";
 import SignupPage from "./components/SignupPage/SignupPage";
+import Verify from './components/OTPPage/OTPPage'
+
 import GamePage from "./components/GamePage/gamePage";
 import MainPage from "./components/LibraryPage/LibraryPage";
 
@@ -18,6 +20,7 @@ function App()
         {/* Public pages */}
         <Route path="/" element = {<LandingPage />}/>
         <Route path="/games/:gameName" element = {<GamePage />}/>
+        <Route path="/verifyaccount" element={<Verify />} />
 
         {/* Auth pages */}
         <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" replace />}/>
