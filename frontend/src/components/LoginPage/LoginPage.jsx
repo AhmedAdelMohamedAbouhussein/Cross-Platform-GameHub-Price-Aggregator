@@ -90,6 +90,11 @@ function LoginPage()
     }
   };
 
+  const resetPassword = () =>
+  {
+    
+  }
+
   const googleLogin = useGoogleLogin({
     onSuccess: async ({ code }) => {
       try 
@@ -170,7 +175,7 @@ function LoginPage()
           
           <div className={styles.checkboxContainer}>
             <span><input type="checkbox" checked={isChecked} onChange={rememberCheckBox}/>Remember Me</span>
-            <Link to="/forgotPassword" className={styles.forgotPasswordLink}>Forgot password</Link>
+            <a className={styles.forgotPasswordLink} onClick={resetPassword}>Forgot password</a>
           </div>
           
           {renderFeedback(feedback)}

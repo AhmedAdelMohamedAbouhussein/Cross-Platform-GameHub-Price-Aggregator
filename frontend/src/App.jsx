@@ -20,7 +20,7 @@ function App()
         {/* Public pages */}
         <Route path="/" element = {<LandingPage />}/>
         <Route path="/games/:gameName" element = {<GamePage />}/>
-        <Route path="/verifyaccount" element={<Verify />} />
+        <Route path="/verify" element={<Verify />} />
 
         {/* Auth pages */}
         <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" replace />}/>

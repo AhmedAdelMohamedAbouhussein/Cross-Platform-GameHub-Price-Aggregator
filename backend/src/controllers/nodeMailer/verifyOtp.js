@@ -131,7 +131,7 @@ export const verifyOtp = async (req, res, next) =>
             await OtpSchema.deleteOne({ _id: userOtpVerification._id });
 
             return res.json({
-                message: "Account permanentlt deleted successfully",
+                message: "Account permanently deleted successfully",
                 userId,
                 verified: true
             });

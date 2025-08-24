@@ -62,6 +62,5 @@ OtpSchema.methods.compareOtp = async function (candidateOtp) {
 
     return ismatch;
 };
-// Add index
 
 export default mongoose.model('Otp', OtpSchema );

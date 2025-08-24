@@ -104,6 +104,14 @@ function OTPPage()
                 } 
                 else if (purpose === "reset_password") 
                 {
+                    navigate(`/resetpassword?userId=${res.data.userId}&token=${res.data.resetToken}`, { replace: true });
+                }
+                else if (purpose === "restore_account") 
+                {
+                    navigate(`/resetpassword?userId=${res.data.userId}&token=${res.data.resetToken}`, { replace: true });
+                }
+                else if (purpose === "permanently_delete_account") 
+                {
                     navigate(`/resetpassword?userId=${userId}`, { replace: true });
                 }
             }, 1500);
@@ -124,17 +132,19 @@ function OTPPage()
     }
 
     return (
-        <div className={styles.container}>
-            <h1>{getTitle()}</h1>
+        <div className={styles.pageContainer}>
+            <div className={styles.container}>
+                <h1>{getTitle()}</h1>
 
-            <input type="text" placeholder="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value)} className={styles.input} maxLength={6}/>
+                <input type="text" placeholder="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value)} className={styles.input} maxLength={6}/>
 
-            <div className={styles.buttonContainer}>
-                <button onClick={handleSendOtp} className={styles.button} disabled={loading}>Send New OTP</button>
-                <button onClick={handleSubmitOtp} className={styles.button} disabled={loading}>Submit OTP</button>
+                <div className={styles.buttonContainer}>
+                    <button onClick={handleSendOtp} className={styles.button} disabled={loading}>Send New OTP</button>
+                    <button onClick={handleSubmitOtp} className={styles.button} disabled={loading}>Submit OTP</button>
+                </div>
+
+                {feedback && <p className={styles.feedback}>{feedback}</p>}
             </div>
-
-            {feedback && <p className={styles.feedback}>{feedback}</p>}
         </div>
     );
 }

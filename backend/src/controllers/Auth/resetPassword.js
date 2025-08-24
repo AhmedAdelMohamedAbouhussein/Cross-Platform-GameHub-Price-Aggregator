@@ -3,7 +3,8 @@ import PasswordResetToken from "../models/PasswordResetToken.js";
 
 // @desc   Reset password using token
 // @route  POST /api/auth/reset-password
-export const resetPassword = async (req, res) => {
+export const resetPassword = async (req, res) => 
+{
     try 
     {
         const { userId, token, newPassword } = req.body;
