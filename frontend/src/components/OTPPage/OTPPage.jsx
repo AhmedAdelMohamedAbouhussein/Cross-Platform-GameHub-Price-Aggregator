@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 
 import styles from "./OTPPage.module.css";
 import LoadingScreen from "../LoadingScreen/LoadingScreen";
+import AuthContext from "../../contexts/AuthContext.jsx";
 
 function OTPPage() 
 {
@@ -16,6 +17,7 @@ function OTPPage()
     const [otp, setOtp] = useState("");          
     const [feedback, setFeedback] = useState(""); 
     const [loading, setLoading] = useState(false);
+    const { fetchUser } = useContext(AuthContext); // 👈 get from context 
 
     const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
     const navigate = useNavigate();
@@ -57,9 +59,7 @@ function OTPPage()
 
             if(res.data.message === "user already verified")
             {
-                setTimeout(() => {
-                    navigate('/login', { replace: true });
-                }, 1500);
+                navigate('/login', { replace: true });
             }
 
         } 
@@ -93,28 +93,38 @@ function OTPPage()
         setFeedback("");
         try 
         {
-            const res = await axios.post(`${BACKEND_URL}/api/mail/verifyotp`, { userId: userId, otp: otp, purpose: purpose });
+            let res;
+            if(purpose === "email_verification")
+            {
+                res = await axios.post(`${BACKEND_URL}/api/mail/verifyotp`, 
+                    { userId: userId, otp: otp, purpose: purpose },
+                    { withCredentials: true } // 🔑 so cookies/sessions work
+                );
+            }
+            else
+            {
+                res = await axios.post(`${BACKEND_URL}/api/mail/verifyotp`, { userId: userId, otp: otp, purpose: purpose });
+            }
+            
             setFeedback(res.data.message || "OTP verified successfully!");
             
             if (purpose === "password_reset") 
             {
                 navigate(`/resetpassword?userId=${res.data.userId}&token=${encodeURIComponent(res.data.resetToken)}`, { replace: true });
             }
-            setTimeout(() => 
+            else if (purpose === "email_verification") 
             {
-                if (purpose === "email_verification") 
-                {
-                    navigate("/login", { replace: true });
-                } 
-                else if (purpose === "restore_account") 
-                {
-                    //
-                }
-                else if (purpose === "permanently_delete_account") 
-                {
-                    //
-                }
-            }, 1500);
+                await fetchUser(); // ⏳ wait until it finishes
+                navigate("/", { replace: true });
+            } 
+            else if (purpose === "restore_account") 
+            {
+                navigate("/login", { replace: true });
+            }
+            else if (purpose === "permanently_delete_account") 
+            {
+                navigate("/", { replace: true });
+            }
         } 
         catch (err) 
         {

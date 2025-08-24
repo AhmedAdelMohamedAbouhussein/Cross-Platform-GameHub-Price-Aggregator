@@ -19,6 +19,7 @@ import notfound from './middleware/notfound.js';
 
 import userModel from './models/User.js'
 import OtpSchema from './models/Otp.js';
+import ResetPasswordSchema from './models/PasswordResetToken.js'
 
 const app = express();
 const PORT = config.port;
@@ -48,7 +49,6 @@ app.use(session({   // Session middleware
         httpOnly: true,
         secure: config.nodeEnv === "production", // set true only if using HTTPS
         sameSite: config.nodeEnv === "production" ? "none" : "lax",
-        maxAge: 1000 * 60 * 60 * 24 // 1 day in ms
     }
 }));
 
@@ -74,6 +74,7 @@ mongoose.connect(MONGO_URL)
             mongoose.set('autoIndex', true);
             await userModel.init();
             await OtpSchema.init();
+            await ResetPasswordSchema.init()
         } 
         else 
         {

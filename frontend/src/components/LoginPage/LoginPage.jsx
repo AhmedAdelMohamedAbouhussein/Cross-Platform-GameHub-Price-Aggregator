@@ -54,7 +54,7 @@ function LoginPage()
     try 
     {
       setLoading(true);
-      
+
       const response = await axios.post(`${API_BASE}/api/users/login`, 
         {email: email.trim(), password: password , rememberMe: isChecked},
         { withCredentials: true } // 🔑 so cookies/sessions work
@@ -131,40 +131,7 @@ function LoginPage()
       setLoading(false)
     }
   }
-  const verifyaccount = async () =>
-  {
-    try 
-    {
-      const {email} = formData; // destructure formData
 
-      setLoading(true)
-      const response = await axios.post(`${API_BASE}/api/users/getuseridbyemail`, 
-        {email: email}
-      );
-
-      const userId =  response.data.userId;
-      
-      await axios.post(`${BACKEND_URL}/api/mail/sendotp`, { userId, email, purpose: "email_verification"  });
-
-      navigate(`/verify?userId=${userId}&email=${encodeURIComponent(email)}&purpose=email_verification`);
-
-    } 
-    catch (error) 
-    {
-      if (error.response?.data) 
-      {
-        setFeedback({ type: "error", message: error.response.data.message || "Something went wrong" });
-      }
-      else
-      {
-        setFeedback({ type: "error", message: "Network error: Unable to reach server" });
-      }
-    }
-    finally
-    {
-      setLoading(true);
-    }
-  }
 
   const googleLogin = useGoogleLogin({
     onSuccess: async ({ code }) => {
@@ -201,7 +168,43 @@ function LoginPage()
       }
     },
   flow: 'auth-code',
-  });
+  });  
+  
+  const redirectActions = async (purpose) =>
+  {
+    try 
+    {
+      const {email} = formData; // destructure formData
+
+      setLoading(true);
+
+      const response = await axios.post(`${API_BASE}/api/users/getuseridbyemail`, 
+        {email: email}
+      );
+
+      const userId =  response.data.userId;
+      
+      await axios.post(`${BACKEND_URL}/api/mail/sendotp`, { userId: userId, email: email, purpose: purpose });
+
+      navigate(`/verify?userId=${userId}&email=${encodeURIComponent(email)}&purpose=${purpose}`);
+
+    } 
+    catch (error) 
+    {
+      if (error.response?.data) 
+      {
+        setFeedback({ type: "error", message: error.response.data.message || "Something went wrong" });
+      }
+      else
+      {
+        setFeedback({ type: "error", message: "Network error: Unable to reach server" });
+      }
+    }
+    finally
+    {
+      setLoading(false);
+    }
+  }
 
   function renderFeedback(fb) 
   {
@@ -212,19 +215,19 @@ function LoginPage()
 
         {fb.verifyLink && (
             <div>
-                <a onClick={verifyaccount} style={{ color: "blue" }}><FiMail/>Verify Account</a>
+                <a onClick={() => redirectActions("email_verification")} style={{ color: "blue" }}><FiMail/>Verify Account</a>
             </div>
         )}
 
         {fb.restoreLink && (
           <div>
-            <Link to = {fb.restoreLink}><FiRotateCcw/>Restore Account</Link>
+            <a onClick={() => redirectActions("restore_account")} ><FiRotateCcw/>Restore Account</a>
           </div>
         )}
 
         {fb.permanentDelete && (
           <div style={{ marginTop: "5px" }}>
-            <Link to = {fb.permanentDelete} style={{ color: "red" }}><FiTrash />Permanently Delete Account</Link>
+            <a onClick={() => redirectActions("permanently_delete_account")} style={{ color: "red" }}><FiTrash />Permanently Delete Account</a>
           </div>
         )}
       </div>

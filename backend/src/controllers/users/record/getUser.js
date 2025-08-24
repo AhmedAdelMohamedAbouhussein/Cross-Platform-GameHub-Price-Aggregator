@@ -19,7 +19,7 @@ export const getUserIdByEmail = async (req, res, next) =>
             return next(err);
         }
 
-        const user = await userModel.findOne({ email: email, isDeleted: false });
+        const user = await userModel.findOne({ email: email });
         if (!user) 
         {
             const err = new Error("User email not found");
@@ -69,96 +69,91 @@ export const getUserByID = async (req, res, next) =>
     }
 };
 
+const ONE_DAY = 1000 * 60 * 60 * 24;
+const SEVEN_DAYS = ONE_DAY * 7;
+
+export async function authenticateUser(email, password, rememberMe) {
+    if (!email || !password) 
+    {
+        throw { status: 400, message: "Email and password are required" };
+    }
+
+    // Check active user
+    const user = await userModel.findOne({ email, isDeleted: false }).select('+password');
+    if (user) 
+    {
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) throw { status: 401, message: "Invalid Password" };
+
+        if (user.isVerified === false) 
+        {
+            return {
+                status: 409,
+                data: {
+                    message: "Please verify your account to login",
+                    verifyLink: `/verify?userId=${user._id}&email=${encodeURIComponent(user.email)}&purpose=email_verification`,
+                }
+            };
+        }
+
+        return {
+            status: 200,
+            data: {userId: user._id, message: "User logged in successfully"}
+        };
+    }
+
+    // Check deleted user
+    const deletedUser = await userModel.findOne({ email, isDeleted: true });
+    if (deletedUser) 
+    {
+        return {
+            status: 409,
+            data: {
+                message: "This email is associated with a deleted account. Would you like to restore or permanently delete it?",
+                restoreLink: `/verify?userId=${deletedUser._id}&email=${encodeURIComponent(deletedUser.email)}&purpose=restore_account`,
+                permanentDelete: `/verify?userId=${deletedUser._id}&email=${encodeURIComponent(deletedUser.email)}&purpose=permanently_delete_account`,
+            }
+        };
+    }
+
+    throw { status: 404, message: "Invalid Email" };
+}
+
+
 // @desc   Login user
 // @route  POST /api/users/login
 export const loginUser = async (req, res, next) => 
 {
-    try 
+    try
     {
-        const email = req.body.email; 
-        const password = req.body.password;
-        const rememberMe = Boolean(req.body.rememberMe);
+        const { email, password, rememberMe } = req.body;
+        const result = await authenticateUser(email, password, rememberMe);
 
-        if (!email || !password) 
+        if (result.status === 200) 
         {
-        const err = new Error("Email and password are required");
-        err.status = 400;
-        return next(err);
-        }
-
-        const ONE_DAY = 1000 * 60 * 60 * 24;
-        const SEVEN_DAYS = ONE_DAY * 7;
-        
-        // Check active user
-        const user = await userModel.findOne({ email, isDeleted: false }).select('+password');
-
-        if (user) 
-        {
-            const isMatch = await user.comparePassword(password);
-            if (!isMatch) 
-            {
-                const err = new Error("Invalid Password");
-                err.status = 401;
-                return next(err);
-            }
-            
-            if(user.isVerified === false)
-            {
-                return res.status(409).json({
-                    message:
-                        "Please verify your account to login",
-                    verifyLink: `/verify?userId=${user._id}&email=${encodeURIComponent(user.email)}&purpose=email_verification`,
-            });
-            }
-
-            //req.session.isLoggedIn = true; //may use layter if i set cookies and sessions to guests
-            req.session.userId = user._id;
-            //req.session.role = user.role; //may use later if i add admin  
+            const { userId } = result.data;
+            req.session.userId = userId;
             req.session.cookie.maxAge = rememberMe ? SEVEN_DAYS : ONE_DAY;
 
             return req.session.save(err => 
             {
                 if (err) 
-                {
-                    console.error("Session save error:", err);
-                    const err = new Error("Failed to save session");
-                    return next(err);
+                { 
+                    console.error("Session save error:", err); 
+                    const err = new Error("Failed to save session"); 
+                    return next(err); 
                 }
-                return res.status(200).json({
-                    message: "Login successful redirecting to Landing Page......"
-                });
+                return res.status(200).json({ message: "Login successful redirecting to Landing Page......" });
             });
-        }
-
-        // Check deleted user
-        const deletedUser = await userModel.findOne({ email, isDeleted: true });
-        if (deletedUser) 
+        } 
+        else 
         {
-            const isMatch = await deletedUser.comparePassword(password);
-            if (!isMatch) 
-            {
-                const err = new Error("Invalid Password");
-                err.status = 401;
-                return next(err);
-            }
-
-            return res.status(409).json({
-                message:
-                    "This email is associated with a deleted account. Would you like to restore your old account or permanently delete it?",
-                restoreLink: `/verify?userId=${user._id}&email=${encodeURIComponent(user.email)}&purpose=restore_account`,
-                permanentDelete: `/verify?userId=${user._id}&email=${encodeURIComponent(user.email)}&purpose=permanently_delete_account`,
-            });
+            return res.status(result.status).json(result.data);
         }
-
-        // No user found at all
-        const err = new Error("Invalid Email");
-        err.status = 404;
-        return next(err);
-    }
+    } 
     catch (error) 
     {
         console.error(error);
-        const err = new Error("Error when trying to login");
-        return next(err);
+        return next(error);
     }
 };

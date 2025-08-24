@@ -18,6 +18,13 @@ export const verifyOtp = async (req, res, next) =>
             error.status = 400;
             return next(error);
         }
+
+        if (!["email_verification", "password_reset", "restore_account", "permanently_delete_account"].includes(purpose)) {
+            const error = new Error("Invalid OTP purpose");
+            error.status = 400;
+            return next(error);
+        }
+
         const user = await userModel.findById(userId);
         if(!user)
         {
@@ -75,11 +82,20 @@ export const verifyOtp = async (req, res, next) =>
             // Delete OTP after success
             await OtpSchema.deleteOne({ _id: userOtpVerification._id });
 
-            return res.json({
-                message: "Email verified successfully",
-                userId,
-                verified: true
+            req.session.userId = userId;
+            req.session.cookie.maxAge = 1000 * 60 * 60 * 24;
+
+            return req.session.save(err => 
+            {
+                if (err) 
+                { 
+                    console.error("Session save error:", err); 
+                    const err = new Error("Failed to save session"); 
+                    return next(err); 
+                }
+                return res.status(200).json({ message: "Email verified successfully, redirecting to Landing Page......" });
             });
+
         } 
         else if (purpose === "password_reset") 
         {
