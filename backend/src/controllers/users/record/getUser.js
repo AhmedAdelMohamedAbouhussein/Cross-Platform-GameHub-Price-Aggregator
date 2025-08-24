@@ -4,6 +4,39 @@ import config from '../../../config.js'
 const APP_BACKEND_URL = config.appUrl;
 const APP_FRONTEND_URL = config.frontendUrl;
 
+
+// @desc   Get user by ID
+// @route  POST /api/users/getuseridbyemail
+export const getUserIdByEmail = async (req, res, next) => 
+{
+    try 
+    {
+        const email = req.body.email;
+        if (!email) 
+        {
+            const err = new Error("User Email is required");
+            err.status = 400;
+            return next(err);
+        }
+
+        const user = await userModel.findOne({ email: email, isDeleted: false });
+        if (!user) 
+        {
+            const err = new Error("User email not found");
+            err.status = 404;
+            return next(err);
+        }
+
+        res.status(200).json({userId: user._id});
+    } 
+    catch (error) 
+    {
+        console.error(error);
+        const err = new Error("Wasn't able to get user");
+        next(err);
+    }
+};
+
 // @desc   Get user by ID
 // @route  GET /api/users/getbyid/:id
 export const getUserByID = async (req, res, next) => 
@@ -74,7 +107,7 @@ export const loginUser = async (req, res, next) =>
                 return res.status(409).json({
                     message:
                         "Please verify your account to login",
-                    verifyLink: `/verifyaccount?userId=${user._id}&email=${encodeURIComponent(user.email)}&purpose=email_verification`,
+                    verifyLink: `/verify?userId=${user._id}&email=${encodeURIComponent(user.email)}&purpose=email_verification`,
             });
             }
 
@@ -112,8 +145,8 @@ export const loginUser = async (req, res, next) =>
             return res.status(409).json({
                 message:
                     "This email is associated with a deleted account. Would you like to restore your old account or permanently delete it?",
-                restoreLink: `${APP_BACKEND_URL}/api/users/${email}/restore`,
-                permanentDelete: `${APP_BACKEND_URL}/api/users/${email}/permanentDelete`,
+                restoreLink: `/verify?userId=${user._id}&email=${encodeURIComponent(user.email)}&purpose=restore_account`,
+                permanentDelete: `/verify?userId=${user._id}&email=${encodeURIComponent(user.email)}&purpose=permanently_delete_account`,
             });
         }
 

@@ -1,9 +1,9 @@
-import userModel from "../models/User.js";
-import PasswordResetToken from "../models/PasswordResetToken.js";
+import userModel from "../../models/User.js";
+import PasswordResetToken from "../../models/PasswordResetToken.js";
 
 // @desc   Reset password using token
-// @route  POST /api/auth/reset-password
-export const resetPassword = async (req, res) => 
+// @route  POST /api/auth/resetpassword
+export const resetPassword = async (req, res, next) => 
 {
     try 
     {
@@ -13,22 +13,26 @@ export const resetPassword = async (req, res) =>
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
         if (!passwordRegex.test(newPassword)) 
         {
-            return res.status(400).json({
-            message: "Password must be at least 8 characters long, contain one uppercase letter, one lowercase letter, and one number.",
-            });
+            const error = new Error("Password must be at least 8 characters long, contain one uppercase letter, one lowercase letter, and one number.");
+            error.status = 400;
+            return next(error);
         }
 
         const user = await userModel.findById(userId);
         if (!user || user.isDeleted === true) 
         {
-            return res.status(404).json({ message: "User not found or inactive." });
+            const error = new Error("User not found or inactive.");
+            error.status = 404;
+            return next(error);
         }
 
         // Find token doc
         const tokenDoc = await PasswordResetToken.findOne({ userId }).sort({ createdAt: -1 });
         if (!tokenDoc) 
         {
-            return res.status(400).json({ message: "Invalid or expired reset token." });
+            const error = new Error("Invalid or expired reset token.");
+            error.status = 400;
+            return next(error);
         }
         else
         {
@@ -43,12 +47,13 @@ export const resetPassword = async (req, res) =>
             }
         }
 
-
         // Compare provided token with hashed one
         const isValid = await tokenDoc.compareToken(token);
         if (!isValid) 
         {
-            return res.status(400).json({ message: "Invalid reset token." });
+            const error = new Error("Invalid reset token.");
+            error.status = 400;
+            return next(error);
         }
 
         // Update user password

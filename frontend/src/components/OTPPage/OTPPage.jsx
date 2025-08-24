@@ -10,7 +10,7 @@ function OTPPage()
 {
     const [searchParams] = useSearchParams();
     const userId = searchParams.get("userId");
-    const email = searchParams.get("email");
+    const email = decodeURIComponent(searchParams.get("email"));
     const purpose = searchParams.get("purpose")
 
     const [otp, setOtp] = useState("");          
@@ -95,24 +95,24 @@ function OTPPage()
         {
             const res = await axios.post(`${BACKEND_URL}/api/mail/verifyotp`, { userId: userId, otp: otp, purpose: purpose });
             setFeedback(res.data.message || "OTP verified successfully!");
-
+            
+            if (purpose === "password_reset") 
+            {
+                navigate(`/resetpassword?userId=${res.data.userId}&token=${encodeURIComponent(res.data.resetToken)}`, { replace: true });
+            }
             setTimeout(() => 
             {
                 if (purpose === "email_verification") 
                 {
                     navigate("/login", { replace: true });
                 } 
-                else if (purpose === "reset_password") 
-                {
-                    navigate(`/resetpassword?userId=${res.data.userId}&token=${res.data.resetToken}`, { replace: true });
-                }
                 else if (purpose === "restore_account") 
                 {
-                    navigate(`/resetpassword?userId=${res.data.userId}&token=${res.data.resetToken}`, { replace: true });
+                    //
                 }
                 else if (purpose === "permanently_delete_account") 
                 {
-                    navigate(`/resetpassword?userId=${userId}`, { replace: true });
+                    //
                 }
             }, 1500);
         } 
@@ -143,7 +143,7 @@ function OTPPage()
                     <button onClick={handleSubmitOtp} className={styles.button} disabled={loading}>Submit OTP</button>
                 </div>
 
-                {feedback && <p className={styles.feedback}>{feedback}</p>}
+                {feedback && <p className={styles.feedback} style={{color: feedback.type==="error" ? "red" : "green"}}>{feedback.message}</p>}
             </div>
         </div>
     );

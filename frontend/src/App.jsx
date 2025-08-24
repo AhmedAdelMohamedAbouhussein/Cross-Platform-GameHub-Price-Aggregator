@@ -5,7 +5,8 @@ import AuthContext from "./contexts/AuthContext";
 import LandingPage from "./components/LandingPage/LandingPage";
 import LoginPage from "./components/LoginPage/LoginPage";
 import SignupPage from "./components/SignupPage/SignupPage";
-import Verify from './components/OTPPage/OTPPage'
+import Verify from './components/OTPPage/OTPPage';
+import ResetPassword from './components/ResetPassword/ResetPassword'
 
 import GamePage from "./components/GamePage/gamePage";
 import MainPage from "./components/LibraryPage/LibraryPage";
@@ -21,6 +22,7 @@ function App()
         <Route path="/" element = {<LandingPage />}/>
         <Route path="/games/:gameName" element = {<GamePage />}/>
         <Route path="/verify" element={<Verify />} />
+        <Route path="/resetpassword" element={<ResetPassword/>} />
 
         {/* Auth pages */}
         <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" replace />}/>

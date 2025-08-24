@@ -18,14 +18,12 @@ export const verifyOtp = async (req, res, next) =>
             error.status = 400;
             return next(error);
         }
-
-        if (purpose === "email_verification") 
+        const user = await userModel.findById(userId);
+        if(!user)
         {
-            const user = await userModel.findById(userId);
-            if(user.isVerified)
-            {
-                return res.json({ message: "user already verified", verified: true});
-            }
+            const error = new Error("Invalid user ID");
+            error.status = 400;
+            return next(error);
         }
 
         const userOtpVerification = await OtpSchema.findOne({ userId, purpose: purpose }) .sort({ createdAt: -1 });
@@ -62,11 +60,7 @@ export const verifyOtp = async (req, res, next) =>
         if (!isMatch) 
         {
             // Increment attempts
-            await OtpSchema.updateOne(
-                { _id: userOtpVerification._id },
-                { $inc: { attempts: 1 } }
-            );
-
+            await OtpSchema.updateOne({ _id: userOtpVerification._id }, { $inc: { attempts: 1 } });
 
             const error = new Error(`Invalid OTP. You have ${5 - userOtpVerification.attempts - 1} attempts left.`);
             error.status = 401;
@@ -125,7 +119,7 @@ export const verifyOtp = async (req, res, next) =>
         }
         else if (purpose === "permanently_delete_account") 
         {
-            await userModel.findByIdAndDelete(userId);
+            await userModel.deleteOne({_id: userId});
         
             // Delete OTP after success
             await OtpSchema.deleteOne({ _id: userOtpVerification._id });

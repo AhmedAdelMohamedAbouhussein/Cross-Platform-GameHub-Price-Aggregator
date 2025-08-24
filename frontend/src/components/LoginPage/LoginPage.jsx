@@ -9,6 +9,7 @@ import styles from "./LoginPage.module.css";
 import Header from "../Header/Header.jsx";
 import Footer from "../Footer/Footer.jsx";
 import AuthContext from "../../contexts/AuthContext.jsx";
+import LoadingScreen from "../LoadingScreen/LoadingScreen.jsx";
 
 function LoginPage() 
 {
@@ -28,6 +29,7 @@ function LoginPage()
   const [isChecked, setIsChecked] = useState(false);
   const [feedback, setFeedback] = useState(null); // holds {type, message, redirectLink?, permanentDelete?}
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => 
   {
@@ -51,13 +53,14 @@ function LoginPage()
     
     try 
     {
+      setLoading(true);
+      
       const response = await axios.post(`${API_BASE}/api/users/login`, 
         {email: email.trim(), password: password , rememberMe: isChecked},
         { withCredentials: true } // 🔑 so cookies/sessions work
       );
       
       handleLoginSuccess(response.data.message);
-      
     }
     catch (error) 
     {
@@ -88,17 +91,86 @@ function LoginPage()
         });
       }
     }
+    finally
+    {
+      setLoading(false);
+    }
   };
 
-  const resetPassword = () =>
+  const resetPassword = async () =>
   {
-    
+    try 
+    {
+      const {email} = formData; // destructure formData
+
+      setLoading(true)
+      const response = await axios.post(`${API_BASE}/api/users/getuseridbyemail`, 
+        {email: email}
+      );
+
+      const userId =  response.data.userId;
+      
+      await axios.post(`${BACKEND_URL}/api/mail/sendotp`, { userId, email, purpose: "password_reset"  });
+
+      navigate(`/verify?userId=${userId}&email=${encodeURIComponent(email)}&purpose=password_reset`);
+
+    } 
+    catch (error) 
+    {
+      if (error.response?.data) 
+      {
+        setFeedback({ type: "error", message: error.response.data.message || "Something went wrong" });
+      }
+      else
+      {
+        setFeedback({ type: "error", message: "Network error: Unable to reach server" });
+      }
+    }
+    finally
+    {
+      setLoading(false)
+    }
+  }
+  const verifyaccount = async () =>
+  {
+    try 
+    {
+      const {email} = formData; // destructure formData
+
+      setLoading(true)
+      const response = await axios.post(`${API_BASE}/api/users/getuseridbyemail`, 
+        {email: email}
+      );
+
+      const userId =  response.data.userId;
+      
+      await axios.post(`${BACKEND_URL}/api/mail/sendotp`, { userId, email, purpose: "email_verification"  });
+
+      navigate(`/verify?userId=${userId}&email=${encodeURIComponent(email)}&purpose=email_verification`);
+
+    } 
+    catch (error) 
+    {
+      if (error.response?.data) 
+      {
+        setFeedback({ type: "error", message: error.response.data.message || "Something went wrong" });
+      }
+      else
+      {
+        setFeedback({ type: "error", message: "Network error: Unable to reach server" });
+      }
+    }
+    finally
+    {
+      setLoading(true);
+    }
   }
 
   const googleLogin = useGoogleLogin({
     onSuccess: async ({ code }) => {
       try 
       {
+        setLoading(true)
         const response = await axios.post(`${API_BASE}/api/auth/google/login`, 
           {code, rememberMe: isChecked},
           { withCredentials: true } // 🔑 so cookies/sessions work
@@ -123,6 +195,10 @@ function LoginPage()
           });
         }
       }
+      finally
+      {
+        setLoading(false);
+      }
     },
   flow: 'auth-code',
   });
@@ -132,11 +208,11 @@ function LoginPage()
     if (!fb) return null;
     return (
       <div style={{ color: fb.type === "error" ? "red" : "green" }}>
-        <p>{fb.message}</p>
+        <p className={styles.feedback}>{fb.message}</p>
 
         {fb.verifyLink && (
             <div>
-                <Link to = {fb.verifyLink} style={{ color: "blue" }}><FiMail/>Verify Account</Link>
+                <a onClick={verifyaccount} style={{ color: "blue" }}><FiMail/>Verify Account</a>
             </div>
         )}
 
@@ -160,6 +236,11 @@ function LoginPage()
     setIsChecked(e.target.checked);
   }
 
+    if (loading) 
+    {
+        return <LoadingScreen />;
+    }
+
   return (
     <>
       <Header />
@@ -169,7 +250,7 @@ function LoginPage()
           <input type="email" name="email" placeholder="Email" className={styles.input} value={formData.email} onChange={handleChange} required/>
           
           <div className={styles.passwordWrapper}>
-            <input type={showPassword ? "text" : "password"} name="password" placeholder="Password" className={styles.passwordInput} value={formData.password} onChange={handleChange} required/>
+            <input type={showPassword ? "text" : "password"} name="password" placeholder="Password" className={styles.passwordInput} value={formData.password} onChange={handleChange} required maxLength={50} minLength={8}/>
             <button type="button" className={styles.passwordToggle} onClick={() => setShowPassword((prev) => !prev)}>{showPassword ? <FiEyeOff /> : <FiEye />}</button>
           </div>
           

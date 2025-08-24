@@ -9,15 +9,30 @@ export const addUser = async (req, res, next) =>
 {
     try 
     {
-        const { email, name } = req.body;
+        const { email, name, password } = req.body;
 
-        if (!email || !name) 
+        if (!name) 
         {
-            const err = new Error("Email and name are required");
+            const err = new Error("Name is required");
             err.status = 400;
             return next(err);
         }
-        
+        const emailRegex = /^\S+@\S+\.\S+$/;
+        if (!emailRegex.test(email)) 
+        {
+            const error = new Error("Invalid email format.");
+            error.status = 400;
+            return next(error);
+        }
+
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(password)) 
+        {
+            const error = new Error("Password must be at least 8 characters long, contain one uppercase letter, one lowercase letter, and one number.");
+            error.status = 400;
+            return next(error);
+        }
+
         const APP_BACKEND_URL = config.appUrl
 
         // Check if an active user already exists
@@ -33,8 +48,12 @@ export const addUser = async (req, res, next) =>
         const deletedUser = await userModel.findOne({ email, isDeleted: true });
         if (deletedUser) 
         {
-            // Send a friendly message suggesting restore
-            return res.status(409).json( {message: "This email is associated with a deleted account. Would you like to restore your old account or permanently delete it?", restoreLink: `${APP_BACKEND_URL}/api/users/${email}/restore`, permanentDelete: `${APP_BACKEND_URL}/api/users/${email}/permanentDelete`});
+            return res.status(409).json({
+                message:
+                    "This email is associated with a deleted account. Would you like to restore your old account or permanently delete it?",
+                restoreLink: `/verify?userId=${deletedUser._id}&email=${encodeURIComponent(deletedUser.email)}&purpose=restore_account`,
+                permanentDelete: `/verify?userId=${deletedUser._id}&email=${encodeURIComponent(deletedUser.email)}&purpose=permanently_delete_account`,
+            });
         }
 
         // Otherwise, create new user
@@ -51,27 +70,3 @@ export const addUser = async (req, res, next) =>
         next(error);
     }
 }
-
-// @desc  
-// @route  PATCH /api/users/:email/restore
-export const restoreUser = async (req, res, next) => 
-{
-    try {
-        const { email } = req.params;
-
-        const deletedUser = await userModel.findOne({ email, isDeleted: true });
-        if (!deletedUser) 
-        {
-            return res.status(404).json({ message: "Deleted user not found" });
-        }
-
-        const restoredUser = await userModel.findOneAndUpdate({email: email },{ $set: { isDeleted: false, ...req.body } },{ new: true });
-
-        res.status(200).json( {message: "User restored successfully", user: restoredUser});
-    } 
-    catch (error) 
-    {
-        console.error(error);
-        next(new Error("Error when trying to restore user"));
-    }
-};

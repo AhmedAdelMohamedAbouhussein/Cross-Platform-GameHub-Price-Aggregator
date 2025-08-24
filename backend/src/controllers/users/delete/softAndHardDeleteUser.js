@@ -30,25 +30,3 @@ export const softDeletUser = async (req, res, next) =>
         next(err);
     }
 }
-// @desc   
-// @route  PATCH /api/users/:email/permanentDelete
-export const hardDeleteUser = async (req, res, next) => {
-    try {
-        const { email } = req.params;
-
-        // Find the user first
-        const user = await userModel.findOne({ email, isDeleted: true });
-        if (!user) {
-            return res.status(404).json({ message: "Deleted user not found" });
-        }
-
-        // Call deleteOne on the document instance to trigger pre('deleteOne') middleware
-        await user.deleteOne();
-
-        res.status(200).json({ message: "User permanently deleted successfully", email });
-    } 
-    catch (error) {
-        console.error(error);
-        next(new Error("Error when trying to permanently delete user"));
-    }
-}

@@ -8,6 +8,7 @@ import { FiEye, FiEyeOff, FiRotateCcw, FiTrash} from "react-icons/fi";
 import styles from "./SignupPage.module.css"; 
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
+import LoadingScreen from "../LoadingScreen/LoadingScreen.jsx";
 
 function SignupPage() 
 {
@@ -17,6 +18,7 @@ function SignupPage()
   const [formData, setFormData] = useState({ username: "", email: "", password: ""});
   const [feedback, setFeedback] = useState(null); // holds {type, message, redirectLink?, permanentDelete?}
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => 
   {
@@ -60,6 +62,7 @@ function SignupPage()
 
     try 
     {
+      setLoading(true);
       const response = await axios.post(`${BACKEND_URL}/api/users/adduser`, {
         name: username,
         email: email,
@@ -70,7 +73,7 @@ function SignupPage()
       const userId =  response.data.userId;
 
       setFeedback({ type: "success", message: message || "User signed up successfully redirecting to verification Page....." });
-      setTimeout(() => { navigate(`/verifyaccount?userId=${userId}&email=${encodeURIComponent(email)}&purpose=email_verification`); }, 2000);
+      setTimeout(() => { navigate(`/verify?userId=${userId}&email=${encodeURIComponent(email)}&purpose=email_verification`); }, 2000);
       console.log('Signup success:', message);
 
     }
@@ -91,12 +94,17 @@ function SignupPage()
         });
       }
     }
+    finally
+    {
+      setLoading(false);
+    }
   }
 
   const googleLogin = useGoogleLogin({
     onSuccess: async ({ code }) => {
       try 
       {
+        setLoading(true)
         const response = await axios.post(`${BACKEND_URL}/api/auth/google/signup`, {
           code,
         });
@@ -124,15 +132,21 @@ function SignupPage()
           });
         }
       }
+      finally
+      {
+        setLoading(false);
+      }
     },
   flow: 'auth-code',
   });
 
-  function renderFeedback(fb) {
+
+  function renderFeedback(fb) 
+  {
     if (!fb) return null;
     return (
       <div style={{ color: fb.type === "error" ? "red" : "green" }}>
-        <p>{fb.message}</p>
+        <p className={styles.feedback}>{fb.message}</p>
 
         {fb.restoreLink && (
           <div>
@@ -149,16 +163,21 @@ function SignupPage()
     );
   }
 
+  if (loading) 
+  {
+      return <LoadingScreen />;
+  }
+
   return (
     <>
       <Header />
       <div className={styles.signupContainer}>
         <form className={styles.signupForm} onSubmit={handleSubmit}>
           <h2 className={styles.signupTitle}>Sign Up</h2>
-          <input type="text" name="username" placeholder="Username" className={styles.signupInput} value={formData.username} onChange={handleChange} required/>
+          <input type="text" name="username" placeholder="Username" className={styles.signupInput} value={formData.username} onChange={handleChange} required minLength={2} maxLength={50}/>
           <input type="email" name="email" placeholder="Email" className={styles.signupInput} value={formData.email} onChange={handleChange} required/>
           <div className={styles.passwordWrapper}>
-            <input type={showPassword ? "text" : "password"} name="password" placeholder="Password" className={styles.passwordInput} value={formData.password} onChange={handleChange} required/>
+            <input type={showPassword ? "text" : "password"} name="password" placeholder="Password" className={styles.passwordInput} value={formData.password} onChange={handleChange} required minLength={8} maxLength={50}/>
             <button type="button" className={styles.passwordToggle} onClick={() => setShowPassword((prev) => !prev)}>{showPassword ? <FiEyeOff /> : <FiEye />}</button>
           </div>
 
