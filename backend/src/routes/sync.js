@@ -1,5 +1,5 @@
 import express from 'express';
-import { syncWithSteam } from '../controllers/sync.js';
+import { syncWithSteam, steamReturn } from '../controllers/sync.js';
 
 const router = express.Router();
 
@@ -8,5 +8,6 @@ router.get('/', (req, res) => {
 });
 
 router.get('/steam', syncWithSteam)
+router.get('/steam/return', steamReturn)
 
 export default router;

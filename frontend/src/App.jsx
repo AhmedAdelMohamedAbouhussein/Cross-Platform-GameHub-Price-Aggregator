@@ -7,9 +7,11 @@ import LoginPage from "./components/LoginPage/LoginPage";
 import SignupPage from "./components/SignupPage/SignupPage";
 import Verify from './components/OTPPage/OTPPage';
 import ResetPassword from './components/ResetPassword/ResetPassword'
+import SyncWithSteam from "./components/SyncWithSteam/SyncWithSteam";
+import SyncWithXbox from "./components/SyncWithXbox/SyncWithXbox";
 
 import GamePage from "./components/GamePage/gamePage";
-import MainPage from "./components/LibraryPage/LibraryPage";
+import LibraryPage from "./components/LibraryPage/LibraryPage";
 
 function App() 
 {
@@ -29,7 +31,9 @@ function App()
         <Route path="/signup" element={!user ? <SignupPage /> : <Navigate to="/" replace />}/>
 
         {/* Private pages */}
-        <Route path="/library" element={user ? <MainPage /> : <Navigate to="/login" replace state={{ from: location }} />}/> //TODO
+        <Route path="/library" element={user ? <LibraryPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
+        <Route path="/library/sync/steam" element={user ? <SyncWithSteam /> : <Navigate to="/login" replace state={{ from: location }} />}/>
+        <Route path="/library/sync/xbox" element={user ? <SyncWithXbox /> : <Navigate to="/login" replace state={{ from: location }} />}/>
     </Routes>
     );
 }

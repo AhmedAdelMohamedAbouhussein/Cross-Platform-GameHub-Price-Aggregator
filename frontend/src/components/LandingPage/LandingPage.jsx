@@ -70,13 +70,13 @@ function LandingPage()
           <p className={styles.subtitle}>Manage your games and explore their features</p>
 
           <div className={styles.cardContainer}>
-            <div className={styles.card} onClick={() => navigate("/mygames")}>
+            <div className={styles.card} onClick={() => navigate("/library")}>
               <div className={styles.cardIcon}>📚</div>
               <h2>My GameHub</h2>
               <p>View and manage your owned games in a personalized hub</p>
             </div>
 
-            <div className={styles.card} onClick={() => navigate("/library")}>
+            <div className={styles.card} onClick={() => navigate("/games")}>
               <div className={styles.cardIcon}>🎮</div>
               <h2>Browse Game</h2>
               <p>Browse games across platforms and compare prices</p>

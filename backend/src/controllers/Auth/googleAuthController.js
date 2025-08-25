@@ -67,7 +67,7 @@ export const googleLogin = async (req, res, next) =>
         }
 
         // No user found at all
-        const err = new Error("Invalid Email");
+        const err = new Error("Invalid Email. Please login if you dont have an account");
         err.status = 404;
         return next(err);
 

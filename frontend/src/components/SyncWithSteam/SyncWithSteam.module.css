@@ -1,0 +1,41 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Arial', sans-serif; /* Modern font */
+    background:  #1a252f;
+}
+
+.body {
+    display: flex;
+    flex: 1;
+    transition: all 0.3s ease;
+}
+
+.main {
+    flex: 1;
+    padding: 20px;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+.buttonContainer
+{
+    margin: 50px;
+}
+
+.button {
+    flex: 1;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    background: #ff4757;
+    color: white;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
