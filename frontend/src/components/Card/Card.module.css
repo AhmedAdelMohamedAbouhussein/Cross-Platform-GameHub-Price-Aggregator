@@ -11,8 +11,8 @@
     margin: 10px;
     text-align: center;
     min-height: 350px;
-    min-width: 250px; 
-    max-width: 250px;
+    min-width: 310px;
+    max-width: 310px;
     transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 

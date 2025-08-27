@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
 import config from '../config.js';
+import { platform, type } from 'os';
 
 const algorithm = config.security.algorithm;
 const ENCRYPTION_KEY = Buffer.from(config.security.encryptionKey, 'hex'); // 32 bytes key
@@ -102,6 +103,10 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    xboxGamertag: {
+        type: String,
+        default: null // optional, but nice to cache locally
+    },
     xboxAccessToken: { 
         type: String, 
         set: encrypt, 
@@ -116,11 +121,51 @@ const UserSchema = new mongoose.Schema({
         default: null,
         select: false
     },
+    xboxTokenExpiresAt: { 
+        type: Date, 
+        default: null
+    },
     signupDate: { 
         type: Date, 
         default: Date.now 
     },
-    ownedGames: [{ type: String }],
+    ownedGames: [
+    {
+        gameName: {
+            type: String,
+            required: true,
+        },
+        gameId: {
+            type: Number,
+            required: true,
+        },
+        platform: {
+            type: String,
+            required: true,
+        },
+            coverImage: {
+            type: String, // URL to the game's cover image
+            default: null,
+        },
+            progress: {
+            type: Number, // Percentage completion 0-100
+            default: 0,
+            min: 0,
+            max: 100,
+        },
+        achievements: [
+            {
+                title: { type: String },
+                description: { type: String },
+                unlocked: { type: Boolean, default: false },
+                dateUnlocked: { type: Date }
+            }
+        ],
+        lastPlayed: {
+            type: Date,
+            default: null
+        }
+    }],
     wishlist: [{ type: String }],
     friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     resendCount: {

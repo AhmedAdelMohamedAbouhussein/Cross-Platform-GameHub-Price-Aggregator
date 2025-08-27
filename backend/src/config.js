@@ -9,6 +9,7 @@ export default
     port: process.env.PORT,
     appUrl: process.env.APP_BACKEND_URL,
     mongoLocal: process.env.LOCAL_MONGO_URL,
+    xboxRedirectURL: process.env.APP_BACKEND_URL + process.env.XBOX_REDIRECT_URI,
     mongoAtlas:
     {
         url: process.env.MONGO_ATLAS_URL,
@@ -46,5 +47,11 @@ export default
     {
         gmail: process.env.GMAIL,
         password: process.env.GMAIL_PASSWORD
+    },
+    azure:
+    {
+        clientId: process.env.AZURE_ClIENT_ID,
+        tenantId: process.env.AZURE_TENANT_ID,
+        clientSecret: process.env.AZURE_ClIENT_SECRET,
     }
 };
