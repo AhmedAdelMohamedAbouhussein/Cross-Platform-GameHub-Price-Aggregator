@@ -1,5 +1,6 @@
 .stickyHeader {
     /*position: sticky;*/
+    width: auto;
     top: 0;
     background: #23313f;
     padding: 10px 20px;
