@@ -76,6 +76,18 @@ export const syncWithSteam = async (req, res, next) =>
     }
 }
 
+// Helper: convert minutes to "Xh Ym Zs"
+function formatPlaytime(minutes) {
+  if (!minutes || minutes <= 0) return "0h 0m 0s";
+
+  const totalSeconds = minutes * 60;
+  const hours = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+
+  return `${hours}h ${mins}m ${secs}s`;
+}
+
 // ✅ Fetch owned games
 export async function getOwnedGames(userId, steamId) 
 {
@@ -96,6 +108,7 @@ export async function getOwnedGames(userId, steamId)
     gameName: game.name,
     gameId: game.appid,
     platform: "steam",
+    hoursPlayed: formatPlaytime(game.playtime_forever), // ✅ save as string
     coverImage: `https://steamcdn-a.akamaihd.net/steam/apps/${game.appid}/header.jpg`,
     progress: null,
     achievements: [],

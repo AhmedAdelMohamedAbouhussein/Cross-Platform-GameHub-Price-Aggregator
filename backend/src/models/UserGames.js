@@ -16,6 +16,9 @@ const userGameSchema = new mongoose.Schema({
             type: String,
             required: true,
         },
+        hoursPlayed:{
+            type: String,
+        },
         coverImage: {
             type: String, // URL to the game's cover image
             default: null,

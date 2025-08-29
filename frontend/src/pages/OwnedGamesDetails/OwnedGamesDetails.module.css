@@ -19,7 +19,7 @@
     background: #162028; /* subtle card background */
     padding: 20px;
     border-radius: 16px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    box-shadow: 20px 20px 20px rgba(0, 0, 0, 0.6);
 }
 
 .info {
@@ -33,12 +33,10 @@
     font-size: 2.2rem;
     font-weight: bold;
     margin-bottom: 15px;
-    color: #ffd700;
+    color: yellow;
 }
 
 .top img {
-
-    height: auto;
     border-radius: 12px;
     box-shadow: 0 0 20px rgba(0,0,0,0.6);
 }
@@ -65,20 +63,20 @@
 }
 
 .storeLink:hover {
-    color: #63b3ed;
-}
-
-.platform {
-    font-style: italic;
-    margin-bottom: 20px;
+    color: #ffd700;
 }
 
 /* Achievement container now allows two items per row */
-.achContainer {
+.achContainer 
+{
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
     width: 100%;
+        background: #162028; /* subtle card background */
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 20px 20px 20px rgba(0, 0, 0, 0.6);
 }
 
 .achBar {

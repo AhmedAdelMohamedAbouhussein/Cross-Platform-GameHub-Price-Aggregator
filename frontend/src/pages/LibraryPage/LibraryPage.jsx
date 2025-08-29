@@ -38,6 +38,7 @@ function LibraryPage() {
           title={game.gameName}
           progress={game.progress}
           lastPlayed={game.lastPlayed}
+          hoursPlayed={game.hoursPlayed}
         />
       ));
     });

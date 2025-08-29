@@ -15,6 +15,8 @@ function Card(props)
     const progress = props.progress;
     const lastPlayed = props.lastPlayed ? new Date(props.lastPlayed).toLocaleDateString() : "Game hasn't been played";
 
+    const hoursPlayed = props.hoursPlayed;
+
     const navigate = useNavigate()
     const cardRef = useRef(null);
     const [isVisible, setIsVisible] = useState(false);
@@ -60,6 +62,7 @@ function Card(props)
                 <div className={styles.defaultOverlay}>
                     <p>Hover to see progress</p>
                 </div>
+                <p>Total Hours: {hoursPlayed}</p>
                 <p>Last Played: {lastPlayed}</p>
             </>
             ) : (

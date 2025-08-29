@@ -16,6 +16,35 @@ function OwnedGamesDetails()
     const {user} = useContext(AuthContext);
     const game = user.ownedGames?.[platform]?.[id];
 
+    let lastPlayed;
+
+    if(game.lastPlayed)
+    {
+        lastPlayed = formatDate(game.lastPlayed)
+    }
+    else
+    {
+        lastPlayed = "Game hasn't been played";
+    }
+
+    function formatDate (dateUnlocked)
+    {
+        const date = new Date(dateUnlocked);
+        if (!isNaN(date.getTime())) 
+        {
+            const formattedDate = `${date.toLocaleString("en-GB", 
+            {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+            })}`;
+                return formattedDate
+        }
+    }
+
     function renderAchievements()
     {
         return game.achievements.map((ach, index) => 
@@ -24,20 +53,9 @@ function OwnedGamesDetails()
 
             if (ach.unlocked && ach.dateUnlocked) 
             {
-                const date = new Date(ach.dateUnlocked);
-                if (!isNaN(date.getTime())) 
-                {
-                    formattedDate = `Unlocked on ${date.toLocaleString("en-GB", 
-                    {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                    })}`;
-                }
+                formattedDate = formatDate(ach.dateUnlocked)
             }
+            
 
             return (
                 <div className={Styles.achBar} key={index} style={{background: ach.unlocked ? "#0c3718" : "#4f0f0d"}}>
@@ -47,7 +65,7 @@ function OwnedGamesDetails()
                     <div className={Styles.achText}>
                         <h2>{ach.title}</h2>
                         <p>{ach.description}</p>
-                        <p className="date">{formattedDate}</p>
+                        <p className="date">Unlocked on: {formattedDate}</p>
                     </div>
                 </div>
             );
@@ -69,9 +87,14 @@ function OwnedGamesDetails()
                             <label>Open Game at Steam WebSite: </label>
                             <a className={Styles.storeLink} onClick={()=> window.location.href = ` steam://store/${id}`}>Steam WebSite</a>
                         </div>
-                        <p className={Styles.platform}>You bought the game on: {platform}</p>
+                        <p>You bought the game on: <strong style={{color: "yellow"}}>{platform}</strong></p>
+                        <p>Total hours played <strong style={{color: "yellow"}}>{game.hoursPlayed}</strong></p>
+                        <p>Last played: <strong style={{color: "yellow"}}>{lastPlayed}</strong></p>
                     </div>
-                    <img src={game.coverImage} alt={game.gameName} />
+                    <div className={Styles.imgContainer}>
+                        <img src={game.coverImage} alt={game.gameName} loading="lazy" />
+                    </div>
+                    
                 </div>
                 <div className={Styles.achContainer}>
                     {renderAchievements()}

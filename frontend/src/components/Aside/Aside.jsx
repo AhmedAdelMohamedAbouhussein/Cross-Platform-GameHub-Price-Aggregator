@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import styles from './Aside.module.css';
 import AuthContext from "../../contexts/AuthContext";  // <-- your auth provider
 import { FaCaretLeft, FaSteam, FaXbox, FaGamepad, FaComments, FaUserFriends, FaCaretRight } from "react-icons/fa";
+import { SiEpicgames, SiGogdotcom, SiNintendo, SiPlaystation  } from 'react-icons/si';
 
 function Aside() {
   const { user } = useContext(AuthContext); // <-- access logged-in user
@@ -52,8 +53,24 @@ function Aside() {
               <Link className={styles.links} to= "/library/sync/steam">Sync with Steam</Link>
             </li>
             <li className={styles.listitems}>
+              <SiEpicgames className={styles.icon}/>
+              <Link className={styles.links} to= "/library/sync/epic">Sync with Epic</Link>
+            </li>
+            <li className={styles.listitems}>
+              <SiPlaystation className={styles.icon}/>
+              <Link className={styles.links} to= "/library/sync/playstation">Sync with Playstation</Link>
+            </li>
+            <li className={styles.listitems}>
               <FaXbox className={styles.icon}/>
-              <Link className={styles.links} to= "/library/sync/xbox">Sync with Xbox</Link>
+              <Link className={styles.links} to= "/library/sync/xbox">Sync with Xbox Live</Link>
+            </li>
+            <li className={styles.listitems}>
+              <SiNintendo className={styles.icon}/>
+              <Link className={styles.links} to= "/library/sync/nintendo">Sync with Nintendo</Link>
+            </li>
+            <li className={styles.listitems}>
+              <SiGogdotcom className={styles.icon}/>
+              <Link className={styles.links} to= "/library/sync/gog">Sync with GOG</Link>
             </li>
           </ul>
         </div>
