@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 
 import styles from "./OTPPage.module.css";
-import LoadingScreen from "../LoadingScreen/LoadingScreen";
+import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
 import AuthContext from "../../contexts/AuthContext.jsx";
 
 function OTPPage() 

@@ -1,0 +1,130 @@
+.container {
+    row-gap: 30px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Arial', sans-serif;
+    background: #1a252f;
+    color: white;
+}
+
+.top {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items:center;
+    gap: 30px;
+    width: 100%;
+    flex-wrap: wrap;
+    background: #162028; /* subtle card background */
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1; /* takes remaining space */
+}
+
+.info h1 {
+    font-size: 2.2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #ffd700;
+}
+
+.top img {
+
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+}
+
+.page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    width: 100%;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.gameTitle {
+    font-size: 2.2rem;
+    font-weight: bold;
+}
+
+.storeLink {
+    color: #1e90ff;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.storeLink:hover {
+    color: #63b3ed;
+}
+
+.platform {
+    font-style: italic;
+    margin-bottom: 20px;
+}
+
+/* Achievement container now allows two items per row */
+.achContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+.achBar {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    background: #4f0f0d;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.achBar:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+}
+
+.achIcon {
+    font-size: 2rem;
+    min-width: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.achText {
+    display: flex;
+    flex-direction: column;
+}
+
+.achText h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #ffd700; /* Gold-ish title */
+}
+
+.achText p {
+    margin: 3px 0;
+    font-size: 0.9rem;
+    color: #d0d0d0;
+}
+
+.achText p.date {
+    font-style: italic;
+    font-size: 0.85rem;
+    color: #a0a0a0;
+}

@@ -1,8 +1,8 @@
 
 
-import Aside from "../Aside/Aside";
-import Header from "../Header/Header";
-import Footer from "../Footer/Footer";
+import Aside from "../../components/Aside/Aside";
+import Header from "../../components/Header/Header";
+import Footer from "../../components/Footer/Footer";
 
 import styles from './SyncWithSteam.module.css'
 

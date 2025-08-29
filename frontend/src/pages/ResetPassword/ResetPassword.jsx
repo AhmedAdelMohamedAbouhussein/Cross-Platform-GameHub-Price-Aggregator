@@ -5,7 +5,7 @@ import { FiEye, FiEyeOff} from "react-icons/fi";
 import axios from "axios";
 
 import styles from './ResetPassword.module.css'
-import LoadingScreen from "../LoadingScreen/LoadingScreen";
+import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
 
 function ResetPassword()
 {

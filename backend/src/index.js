@@ -74,7 +74,7 @@ mongoose.connect(MONGO_URL)
             mongoose.set('autoIndex', true);
             await userModel.init();
             await OtpSchema.init();
-            await ResetPasswordSchema.init()
+            await ResetPasswordSchema.init();
         } 
         else 
         {

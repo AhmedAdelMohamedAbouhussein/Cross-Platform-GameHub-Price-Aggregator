@@ -6,10 +6,10 @@ import axios from 'axios';
 import { FiEye, FiEyeOff, FiRotateCcw, FiTrash, FiMail} from "react-icons/fi";
 
 import styles from "./LoginPage.module.css";
-import Header from "../Header/Header.jsx";
-import Footer from "../Footer/Footer.jsx";
+import Header from "../../components/Header/Header.jsx";
+import Footer from "../../components/Footer/Footer.jsx";
 import AuthContext from "../../contexts/AuthContext.jsx";
-import LoadingScreen from "../LoadingScreen/LoadingScreen.jsx";
+import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
 
 function LoginPage() 
 {

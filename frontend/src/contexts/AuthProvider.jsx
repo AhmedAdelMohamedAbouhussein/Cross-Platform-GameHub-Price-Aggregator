@@ -34,9 +34,18 @@ function AuthProvider({ children })
     };
 
     // Run once on mount
-    useEffect(() => 
-    {
-        fetchUser();
+    useEffect(() => {
+        const loadUser = async () => {
+            try 
+            {
+                await fetchUser();
+            } 
+            catch (err) 
+            {
+                console.error(err);
+            }
+        };
+        loadUser();
     }, []);
 
     if (loading) 

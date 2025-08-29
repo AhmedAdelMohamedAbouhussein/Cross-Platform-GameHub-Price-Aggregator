@@ -76,6 +76,87 @@ export const syncWithSteam = async (req, res, next) =>
     }
 }
 
+// ✅ Fetch owned games
+export async function getOwnedGames(userId, steamId) 
+{
+  const steamLibrary = await axios.get(
+    `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${steamId}&include_appinfo=true&format=json`
+  );
+
+  const response = steamLibrary.data.response;
+
+  if (!response?.games) 
+  {
+    throw new Error("No games found (maybe Steam account has no games?)");
+  }
+
+  // Build game list
+  const games = response.games.map((game) => ({
+    userId: userId,
+    gameName: game.name,
+    gameId: game.appid,
+    platform: "steam",
+    coverImage: `https://steamcdn-a.akamaihd.net/steam/apps/${game.appid}/header.jpg`,
+    progress: null,
+    achievements: [],
+    lastPlayed: game.rtime_last_played !== 0? new Date(game.rtime_last_played * 1000) : null, }));
+
+  return games; 
+}
+
+// ✅ Fetch achievements for each owned game
+export async function getUserAchievements(steamId, games) 
+{
+  const STEAM_API_KEY = config.steam.apiKey;
+  const gamesWithAchievements = [];
+
+  for (const game of games) 
+  {
+    try 
+    {
+      const achievementResponse = await axios.get(`https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key=${STEAM_API_KEY}&steamid=${steamId}&appid=${game.gameId}&l=en`);
+
+      const achievements = achievementResponse.data?.playerstats?.achievements || [];
+
+      if (!achievements.length) 
+      {
+        console.warn(
+          `No achievements for game ${game.gameName} (${game.gameId}) or profile private`
+        );
+        continue;
+      }
+      
+      let completedCount = 0;
+      game.achievements = achievements.map((ach) => 
+      {
+        const unlocked = ach.achieved === 1;
+        if (unlocked) completedCount++;  // count completed achievements
+
+        return {
+          title: ach.name,        // should be apiname but idc 
+          description: ach.description || null,
+          unlocked: unlocked,
+          dateUnlocked: ach.unlocktime ? new Date(ach.unlocktime * 1000) : null,
+        };
+      });
+
+      // Add the count of completed achievements to the game object
+      game.progress = achievements.length? Number(((completedCount / achievements.length) * 100).toFixed(2)): 0;
+
+      gamesWithAchievements.push(game); // keep this game
+    }
+    catch (err) 
+    {
+      console.warn(
+        `Failed to fetch achievements for game ${game.gameName} (${game.gameId}): ${err.message}`
+      );
+    }
+  }
+
+  return gamesWithAchievements; // games now enriched with achievements
+}
+
+
 
 // @desc  get steamid and steam info
 // @route GET /sync/steam/return
@@ -83,7 +164,7 @@ export const steamReturn = (req, res, next) => {
 
     const APP_FRONTEND_URL = config.frontendUrl;
 
-    passport.authenticate("steam", { failureRedirect: "/", session: false }, async (err, user) => 
+    passport.authenticate("steam", { failureRedirect: `${APP_FRONTEND_URL}/`, session: false }, async (err, user) => 
     {
     if (err) 
     {
@@ -100,22 +181,27 @@ export const steamReturn = (req, res, next) => {
     try 
     {
         // Example: link Steam account to your logged-in user
-        const myUserId = req.session.userId; // however you track your user
-        await userModel.findByIdAndUpdate(myUserId, 
-        {
-            steamId: user._json.steamid,
-        });
+        const userId = req.session.userId; // however you track your user
 
-        const STEAM_API_KEY = config.steam.apiKey;
         
-        const steamLibrary = await axios.get(
-            `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${user._json.steamid}&include_appinfo=true&format=json`
-        );
+        const noAchGames = await getOwnedGames(userId, user._json.steamid);
+        const games = await getUserAchievements(user._json.steamid, noAchGames);
+        
+        const updateData = {};
+        for (const game of games) 
+        {
+          // Set/update the game under the platform map
+          updateData[`ownedGames.${game.platform}.${game.gameId}`] = game;
+        }
 
-        const games = steamLibrary.data.response.games;
+      await userModel.updateOne(
+        { _id: userId },
+        { $set: updateData },
+        { upsert: true }
+      );
 
-        // Redirect to frontend
-        return res.redirect(`${APP_FRONTEND_URL}/library`);
+      const updateduser = await userModel.findById(userId);
+      res.redirect(`${APP_FRONTEND_URL}/library`)
     }   
     catch (dbErr) 
     {
@@ -130,6 +216,8 @@ const CLIENT_ID = config.azure.clientId;
 const TENANT_ID = config.azure.tenantId;
 const CLIENT_SECRET = config.azure.clientSecret;
 const XBOX_REDIRECT_URI = config.xboxRedirectURL;
+
+
 //                                         **xbox**
 
 

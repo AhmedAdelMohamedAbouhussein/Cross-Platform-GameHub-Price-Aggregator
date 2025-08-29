@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-import LoadingScreen from '../LoadingScreen/LoadingScreen'
+import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 
 const GamePage = () => 
 {

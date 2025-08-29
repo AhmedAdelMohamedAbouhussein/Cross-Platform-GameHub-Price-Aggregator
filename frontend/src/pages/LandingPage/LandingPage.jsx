@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import styles from "./LandingPage.module.css";
-import Header from "../Header/Header.jsx";
-import Footer from "../Footer/Footer.jsx";
+import Header from "../../components/Header/Header.jsx";
+import Footer from "../../components/Footer/Footer.jsx";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 

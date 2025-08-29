@@ -6,9 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff, FiRotateCcw, FiTrash} from "react-icons/fi";
 
 import styles from "./SignupPage.module.css"; 
-import Header from "../Header/Header";
-import Footer from "../Footer/Footer";
-import LoadingScreen from "../LoadingScreen/LoadingScreen.jsx";
+import Header from "../../components/Header/Header.jsx";
+import Footer from "../../components/Footer/Footer.jsx";
+import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
 
 function SignupPage() 
 {

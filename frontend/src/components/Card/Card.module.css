@@ -10,12 +10,14 @@
     padding: 20px;
     margin: 10px;
     text-align: center;
-    min-height: 350px;
-    min-width: 310px;
-    max-width: 310px;
+    min-height: 200px;
+    min-width: 300px;
+    max-width: 300px;
     transition: transform 0.4s ease, box-shadow 0.4s ease;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden; /* Optional: ensures hover elements don't overflow */
 }
-
 /* 3D hover lift */
 .card:hover {
     transform: translateY(-12px) scale(1.03);
@@ -24,11 +26,40 @@
         0 12px 15px rgba(0, 0, 0, 0.15);
 }
 
+/* Default content shown in place of progress circle */
+.defaultOverlay 
+{
+    display: flex;
+    justify-content: center;
+    top: 10px;
+    right: 10px;
+    transition: opacity 0.3s ease;
+}
+
+/* Progress circle hidden by default */
+.progressWrapper {
+    top: 10px;
+    right: 10px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Swap on hover */
+.card:hover .defaultOverlay {
+    opacity: 0;
+}
+
+.card:hover .progressWrapper {
+    opacity: 1;
+    transform: scale(1);
+}
+
 /* Image with soft borders and subtle depth */
 .card .cardImage {
     width: 100%;
-    height: 200px;
-    object-fit: cover;
+    height: 150px;
+    object-fit: contain;
     border-radius: 16px;
     box-shadow: 
         0 5px 12px rgba(0, 0, 0, 0.25),
@@ -48,7 +79,6 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 1.4em;
     font-weight: bold;
-    color: #ffffff;
     margin-bottom: 6px;
     text-shadow: 0 1px 1px rgba(255,255,255,0.5);
 }

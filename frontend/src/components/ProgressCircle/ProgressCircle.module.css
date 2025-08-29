@@ -1,0 +1,16 @@
+.progressCircle {
+  width: 100px;          /* adjust size */
+  height: 100px;
+  display: block;
+  margin: 0 auto;
+}
+
+.progressCircle circle {
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.progressCircleText {
+  font-size: 14px;
+  fill: #ffffff;
+  font-weight: bold;
+}
