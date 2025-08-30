@@ -15,6 +15,8 @@ const SyncWithXbox = lazy(() => import("./pages/SyncWithXbox/SyncWithXbox"));
 const GamePage = lazy(() => import("./pages/GamePage/gamePage"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage/LibraryPage"));
 const OwnedGamesDetails = lazy(() => import("./pages/OwnedGamesDetails/OwnedGamesDetails"));
+const FriendsPage = lazy(() => import('./pages/FriendsPage/FriendsPage'))
+const AddFriendPage = lazy(() => import('./pages/AddFriendPage/AddFriendPage.jsx'))
 
 function App() 
 {
@@ -31,32 +33,16 @@ function App()
                 <Route path="/resetpassword" element={<ResetPassword />} />
 
                 {/* Auth pages */}
-                <Route
-                    path="/login"
-                    element={!user ? <LoginPage /> : <Navigate to="/" replace />}
-                />
-                <Route
-                    path="/signup"
-                    element={!user ? <SignupPage /> : <Navigate to="/" replace />}
-                />
+                <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" replace />}/>
+                <Route path="/signup" element={!user ? <SignupPage /> : <Navigate to="/" replace />}/>
 
                 {/* Private pages */}
-                <Route
-                    path="/library"
-                    element={user ? <LibraryPage /> : <Navigate to="/login" replace state={{ from: location }} />}
-                />
-                <Route
-                    path="/library/sync/steam"
-                    element={user ? <SyncWithSteam /> : <Navigate to="/login" replace state={{ from: location }} />}
-                />
-                <Route
-                    path="/library/sync/xbox"
-                    element={user ? <SyncWithXbox /> : <Navigate to="/login" replace state={{ from: location }} />}
-                />
-                <Route
-                    path="/ownedgamedetails"
-                    element={user ? <OwnedGamesDetails /> : <Navigate to="/login" replace state={{ from: location }} />}
-                />
+                <Route path="/library" element={user ? <LibraryPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
+                <Route path="/library/sync/steam" element={user ? <SyncWithSteam /> : <Navigate to="/login" replace state={{ from: location }} />}/>
+                <Route path="/library/sync/xbox" element={user ? <SyncWithXbox /> : <Navigate to="/login" replace state={{ from: location }} />}/>
+                <Route path="/ownedgamedetails" element={user ? <OwnedGamesDetails /> : <Navigate to="/login" replace state={{ from: location }} />}/>
+                <Route path="/friends" element={user ? <FriendsPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
+                <Route path="/addfriend" element={user ? <AddFriendPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
             </Routes>
         </Suspense>
     );

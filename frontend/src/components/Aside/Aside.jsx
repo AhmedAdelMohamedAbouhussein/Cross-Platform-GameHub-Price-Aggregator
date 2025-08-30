@@ -42,11 +42,11 @@ function Aside() {
             </li>
             <li className={styles.listitems}>
               <FaComments className={styles.icon}/>
-              <Link className={styles.links} to= "/">Chat with Friends</Link>
+              <Link className={styles.links} to= "/friends">Chat with Friends</Link>
             </li>
             <li className={styles.listitems}>
               <FaUserFriends className={styles.icon}/>
-              <Link className={styles.links} to= "/">Friend List</Link>
+              <Link className={styles.links} to= "/friends">Friend List</Link>
             </li>
             <li className={styles.listitems}>
               <FaSteam className={styles.icon}/>

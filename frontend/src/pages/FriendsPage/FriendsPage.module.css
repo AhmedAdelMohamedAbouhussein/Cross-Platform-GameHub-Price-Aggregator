@@ -1,0 +1,135 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Arial', sans-serif;
+    background: #12181f;
+    color: white;
+    gap: 40px;
+}
+
+.page {
+    width: 100%;
+    max-width: 1000px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.top {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    border-radius: 16px;
+    background: linear-gradient(145deg, #1e2a35, #141b22);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.top:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.7);
+}
+
+.iconCircle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    flex-shrink: 0;
+}
+
+.title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: white;
+}
+
+.friendList {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 0;
+    margin: 0;
+}
+
+.friendBar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    border-radius: 12px;
+    background: #1a242f;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.friendBar:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+}
+
+.friendImage img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.friendInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.friendName {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.friendId {
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.friendLink {
+    font-size: 0.9rem;
+    color: #1e90ff;
+    text-decoration: none;
+}
+
+.friendLink:hover {
+    text-decoration: underline;
+    color: #ffd700;
+}
+
+.noFriends {
+    font-style: italic;
+    color: #888;
+}
+
+
+
+.addFriendBtn {
+    margin-left: auto; /* pushes button to the far right of the top row */
+    padding: 8px 16px;
+    border-radius: 12px;
+    border: none;
+    background: #FFD700;
+    color: #12181f;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.addFriendBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}

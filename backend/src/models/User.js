@@ -139,7 +139,32 @@ const UserSchema = new mongoose.Schema({
         default: {},
     },
     wishlist: [{ type: String }],
-    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    friends: {
+        type: Map,
+        of: [
+            new mongoose.Schema(
+            {
+                user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // internal user reference
+                externalId: { type: String }, // platform-specific ID (SteamID, XboxID, etc.)
+                displayName: { type: String }, // optional, cached name
+                profileUrl: { type: String },
+                avatar: { type: String }, // optional, cached avatar
+                status: { type: String, enum: ["pending", "accepted"], default: "pending" }, // track request
+                requestedByMe: { type: Boolean, default: true }, // true if current user sent the request
+            },
+            { _id: false } // prevent subdocument _id
+            )
+        ],
+    default: {
+        User: [],
+        Steam: [],
+        Xbox: [],
+        Epic: [],
+        PS: [],
+        GOG: [],
+        Nintendo: [],
+    }
+},
     resendCount: {
         emailVerification: { 
             count: { 
@@ -281,15 +306,14 @@ UserSchema.pre('deleteOne', { document: true, query: false }, async function(nex
     try {
         const userId = this._id;
 
-        // Remove this user from all friends arrays
+        // Remove this user from all User-platform friends arrays
         await this.model('User').updateMany(
-            { friends: userId },
-            { $pull: { friends: userId } }
+            { [`friends.User.user`]: userId },
+            { $pull: { [`friends.User`]: { user: userId } } }
         );
 
         next();
-    } catch (error) 
-    {
+    } catch (error) {
         next(error);
     }
 });

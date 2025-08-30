@@ -1,13 +1,5 @@
-import express from 'express';
-import { getallsteaminfo } from '../controllers/allSteamInfo.js';
+//import express from 'express';
 
-const router = express.Router();
+//const router = express.Router();
 
-router.get('/', (req, res) => {
-    res.status(404).json({ error: 'category or Game name is required' });
-});
-
-router.get('/getinfo', getallsteaminfo)
-
-
-export default router;
+//export default router;

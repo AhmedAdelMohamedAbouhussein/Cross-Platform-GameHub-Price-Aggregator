@@ -8,7 +8,7 @@ import config from './config.js'
 
 import Auth from './routes/Auth.js';
 import games from './routes/games.js';
-import steam from './routes/steam.js';
+//import steam from './routes/steam.js';
 import sync from './routes/sync.js';
 import usersCRUD from './routes/users.js';
 import NodeMailer from './routes/nodeMailer.js';
@@ -55,7 +55,7 @@ app.use(session({   // Session middleware
 //routes
 app.use('/api/auth', Auth);
 app.use('/games', games);
-app.use('/steam', steam);
+//app.use('/steam', steam);
 app.use('/api/users', usersCRUD);
 app.use('/sync', sync);
 app.use('/api/mail', NodeMailer);

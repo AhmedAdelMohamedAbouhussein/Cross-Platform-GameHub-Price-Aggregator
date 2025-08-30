@@ -4,6 +4,8 @@ import SteamStrategy from "passport-steam";
 import config from '../config.js'
 import userModel from "../models/User.js"; //TODO
 
+import {getOwnedGames, getUserAchievements, getUserFriendList} from './allSteamInfo.js'
+
 const APP_BACKEND_URL = config.appUrl;
 const STEAM_API_KEY = config.steam.apiKey;
 
@@ -35,8 +37,16 @@ passport.use(
             });
 
             // Attach Steam API data to profile
-            profile.summary = response.data.response.players?.[0] || null;
-
+            const players = response.data?.response?.players;
+            if (Array.isArray(players) && players.length > 0) 
+            {
+              profile.summary = players[0];
+            } 
+            else 
+            {
+              console.warn("No players returned from Steam API:", response.data);
+              profile.summary = null;
+            }
             return done(null, profile);
         } 
         catch (error) 
@@ -76,101 +86,6 @@ export const syncWithSteam = async (req, res, next) =>
     }
 }
 
-// Helper: convert minutes to "Xh Ym Zs"
-function formatPlaytime(minutes) {
-  if (!minutes || minutes <= 0) return "0h 0m 0s";
-
-  const totalSeconds = minutes * 60;
-  const hours = Math.floor(totalSeconds / 3600);
-  const mins = Math.floor((totalSeconds % 3600) / 60);
-  const secs = totalSeconds % 60;
-
-  return `${hours}h ${mins}m ${secs}s`;
-}
-
-// ✅ Fetch owned games
-export async function getOwnedGames(userId, steamId) 
-{
-  const steamLibrary = await axios.get(
-    `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${steamId}&include_appinfo=true&format=json`
-  );
-
-  const response = steamLibrary.data.response;
-
-  if (!response?.games) 
-  {
-    throw new Error("No games found (maybe Steam account has no games?)");
-  }
-
-  // Build game list
-  const games = response.games.map((game) => ({
-    userId: userId,
-    gameName: game.name,
-    gameId: game.appid,
-    platform: "steam",
-    hoursPlayed: formatPlaytime(game.playtime_forever), // ✅ save as string
-    coverImage: `https://steamcdn-a.akamaihd.net/steam/apps/${game.appid}/header.jpg`,
-    progress: null,
-    achievements: [],
-    lastPlayed: game.rtime_last_played !== 0? new Date(game.rtime_last_played * 1000) : null, }));
-
-  return games; 
-}
-
-// ✅ Fetch achievements for each owned game
-export async function getUserAchievements(steamId, games) 
-{
-  const STEAM_API_KEY = config.steam.apiKey;
-  const gamesWithAchievements = [];
-
-  for (const game of games) 
-  {
-    try 
-    {
-      const achievementResponse = await axios.get(`https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key=${STEAM_API_KEY}&steamid=${steamId}&appid=${game.gameId}&l=en`);
-
-      const achievements = achievementResponse.data?.playerstats?.achievements || [];
-
-      if (!achievements.length) 
-      {
-        console.warn(
-          `No achievements for game ${game.gameName} (${game.gameId}) or profile private`
-        );
-        continue;
-      }
-      
-      let completedCount = 0;
-      game.achievements = achievements.map((ach) => 
-      {
-        const unlocked = ach.achieved === 1;
-        if (unlocked) completedCount++;  // count completed achievements
-
-        return {
-          title: ach.name,        // should be apiname but idc 
-          description: ach.description || null,
-          unlocked: unlocked,
-          dateUnlocked: ach.unlocktime ? new Date(ach.unlocktime * 1000) : null,
-        };
-      });
-
-      // Add the count of completed achievements to the game object
-      game.progress = achievements.length? Number(((completedCount / achievements.length) * 100).toFixed(2)): 0;
-
-      gamesWithAchievements.push(game); // keep this game
-    }
-    catch (err) 
-    {
-      console.warn(
-        `Failed to fetch achievements for game ${game.gameName} (${game.gameId}): ${err.message}`
-      );
-    }
-  }
-
-  return gamesWithAchievements; // games now enriched with achievements
-}
-
-
-
 // @desc  get steamid and steam info
 // @route GET /sync/steam/return
 export const steamReturn = (req, res, next) => {
@@ -209,11 +124,28 @@ export const steamReturn = (req, res, next) => {
 
       await userModel.updateOne(
         { _id: userId },
-        { $set: updateData },
+        { $set:{...updateData, steamId: user._json.steamid} },
         { upsert: true }
       );
 
-      const updateduser = await userModel.findById(userId);
+      const friends = await getUserFriendList(user._json.steamid)
+
+      await userModel.updateOne
+      (
+        { _id: userId },
+        {
+          $set: {
+            "friends.Steam": friends.map(f => ({
+              externalId: f.externalId,
+              displayName: f.displayName,
+              profileUrl: f.profileUrl,
+              avatar: f.avatar
+            }))
+          }
+        },
+        { upsert: true }
+      );
+      
       res.redirect(`${APP_FRONTEND_URL}/library`)
     }   
     catch (dbErr) 
@@ -222,8 +154,6 @@ export const steamReturn = (req, res, next) => {
     }
   })(req, res, next); // <-- still need this
 };
-
-
 
 const CLIENT_ID = config.azure.clientId;
 const TENANT_ID = config.azure.tenantId;
