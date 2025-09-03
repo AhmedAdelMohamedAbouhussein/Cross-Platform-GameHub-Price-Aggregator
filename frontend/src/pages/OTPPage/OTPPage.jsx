@@ -149,8 +149,8 @@ function OTPPage()
                 <input type="text" placeholder="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value)} className={styles.input} maxLength={6}/>
 
                 <div className={styles.buttonContainer}>
-                    <button onClick={handleSendOtp} className={styles.button} disabled={loading}>Send New OTP</button>
                     <button onClick={handleSubmitOtp} className={styles.button} disabled={loading}>Submit OTP</button>
+                    <button onClick={handleSendOtp} className={styles.button} disabled={loading}>Send New OTP</button>
                 </div>
 
                 {feedback && <p className={styles.feedback} style={{color: feedback.type==="error" ? "red" : "green"}}>{feedback.message}</p>}

@@ -6,6 +6,7 @@
     font-family: 'Arial', sans-serif;
     background: #1a252f;
     color: white;
+    width: 100%;
 }
 
 .top {
@@ -45,10 +46,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px;
-    min-width: 100%;
-    max-width: auto;
-    margin: auto;
+    gap: 30px;  
+    min-width: 1200px;   /* set a max width for readable layout */
+    max-width: 1200px;   /* set a max width for readable layout */
+    margin: auto;        /* center it horizontally */
 }
 
 .gameTitle {
@@ -73,7 +74,7 @@
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
     width: 100%;
-        background: #162028; /* subtle card background */
+    background: #162028; /* subtle card background */
     padding: 20px;
     border-radius: 16px;
     box-shadow: 20px 20px 20px rgba(0, 0, 0, 0.6);

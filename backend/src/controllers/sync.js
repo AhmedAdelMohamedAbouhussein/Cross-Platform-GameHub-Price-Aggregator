@@ -139,7 +139,9 @@ export const steamReturn = (req, res, next) => {
               externalId: f.externalId,
               displayName: f.displayName,
               profileUrl: f.profileUrl,
-              avatar: f.avatar
+              avatar: f.avatar,
+              status: "accepted",
+              source: "Steam"
             }))
           }
         },
