@@ -43,26 +43,23 @@ function FriendsPage()
                                 <button className={Styles.addFriendBtn} onClick={() => navigate('/managefriends')}> Manage Friends </button>
                             )}
                         </div>
-
                         <ul className={Styles.friendList}>
-                            {user?.friends?.[platform.key]?.length ? (
-                                user.friends[platform.key].map((friend, idx) => (
-                                    <li key={idx} className={Styles.friendBar}>
+                            {user?.friends?.[platform.key]
+                                ?.filter(friend => friend.status === "accepted").length > 0 ? (
+                                    user.friends[platform.key].filter(friend => friend.status === "accepted").map((friend, idx) => (
+                                        <li key={idx} className={Styles.friendBar}>
                                         <div className={Styles.friendImage}>
-                                            {friend.avatar && (
-                                                <img src={friend.avatar} alt={friend.displayName || "Friend avatar"} className={Styles.avatar}/>
-                                            )}
-                                        </div>
-                                        <div className={Styles.friendInfo}>
-                                            <div className={Styles.friendName}>{friend.displayName || "Unknown"}</div>
-                                            {friend.externalId && <div className={Styles.friendId}>{platform.key} ID: {friend.externalId}</div>}
-                                            {friend.profileUrl && <a href={friend.profileUrl} target="_blank" rel="noreferrer" className={Styles.friendLink}>View Profile</a>}
-                                        </div>
-                                    </li>
-                                ))
-                            ) : (
-                                <li className={Styles.noFriends}>No friends found</li>
-                            )}
+                                            {friend.avatar && (<img src={friend.avatar} alt={friend.displayName || "Friend avatar"} className={Styles.avatar}/>)}</div>
+                                            <div className={Styles.friendInfo}>
+                                                <div className={Styles.friendName}> {friend.displayName || "Unknown"} </div>
+                                                {friend.externalId && ( <div className={Styles.friendId}> {platform.key} ID: {friend.externalId} </div>)}
+                                                {friend.profileUrl && ( <a href={friend.profileUrl} target="_blank" rel="noreferrer" className={Styles.friendLink} > View Profile </a>)}
+                                            </div>
+                                        </li>
+                                    ))
+                                ) : (
+                                    <li className={Styles.noFriends}>No accepted friends found</li>
+                                )}
                         </ul>
                     </div>
                 );

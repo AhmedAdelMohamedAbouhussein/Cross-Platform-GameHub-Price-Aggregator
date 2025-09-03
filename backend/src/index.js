@@ -8,10 +8,10 @@ import config from './config.js'
 
 import Auth from './routes/Auth.js';
 import games from './routes/games.js';
-//import steam from './routes/steam.js';
 import sync from './routes/sync.js';
 import usersCRUD from './routes/users.js';
 import NodeMailer from './routes/nodeMailer.js';
+import Friends from './routes/Friends.js'
 
 import logger from './middleware/logger.js';
 import errorHandeler from './middleware/error.js';
@@ -59,6 +59,7 @@ app.use('/games', games);
 app.use('/api/users', usersCRUD);
 app.use('/sync', sync);
 app.use('/api/mail', NodeMailer);
+app.use('/friends', Friends)
 
 //middleware
 app.use(notfound);
