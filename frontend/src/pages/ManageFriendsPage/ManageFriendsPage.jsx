@@ -1,25 +1,48 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import Styles from "./ManageFriendsPage.module.css";
-
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import AuthContext from "../../contexts/AuthContext";
 
-function ManageFriendsPage() {
+function ManageFriendsPage() 
+{
     const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
+    const API_BASE = import.meta.env.MODE === "development" ? "" : BACKEND_URL;
+    
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const [activeTab, setActiveTab] = useState("add");
     const [recieverid, setrecieverid] = useState("");
     const [feedback, setFeedback] = useState(""); // <-- feedback state
+    const [friends, setFriends] = useState(null); // <-- store fetched friends
+
+      // Fetch friend list on mount
+    useEffect(() => {
+        const fetchFriends = async () => {
+            try 
+            {
+                const res = await axios.post(`${API_BASE}/api/users/friendlist`, {
+                    userId: user._id,
+                });
+                setFriends(res.data.friends);
+                console.log("Fetched friends:", res.data.friends);
+            } 
+            catch (err) 
+            {
+                console.error("Failed to fetch friends:", err);
+            }
+    };
+
+    if (user?._id) fetchFriends();
+  }, [user, BACKEND_URL]);
 
     // flatten all friends arrays from the Map into one list
-    const allFriends = user?.friends 
-        ? Object.values(user.friends).flat().filter(f => f.source === "User") 
+    const allFriends = friends 
+        ? Object.values(friends).flat().filter(f => f.source === "User") 
         : [];
 
     const sendRequest = async (recieverid) => {

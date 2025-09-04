@@ -1,6 +1,7 @@
-import { useContext} from "react";
+import { useContext, useEffect, useState} from "react";
 import Styles from "./FriendsPage.module.css";
 import { useNavigate } from 'react-router-dom';
+import axios from "axios";
 
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -11,9 +12,34 @@ import { SiEpicgames, SiGogdotcom, SiNintendo, SiPlaystation } from "react-icons
 
 function FriendsPage() 
 {
+    const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
+    const API_BASE = import.meta.env.MODE === "development" ? "" : BACKEND_URL;
+
     const { user } = useContext(AuthContext); // assumes setUser updates context
+    const [friends, setFriends] = useState(null); // <-- store fetched friends
 
     const navigate = useNavigate();
+
+     // Fetch friend list on mount
+    useEffect(() => {
+        const fetchFriends = async () => 
+        {
+            try {
+                const res = await axios.post(`${API_BASE}/api/users/friendlist`, {
+                userId: user._id,
+                });
+                setFriends(res.data.friends);
+                console.log("Fetched friends:", res.data.friends);
+            } 
+            catch (err) 
+            {
+                console.error("Failed to fetch friends:", err);
+            }
+        };
+
+        if (user?._id) fetchFriends();
+    }, [user, API_BASE]);
+
 
     const platforms = [
         { key: "User", label: "App Friends", icon: FaGamepad, color: "#FFD700" },
@@ -44,9 +70,9 @@ function FriendsPage()
                             )}
                         </div>
                         <ul className={Styles.friendList}>
-                            {user?.friends?.[platform.key]
+                            {friends?.[platform.key]
                                 ?.filter(friend => friend.status === "accepted").length > 0 ? (
-                                    user.friends[platform.key].filter(friend => friend.status === "accepted").map((friend, idx) => (
+                                    friends[platform.key].filter(friend => friend.status === "accepted").map((friend, idx) => (
                                         <li key={idx} className={Styles.friendBar}>
                                         <div className={Styles.friendImage}>
                                             {friend.avatar && (<img src={friend.avatar} alt={friend.displayName || "Friend avatar"} className={Styles.avatar}/>)}</div>

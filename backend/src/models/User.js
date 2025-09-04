@@ -156,16 +156,16 @@ const UserSchema = new mongoose.Schema({
             { _id: false } // prevent subdocument _id
             )
         ],
-    default: {
-        User: [],
-        Steam: [],
-        Xbox: [],
-        Epic: [],
-        PS: [],
-        GOG: [],
-        Nintendo: [],
-    }
-},
+        default: {
+            User: [],
+            Steam: [],
+            Xbox: [],
+            Epic: [],
+            PS: [],
+            GOG: [],
+            Nintendo: [],
+        }
+    },
     resendCount: {
         emailVerification: { 
             count: { 
@@ -230,6 +230,18 @@ UserSchema.set('toJSON',
         delete ret.password; //delete ret.field → removes that field before sending it to the client This applies globally whenever .toJSON() is called (e.g., res.json(user))
         delete ret.xboxAccessToken;
         delete ret.xboxRefreshToken;
+        delete ret.xboxTokenExpiresAt;
+        delete ret.ownedGames;
+        delete ret.friends;
+        delete ret.wishlist;
+        delete ret.updatedAt;
+        delete ret.signupDate;
+        delete ret.createdAt;
+        delete ret.isDeleted;
+        delete ret.isVerified;
+        delete ret.role;
+        delete ret.__v; //remove version key
+        delete ret.xboxGamertag
         if (ret.resendCount) 
         {
             if(ret.resendCount.emailVerification)

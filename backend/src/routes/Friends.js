@@ -33,16 +33,27 @@ router.post("/add/:friendId", async (req, res, next) => {
       return next(error);
     }
 
+    let friendAvatar = friend.profilePicture;
+    if(!friendAvatar)
+    {
+      friendAvatar = "https://digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png"
+    }
+    let userAvatar = friend.profilePicture;
+    if(!userAvatar)
+    {
+      userAvatar = "https://digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png"
+    }
+
     // Add to current user's map (User platform)
     await userModel.updateOne(
       { _id: userId, "friends.User.user": { $ne: friendId } },
-      { $push: { "friends.User": { user: friendId, requestedByMe: true, status: "pending", displayName: friend.name} } }
+      { $push: { "friends.User": { user: friendId, requestedByMe: true, status: "pending", displayName: friend.name, avatar: friendAvatar} } }
     );
 
     // Add to friend's map
     await userModel.updateOne(
       { _id: friendId, "friends.User.user": { $ne: userId } },
-      { $push: { "friends.User": { user: userId, requestedByMe: false, status: "pending", displayName: user.name} } }
+      { $push: { "friends.User": { user: userId, requestedByMe: false, status: "pending", displayName: user.name, avatar: userAvatar} } }
     );
 
     res.status(200).json({ message: "Friend request sent!" });
