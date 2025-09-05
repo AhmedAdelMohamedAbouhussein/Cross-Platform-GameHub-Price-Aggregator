@@ -3,24 +3,64 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    font-family: 'Arial', sans-serif; /* Modern font */
-    background:  #1a252f;
-    
+    font-family: 'Arial', sans-serif;
+    background: #1a252f;
 }
+
 .spacer {
     flex: 1;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    padding: 20px;
 }
 
-.settingsContainer {
-    max-width: 700px;
-    padding: 20px;
+.settingsWrapper {
+    display: flex;
+    width: 100%;
+    max-width: 1000px;
     background: #23313f;
-    color: #fff;
     border-radius: 10px;
+    overflow: hidden;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Sidebar */
+.sidebar {
+    width: 220px;
+    background: #1e2a35;
+    padding: 20px;
+    border-right: 2px solid #34495e;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar li {
+    padding: 12px;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.3s ease;
+}
+
+.sidebar li:hover {
+    background: #2c3e50;
+}
+
+.active {
+    background: #34495e;
+    font-weight: bold;
+}
+
+/* Content */
+.settingsContainer {
+    flex: 1;
+    padding: 20px;
+    color: #fff;
 }
 
 .title {
@@ -41,7 +81,7 @@
 }
 
 .input, .textarea, .select {
-    width: 100%;
+    width: 90%;
     padding: 10px;
     margin-bottom: 12px;
     border: 1px solid #34495e;
@@ -51,6 +91,7 @@
 }
 
 .textarea {
+    width: 90%;
     height: 80px;
     resize: none;
 }
@@ -102,4 +143,57 @@
 
 .deleteButton:hover {
     background: #c0392b;
+}
+.cropContainer {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    background: #333;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Cropper takes full container */
+.cropArea {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* Cropper stays behind */
+}
+
+/* Controls stay OUTSIDE and clickable */
+.controls {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 2; /* Make sure buttons & slider are above */
+    position: relative;
+}
+
+.zoomSlider {
+    width: 200px;
+}
+
+.hiddenFileInput {
+    display: none;
+}
+.uploadButton {
+    background: #27ae60;
+    padding: 8px 14px;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.uploadButton:hover {
+    background: #2ecc71;
 }
