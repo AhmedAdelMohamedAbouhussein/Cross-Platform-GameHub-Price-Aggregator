@@ -10,7 +10,10 @@
 }
 
 .content {
+  display: flex;
+  flex-direction: column;
   padding: 1em;
+  position: relative; /* for dropdown */
 }
 
 .profilePic {
@@ -40,6 +43,7 @@
 .items {
   border-top: 1px solid #a4a4a4;
   border-bottom: 1px solid #a4a4a4;
+  flex-grow: 1; /* pushes bottom + account down */
 }
 
 .ulist{
@@ -72,12 +76,51 @@
   min-width: 25px; /* keep icons aligned */
 }
 
-.account
-{
+.account {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 2em 0;
+  cursor: pointer;
+  position: relative;
+  margin-top: 1em;
+}
+
+.accountInfo {
+  display: flex;
+  align-items: center;
+  flex: 1;                /* takes available space */
+  min-width: 0;           /* allow ellipsis to work */
+  overflow: hidden;
+}
+
+.accountArrow {
+  font-size: 1.2em;
+  color: #ffffff;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.accountDropdown {
+  list-style: none;
+  padding: 0.5em 0;
+  margin-top: 1em;
+  background: #2a3444;
+  border-radius: 8px;
+  bottom: 60px; /* just above account bar */
+  left: 0;
+  width: 100%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.accountDropdown .listitems {
+  margin: 0;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.accountDropdown .listitems:hover {
+  background: #695cfe;
 }
 
 .account .hfive,

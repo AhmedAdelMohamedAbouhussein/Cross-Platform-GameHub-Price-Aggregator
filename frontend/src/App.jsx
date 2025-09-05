@@ -15,8 +15,9 @@ const SyncWithXbox = lazy(() => import("./pages/SyncWithXbox/SyncWithXbox"));
 const GamePage = lazy(() => import("./pages/GamePage/gamePage"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage/LibraryPage"));
 const OwnedGamesDetails = lazy(() => import("./pages/OwnedGamesDetails/OwnedGamesDetails"));
-const FriendsPage = lazy(() => import('./pages/FriendsPage/FriendsPage'))
-const AddFriendPage = lazy(() => import('./pages/ManageFriendsPage/ManageFriendsPage.jsx'))
+const FriendsPage = lazy(() => import('./pages/FriendsPage/FriendsPage'));
+const AddFriendPage = lazy(() => import('./pages/ManageFriendsPage/ManageFriendsPage.jsx'));
+const SettingsPage = lazy(() => import(`./pages/SettingsPage/SettingsPage.jsx`));
 
 function App() 
 {
@@ -43,6 +44,7 @@ function App()
                 <Route path="/ownedgamedetails" element={user ? <OwnedGamesDetails /> : <Navigate to="/login" replace state={{ from: location }} />}/>
                 <Route path="/friends" element={user ? <FriendsPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
                 <Route path="/managefriends" element={user ? <AddFriendPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
+                <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
             </Routes>
         </Suspense>
     );

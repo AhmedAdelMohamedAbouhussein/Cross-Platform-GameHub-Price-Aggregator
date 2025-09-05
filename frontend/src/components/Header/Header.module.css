@@ -1,5 +1,5 @@
 .stickyHeader {
-    /*position: sticky;*/
+    position: relative; /* so dropdown anchors here */
     width: auto;
     top: 0;
     background: #23313f;
@@ -42,14 +42,21 @@ h1 {
     font-size: 1.8rem;
 }
 
-
 .profileBox {
+    position: relative;   /* so dropdown anchors here */
     display: flex;
     align-items: center;
     gap: 10px;
     background: #222;
     padding: 10px;
     border-radius: 8px;
+    cursor: pointer;
+}
+
+.profileToggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .profilePic {
@@ -68,9 +75,56 @@ h1 {
     font-weight: bold;
     font-size: 14px;
     color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
 }
 
 .profileEmail {
     font-size: 12px;
     color: #aaa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+}
+
+.accountArrow {
+    margin-left: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #fff;
+}
+
+.accountDropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #2c3e50;
+    border-radius: 6px;
+    margin-top: 8px;
+    padding: 5px 0;
+    list-style: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    min-width: 180px;
+    z-index: 9999;
+}
+
+.accountDropdown .listitems {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    color: white;
+    transition: background 0.2s ease;
+}
+
+.accountDropdown .listitems:hover {
+    background: #34495e;
+    cursor: pointer;
+}
+
+.icon {
+    font-size: 16px;
 }

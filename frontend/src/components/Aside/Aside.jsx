@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import styles from './Aside.module.css';
 import AuthContext from "../../contexts/AuthContext";  // <-- your auth provider
 import { FaCaretLeft, FaSteam, FaXbox, FaGamepad, FaComments, FaUserFriends, FaCaretRight } from "react-icons/fa";
+import { FaCaretDown, FaCaretUp, FaCog, FaSignOutAlt } from "react-icons/fa";
 import { SiEpicgames, SiGogdotcom, SiNintendo, SiPlaystation  } from 'react-icons/si';
+
 
 function Aside() {
   const { user } = useContext(AuthContext); // <-- access logged-in user
-
   const [isOpen, setIsOpen] = useState(true); // sidebar open/close state
+  const [isAccountOpen, setIsAccountOpen] = useState(false); // <-- account dropdown state
 
   // toggle sidebar
   const toggleSidebar = () => {
@@ -20,6 +22,11 @@ function Aside() {
       setIsOpen(true);
     }
   };
+
+  const toggleAccount = () => 
+  {
+      setIsAccountOpen(!isAccountOpen);
+  }
 
   return (
     <div className={`${styles.sidebar} ${!isOpen ? styles.hide : ''}`} onClick={handleSidebarClick} >
@@ -75,14 +82,31 @@ function Aside() {
           </ul>
         </div>
         <div className={styles.account}>
-          <div>
+          <div className={styles.accountInfo}>
             <img src={user.profilePicture && user.profilePicture.trim() !== "" ? user.profilePicture : "https://digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png"} alt="Profile" className={styles.profilePic} />
+            <div>
+              <h5 className={styles.hfive}>{user.name}</h5>
+              <p className={styles.para}>{user.email}</p>
+            </div>
           </div>
-          <div>
-            <h5 className={styles.hfive}>{user.name}</h5>
-            <p className={styles.para}>{user.email}</p>
+          <div className={styles.accountArrow} onClick={toggleAccount}>
+            {isAccountOpen ? <FaCaretUp /> : <FaCaretDown />}
           </div>
         </div>
+        {isAccountOpen && (
+        <div>
+          <ul className={styles.accountDropdown}>
+            <li className={styles.listitems}>
+              <FaCog className={styles.icon}/>
+              <Link className={styles.links} to="/settings">Settings</Link>
+            </li>
+            <li className={styles.listitems}>
+              <FaSignOutAlt className={styles.icon}/>
+              <Link className={styles.links} to="/logout">Logout</Link>
+            </li>
+          </ul>
+        </div>
+        )}
       </div>
     </div>
   );
