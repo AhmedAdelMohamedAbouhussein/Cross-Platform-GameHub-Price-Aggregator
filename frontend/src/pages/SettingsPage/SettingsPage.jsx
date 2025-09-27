@@ -1,48 +1,73 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useContext } from "react";
 import styles from "./SettingsPage.module.css";
 import Cropper from "react-easy-crop";
+import axios from "axios";
 
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
+import getCroppedImg from "../../utils/cropImage";
 
-function SettingsPage() {
+import AuthContext from "../../contexts/AuthContext.jsx";
+
+function SettingsPage() 
+{
+    const { user } = useContext(AuthContext); // 👈 get from context 
+    const BackendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL;
+
     const [selected, setSelected] = useState("profile");
 
+    // Profile states
     const [username, setUsername] = useState("PlayerOne");
     const [bio, setBio] = useState("");
-    const [socialLinks, setSocialLinks] = useState({
-        steam: "",
-        epic: "",
-        xbox: "",
-        playstation: ""
-    });
     const [visibility, setVisibility] = useState("friends");
 
-    // Profile Picture States
-    const [profilePic, setProfilePic] = useState(null);
+    // Profile Picture states
+    const [profilePic, setProfilePic] = useState(null); // final cropped profile picture URL
+    const [profilePicPreview, setProfilePicPreview] = useState(null); // preview before cropping
+    const [croppingMode, setCroppingMode] = useState(false);
+
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedArea, setCroppedArea] = useState(null);
-    const [croppingMode, setCroppingMode] = useState(false);
 
     const handleProfilePicChange = (e) => {
         const file = e.target.files[0];
-        if (file) 
-            {
-            const url = URL.createObjectURL(file);
-            console.log("Preview URL:", url);  // Temporary blob for preview only
-            setProfilePic(url);
-            setCroppingMode(true);
+        if (file) {
+            setProfilePicPreview(URL.createObjectURL(file));
+            setCroppingMode(true); // force user to crop
         }
-    };
-
-    const handleSocialChange = (platform, value) => {
-        setSocialLinks({ ...socialLinks, [platform]: value });
     };
 
     const onCropComplete = useCallback((_, croppedAreaPixels) => {
         setCroppedArea(croppedAreaPixels);
     }, []);
+
+    const handleCropDone = async () => {
+        try {
+            const croppedBlob = await getCroppedImg(profilePicPreview, croppedArea);
+
+            // Upload cropped image
+            const formData = new FormData();
+            formData.append("profileImage", croppedBlob, "profile.jpg");
+            formData.append("userId", user._id); // <-- send the user ID
+
+            await axios.post(`${BackendUrl}/setting/profileImage`, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+
+            // Show final cropped picture
+            setProfilePic(URL.createObjectURL(croppedBlob));
+            setCroppingMode(false);
+            setProfilePicPreview(null);
+        } catch (error) {
+            console.error("Upload failed:", error);
+        }
+    };
+
+    const handleCropCancel = () => {
+        setCroppingMode(false);
+        setProfilePicPreview(null);
+    };
 
     const renderContent = () => {
         switch (selected) {
@@ -59,21 +84,32 @@ function SettingsPage() {
                                     <>
                                         <img
                                             src={
-                                                profilePic ||
+                                                profilePic || user.profilePicture ||
                                                 "https://digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png"
                                             }
                                             alt="Profile"
                                             className={styles.profilePic}
                                         />
-                                        <input type="file" id="profilePicUpload" accept="image/*" onChange={handleProfilePicChange} className={styles.hiddenFileInput}/>
-                                        <label htmlFor="profilePicUpload" className={styles.uploadButton}>Upload Image</label>
+                                        <input
+                                            type="file"
+                                            id="profilePicUpload"
+                                            accept="image/*"
+                                            onChange={handleProfilePicChange}
+                                            className={styles.hiddenFileInput}
+                                        />
+                                        <label
+                                            htmlFor="profilePicUpload"
+                                            className={styles.uploadButton}
+                                        >
+                                            Upload Image
+                                        </label>
                                     </>
                                 ) : (
                                     <div>
                                         <div className={styles.cropContainer}>
                                             <div className={styles.cropArea}>
                                                 <Cropper
-                                                    image={profilePic}
+                                                    image={profilePicPreview}
                                                     crop={crop}
                                                     zoom={zoom}
                                                     aspect={1}
@@ -85,7 +121,8 @@ function SettingsPage() {
                                                 />
                                             </div>
                                         </div>
-                                        {/* Controls BELOW the cropper */}
+
+                                        {/* Controls */}
                                         <div className={styles.controls}>
                                             <input
                                                 type="range"
@@ -97,13 +134,18 @@ function SettingsPage() {
                                                 className={styles.zoomSlider}
                                             />
                                             <div className={styles.cropButtons}>
-                                                <button onClick={() => setCroppingMode(false)} className={styles.button}>Done</button>
-                                                <button onClick={() => {
-                                                        setProfilePic(null);
-                                                        setCroppingMode(false);
-                                                    }}
+                                                <button
+                                                    onClick={handleCropDone}
+                                                    className={styles.button}
+                                                >
+                                                    Done
+                                                </button>
+                                                <button
+                                                    onClick={handleCropCancel}
                                                     className={styles.deleteButton}
-                                                > Cancel</button>
+                                                >
+                                                    Cancel
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -135,7 +177,6 @@ function SettingsPage() {
                         {/* Social Links */}
                         <section className={styles.section}>
                             <h3>Social Links</h3>
-
                         </section>
                     </div>
                 );
@@ -146,15 +187,33 @@ function SettingsPage() {
                         <h2 className={styles.title}>Account Settings</h2>
                         <section className={styles.section}>
                             <h3>Change Email</h3>
-                            <input type="email" placeholder="New Email" className={styles.input} />
-                            <button className={styles.button}>Send Verification Link</button>
+                            <input
+                                type="email"
+                                placeholder="New Email"
+                                className={styles.input}
+                            />
+                            <button className={styles.button}>
+                                Send Verification Link
+                            </button>
                         </section>
 
                         <section className={styles.section}>
                             <h3>Change Password</h3>
-                            <input type="password" placeholder="Current Password" className={styles.input} />
-                            <input type="password" placeholder="New Password" className={styles.input} />
-                            <input type="password" placeholder="Confirm New Password" className={styles.input} />
+                            <input
+                                type="password"
+                                placeholder="Current Password"
+                                className={styles.input}
+                            />
+                            <input
+                                type="password"
+                                placeholder="New Password"
+                                className={styles.input}
+                            />
+                            <input
+                                type="password"
+                                placeholder="Confirm New Password"
+                                className={styles.input}
+                            />
                             <button className={styles.button}>Update Password</button>
                         </section>
                     </div>
@@ -203,20 +262,28 @@ function SettingsPage() {
                     {/* Sidebar */}
                     <aside className={styles.sidebar}>
                         <ul>
-                            <li onClick={() => setSelected("profile")}
-                                className={selected === "profile" ? styles.active : ""}>
+                            <li
+                                onClick={() => setSelected("profile")}
+                                className={selected === "profile" ? styles.active : ""}
+                            >
                                 Profile
                             </li>
-                            <li onClick={() => setSelected("account")}
-                                className={selected === "account" ? styles.active : ""}>
+                            <li
+                                onClick={() => setSelected("account")}
+                                className={selected === "account" ? styles.active : ""}
+                            >
                                 Account
                             </li>
-                            <li onClick={() => setSelected("privacy")}
-                                className={selected === "privacy" ? styles.active : ""}>
+                            <li
+                                onClick={() => setSelected("privacy")}
+                                className={selected === "privacy" ? styles.active : ""}
+                            >
                                 Privacy
                             </li>
-                            <li onClick={() => setSelected("danger")}
-                                className={selected === "danger" ? styles.active : ""}>
+                            <li
+                                onClick={() => setSelected("danger")}
+                                className={selected === "danger" ? styles.active : ""}
+                            >
                                 Danger Zone
                             </li>
                         </ul>

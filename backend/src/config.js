@@ -53,5 +53,11 @@ export default
         clientId: process.env.AZURE_ClIENT_ID,
         tenantId: process.env.AZURE_TENANT_ID,
         clientSecret: process.env.AZURE_ClIENT_SECRET,
+    },
+    cloudinary:
+    {
+        cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+        apiKey: process.env.CLOUDINARY_API_KEY,
+        apiSecret: process.env.CLOUDINARY_API_SECRET,
     }
 };

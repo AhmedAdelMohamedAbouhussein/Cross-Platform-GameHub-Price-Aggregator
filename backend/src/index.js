@@ -12,6 +12,7 @@ import sync from './routes/sync.js';
 import usersCRUD from './routes/users.js';
 import NodeMailer from './routes/nodeMailer.js';
 import Friends from './routes/Friends.js'
+import Settings from './routes/settings.js';
 
 import logger from './middleware/logger.js';
 import errorHandeler from './middleware/error.js';
@@ -60,6 +61,7 @@ app.use('/api/users', usersCRUD);
 app.use('/sync', sync);
 app.use('/api/mail', NodeMailer);
 app.use('/friends', Friends)
+app.use('/setting', Settings);
 
 //middleware
 app.use(notfound);
