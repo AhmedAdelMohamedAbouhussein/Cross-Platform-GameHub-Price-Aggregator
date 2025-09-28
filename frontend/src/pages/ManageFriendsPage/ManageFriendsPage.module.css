@@ -91,21 +91,6 @@
   width: 1000px;
 }
 
-.friendBar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background: #4f0f0d;
-  border-radius: 8px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.friendBar:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-}
-
 .btnPrimary {
   background: #1e90ff;
   color: white;
@@ -162,8 +147,117 @@
   color: #f44336; /* red for errors */
 }
 
-.buttonContainer
-{
+.friendBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* pushes buttonContainer to the right */
+  padding: 12px;
+  background: #4f0f0d;
+  border-radius: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.friendBar:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+}
+
+.friendInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-grow: 1; /* takes remaining space */
+}
+
+.buttonContainer {
   display: flex;
   gap: 10px;
+  flex-shrink: 0; /* prevent shrinking */
+  margin-left: 15px; /* optional spacing from friendInfo */
+}
+
+
+/* --- Avatar & Friend Info --- */
+.friendImage {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 15px;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #ffd700;
+}
+
+
+.friendName {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #ffd700;
+}
+
+.friendId {
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+.friendLink {
+  font-size: 0.85rem;
+  color: #1e90ff;
+  text-decoration: none;
+  margin-top: 3px;
+  transition: color 0.3s;
+}
+
+.friendLink:hover {
+  color: #ffd700;
+  text-decoration: underline;
+}
+
+/* Responsive for smaller screens */
+@media (max-width: 1280px) {
+  .page {
+    min-width: 95%;
+    max-width: 95%;
+  }
+
+  .friendList {
+    width: 100%;
+  }
+
+  .input {
+    width: 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .friendBar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .buttonContainer {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .input {
+    width: 80%;
+  }
+}
+
+/* Feedback colors based on success/error */
+.feedback.success {
+  color: #4caf50;
+}
+
+.feedback.error {
+  color: #f44336;
 }

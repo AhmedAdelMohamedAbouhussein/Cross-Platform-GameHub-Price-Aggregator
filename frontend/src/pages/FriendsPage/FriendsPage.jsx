@@ -21,37 +21,37 @@ function FriendsPage()
     const navigate = useNavigate();
 
      // Fetch friend list on mount
-useEffect(() => {
-    const fetchFriends = async () => {
-        try {
-            const res = await axios.post(`${API_BASE}/api/users/friendlist`, {
-                publicID: user.publicID,
-            });
+    useEffect(() => {
+        const fetchFriends = async () => {
+            try {
+                const res = await axios.post(`${API_BASE}/api/users/friendlist`, {
+                    publicID: user.publicID,
+                });
 
-            // Copy the friends object so we don't mutate the original
-            let allFriends = { ...res.data.friends };
+                // Copy the friends object so we don't mutate the original
+                let allFriends = { ...res.data.friends };
 
-            // Only update the "User" array with populated user objects
-            const userFriends = await Promise.all(
-                (allFriends.User || []).map(async (friend) => {
-                    console.log("Fetching details for friend:", friend.user);
-                    const response = await axios.get(`${API_BASE}/api/users/${encodeURIComponent(friend.user)}`);
-                    return { ...friend, ...response.data.user }; 
-                    // merges original friend info with populated user
-                })
-            );
+                // Only update the "User" array with populated user objects
+                const userFriends = await Promise.all(
+                    (allFriends.User || []).map(async (friend) => {
+                        console.log("Fetching details for friend:", friend.user);
+                        const response = await axios.get(`${API_BASE}/api/users/${encodeURIComponent(friend.user)}`);
+                        return { ...friend, ...response.data.user }; 
+                        // merges original friend info with populated user
+                    })
+                );
 
-            allFriends.User = userFriends;
+                allFriends.User = userFriends;
 
-            setFriends(allFriends);
-            console.log("Fetched friends:", allFriends);
-        } catch (err) {
-            console.error("Failed to fetch friends:", err);
-        }
-    };
+                setFriends(allFriends);
+                console.log("Fetched friends:", allFriends);
+            } catch (err) {
+                console.error("Failed to fetch friends:", err);
+            }
+        };
 
-    if (user?.publicID) fetchFriends();
-}, [user, API_BASE]);
+        if (user?.publicID) fetchFriends();
+    }, []); // Empty dependency array ensures this runs once on mount
 
 
 

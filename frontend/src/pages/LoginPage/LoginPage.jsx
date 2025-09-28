@@ -39,11 +39,8 @@ function LoginPage()
   const handleLoginSuccess = async (message) => 
   {
     setFeedback({ type: "success", message: message || "User logged in successfully" });
-    setTimeout(async () => 
-    {
-      await fetchUser();
-      navigate(redirectTo, { replace: true });
-    }, 2000);
+    await fetchUser();
+    navigate(redirectTo, { replace: true });
   };
 
   const handleSubmit = async (e) => 
