@@ -5,19 +5,20 @@ const APP_BACKEND_URL = config.appUrl;
 const APP_FRONTEND_URL = config.frontendUrl;
 
 
-// @desc   Get user by ID
-// @route  GET /api/users/:id
+// @desc   Get user by publicID
+// @route  GET /api/users/:publicID
 export const getUserById = async (req, res, next) => {
     try {
-        const userId = req.params.id;
+        const publicID = decodeURIComponent(req.params.publicID);
 
-        if (!userId) {
-            const err = new Error("User ID is required");
+        console.log("Fetching user with publicID:", publicID);
+        if (!publicID) {
+            const err = new Error("User publicID is required");
             err.status = 400;
             return next(err);
         }
 
-        const user = await userModel.findById(userId);
+        const user = await userModel.findOne({ publicID });
 
         if (!user) {
             const err = new Error("User not found");
@@ -30,9 +31,11 @@ export const getUserById = async (req, res, next) => {
     catch (error) {
         console.error(error);
         const err = new Error("Wasn't able to get user");
-        next(err);
+        err.status = 500;
+        return next(err);
     }
 };
+
 
 
 
@@ -220,9 +223,10 @@ export const getUserOwnedGame = async (req, res, next) => {
 // @route  POST /api/users/friendlist
 export const getUserFriendList = async (req, res, next) => {
   try {
-    const { userId } = req.body;
+    const { publicID } = req.body; // now using publicID
 
-    const user = await userModel.findById(userId).select("friends");
+    // Find user by publicID
+    const user = await userModel.findOne({ publicID }).select("friends");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -230,13 +234,12 @@ export const getUserFriendList = async (req, res, next) => {
 
     // Convert Map -> plain object
     const friends = {};
-    if (user.friends) 
-    {
-      for (const [platform, friendArray] of user.friends.entries()) 
-    {
+    if (user.friends) {
+      for (const [platform, friendArray] of user.friends.entries()) {
         friends[platform] = friendArray; // friendArray is already plain objects
       }
     }
+
     console.log("User friends:", friends);
     res.status(200).json({ friends });
   } catch (err) {

@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post('/adduser', addUser) 
 
-router.get('/:id', getUserById)
+router.get('/:publicID', getUserById)
 router.post('/getuseridbyemail', getUserIdByEmail)
 
 router.post('/login', loginUser)

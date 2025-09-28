@@ -166,7 +166,7 @@ const UserSchema = new mongoose.Schema({
         of: [
             new mongoose.Schema(
             {
-                user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // internal user reference
+                user: { type: String, required: true }, // <-- store publicID, not ObjectId
                 externalId: { type: String }, // platform-specific ID (SteamID, XboxID, etc.)
                 displayName: { type: String }, // optional, cached name
                 profileUrl: { type: String },

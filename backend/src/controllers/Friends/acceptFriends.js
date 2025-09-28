@@ -1,47 +1,42 @@
 import userModel from '../../models/User.js'
 
-export const acceptFriends = async (req, res) =>  
-{
-  const { userId } = req.body; // current user
-  const friendId = req.params.friendId;
+export const acceptFriends = async (req, res, next) => {
+  const { publicID } = req.body; // current user
+  const friendPublicID = decodeURIComponent(req.params.friendId); // param now refers to friend's publicID
 
   try {
     // Make sure both exist
     const [user, friend] = await Promise.all([
-      userModel.findById(userId),
-      userModel.findById(friendId),
+      userModel.findOne({ publicID }),
+      userModel.findOne({ publicID: friendPublicID }),
     ]);
 
-    if (!user || !friend) 
-    {
+    if (!user || !friend) {
       const error = new Error("One or both users not found");
       error.status = 404;
-      return next(error)
+      return next(error);
     }
 
     // Update current user (only if status is still pending)
     const userUpdate = await userModel.updateOne(
-      { _id: userId, "friends.User.user": friendId, "friends.User.status": "pending" },
+      { publicID, "friends.User.user": friendPublicID, "friends.User.status": "pending" },
       { $set: { "friends.User.$.status": "accepted" } }
     );
 
     // Update friend (only if status is still pending)
     const friendUpdate = await userModel.updateOne(
-      { _id: friendId, "friends.User.user": userId, "friends.User.status": "pending" },
+      { publicID: friendPublicID, "friends.User.user": publicID, "friends.User.status": "pending" },
       { $set: { "friends.User.$.status": "accepted" } }
     );
 
-    if (!userUpdate.modifiedCount || !friendUpdate.modifiedCount) 
-    {
+    if (!userUpdate.modifiedCount || !friendUpdate.modifiedCount) {
       const error = new Error("No pending request found to accept");
       error.status = 400;
       return next(error);
     }
 
     res.status(200).json({ message: "Friend request accepted!" });
-  }
-  catch (err) 
-  {
+  } catch (err) {
     next(err);
   }
-}
+};

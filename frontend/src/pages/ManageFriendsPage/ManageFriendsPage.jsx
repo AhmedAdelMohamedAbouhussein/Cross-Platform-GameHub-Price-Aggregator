@@ -35,10 +35,9 @@ function ManageFriendsPage()
             {
                 console.error("Failed to fetch friends:", err);
             }
-    };
-
-    if (user?._id) fetchFriends();
-  }, [user, BACKEND_URL]);
+        };
+        if (user?._id) fetchFriends();
+    }, []);
 
     // flatten all friends arrays from the Map into one list
     const allFriends = friends 
@@ -47,8 +46,8 @@ function ManageFriendsPage()
 
     const sendRequest = async (recieverid) => {
         try {
-            const response = await axios.post(`${BACKEND_URL}/friends/add/${recieverid}`, {
-                userId: user._id,
+            const response = await axios.post(`${BACKEND_URL}/friends/add/${encodeURIComponent(recieverid)}`, {
+                publicID: user.publicID,
             });
             setFeedback(response.data.message || "Request sent!");
         } catch (err) {
@@ -58,8 +57,8 @@ function ManageFriendsPage()
 
     const acceptPendingRequest = async (recieverid) => {
         try {
-            const response = await axios.post(`${BACKEND_URL}/friends/accept/${recieverid}`, {
-                userId: user._id,
+            const response = await axios.post(`${BACKEND_URL}/friends/accept/${encodeURIComponent(recieverid)}`, {
+                publicID: user.publicID,
             });
             setFeedback(response.data.message || "Request accepted!");
         } catch (err) {
@@ -69,8 +68,8 @@ function ManageFriendsPage()
 
     const rejectPendingRequest = async (recieverid) => {
         try {
-            const response = await axios.post(`${BACKEND_URL}/friends/reject/${recieverid}`, {
-                userId: user._id,
+            const response = await axios.post(`${BACKEND_URL}/friends/reject/${encodeURIComponent(recieverid)}`, {
+                publicID: user.publicID,
             });
             setFeedback(response.data.message || "Request rejected!");
         } catch (err) {
@@ -80,8 +79,8 @@ function ManageFriendsPage()
 
     const removeRequest = async (recieverid) => {
         try {
-            const response = await axios.post(`${BACKEND_URL}/friends/remove/${recieverid}`, {
-                userId: user._id,
+            const response = await axios.post(`${BACKEND_URL}/friends/remove/${encodeURIComponent(recieverid)}`, {
+                publicID: user.publicID,
             });
             setFeedback(response.data.message || "Friend removed!");
         } catch (err) {

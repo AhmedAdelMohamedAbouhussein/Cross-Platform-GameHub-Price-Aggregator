@@ -1,46 +1,42 @@
 import userModel from '../../models/User.js'
 
-export const removeFriends = async (req, res) =>
-{
-  const { userId } = req.body;
-  const friendId = req.params.friendId;
+export const removeFriends = async (req, res, next) => {
+  const { publicID } = req.body; // current user
+  const friendPublicID = decodeURIComponent(req.params.friendId); // param now refers to friend's publicID
 
   try {
     // Ensure both users exist
     const [user, friend] = await Promise.all([
-      userModel.findById(userId),
-      userModel.findById(friendId),
+      userModel.findOne({ publicID }),
+      userModel.findOne({ publicID: friendPublicID }),
     ]);
 
     if (!user || !friend) {
       const error = new Error("One or both users not found");
       error.status = 404;
-      return next(error)
+      return next(error);
     }
 
     // Remove friend from current user
     const userUpdate = await userModel.updateOne(
-      { _id: userId },
-      { $pull: { "friends.User": { user: friendId } } }
+      { publicID },
+      { $pull: { "friends.User": { user: friendPublicID } } }
     );
 
     // Remove current user from friend
     const friendUpdate = await userModel.updateOne(
-      { _id: friendId },
-      { $pull: { "friends.User": { user: userId } } }
+      { publicID: friendPublicID },
+      { $pull: { "friends.User": { user: publicID } } }
     );
 
-    if (!userUpdate.modifiedCount && !friendUpdate.modifiedCount) 
-    {
-      const error = new Error("Friendship not found" );
+    if (!userUpdate.modifiedCount && !friendUpdate.modifiedCount) {
+      const error = new Error("Friendship not found");
       error.status = 400;
       return next(error);
     }
 
     res.status(200).json({ message: "Friend removed successfully" });
-  }
-  catch (err) 
-  {
+  } catch (err) {
     next(err);
   }
-}
+};

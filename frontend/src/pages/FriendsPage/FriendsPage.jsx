@@ -25,7 +25,7 @@ useEffect(() => {
     const fetchFriends = async () => {
         try {
             const res = await axios.post(`${API_BASE}/api/users/friendlist`, {
-                userId: user._id,
+                publicID: user.publicID,
             });
 
             // Copy the friends object so we don't mutate the original
@@ -34,7 +34,8 @@ useEffect(() => {
             // Only update the "User" array with populated user objects
             const userFriends = await Promise.all(
                 (allFriends.User || []).map(async (friend) => {
-                    const response = await axios.get(`${API_BASE}/api/users/${friend.user}`);
+                    console.log("Fetching details for friend:", friend.user);
+                    const response = await axios.get(`${API_BASE}/api/users/${encodeURIComponent(friend.user)}`);
                     return { ...friend, ...response.data.user }; 
                     // merges original friend info with populated user
                 })
@@ -49,7 +50,7 @@ useEffect(() => {
         }
     };
 
-    if (user?._id) fetchFriends();
+    if (user?.publicID) fetchFriends();
 }, [user, API_BASE]);
 
 
@@ -114,9 +115,9 @@ return (
 
                                             {platform.key === "User" ? (
                                                 <>
-                                                    <div className={Styles.friendId}> UserID: {friend._id} </div>
+                                                    <div className={Styles.friendId}> UserID: {friend.publicID} </div>
                                                     {/* Internal link for User friends */}
-                                                    <Link to={`/friends/viewprofile/${friend._id}`} className={Styles.friendLink}> View Profile </Link>
+                                                    <Link to={`/friends/viewprofile/${friend.publicID}`} className={Styles.friendLink}> View Profile </Link>
                                                 </>
 
                                             ) : (
