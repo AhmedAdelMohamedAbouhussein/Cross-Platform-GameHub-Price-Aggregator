@@ -6,6 +6,37 @@ const APP_FRONTEND_URL = config.frontendUrl;
 
 
 // @desc   Get user by ID
+// @route  GET /api/users/:id
+export const getUserById = async (req, res, next) => {
+    try {
+        const userId = req.params.id;
+
+        if (!userId) {
+            const err = new Error("User ID is required");
+            err.status = 400;
+            return next(err);
+        }
+
+        const user = await userModel.findById(userId);
+
+        if (!user) {
+            const err = new Error("User not found");
+            err.status = 404;
+            return next(err);
+        }
+
+        res.status(200).json({ user });
+    } 
+    catch (error) {
+        console.error(error);
+        const err = new Error("Wasn't able to get user");
+        next(err);
+    }
+};
+
+
+
+// @desc   Get user by ID
 // @route  POST /api/users/getuseridbyemail
 export const getUserIdByEmail = async (req, res, next) => 
 {
@@ -153,34 +184,6 @@ export const getUserOwnedGames = async (req, res, next) => {
 };
 
 
-// @desc   get user friend list
-// @route  POST /api/users/friendlist
-export const getUserFriendList = async (req, res, next) => {
-  try {
-    const { userId } = req.body;
-
-    const user = await userModel.findById(userId).select("friends");
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Convert Map -> plain object
-    const friends = {};
-    if (user.friends) 
-    {
-      for (const [platform, friendArray] of user.friends.entries()) 
-    {
-        friends[platform] = friendArray; // friendArray is already plain objects
-      }
-    }
-
-    res.status(200).json({ friends });
-  } catch (err) {
-    next(err);
-  }
-};
-
 // @desc   Get a specific owned game
 // @route  POST /api/users/ownedgames/:platform/:id
 export const getUserOwnedGame = async (req, res, next) => {
@@ -210,3 +213,33 @@ export const getUserOwnedGame = async (req, res, next) => {
   }
 };
 
+
+
+
+// @desc   get user friend list
+// @route  POST /api/users/friendlist
+export const getUserFriendList = async (req, res, next) => {
+  try {
+    const { userId } = req.body;
+
+    const user = await userModel.findById(userId).select("friends");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Convert Map -> plain object
+    const friends = {};
+    if (user.friends) 
+    {
+      for (const [platform, friendArray] of user.friends.entries()) 
+    {
+        friends[platform] = friendArray; // friendArray is already plain objects
+      }
+    }
+    console.log("User friends:", friends);
+    res.status(200).json({ friends });
+  } catch (err) {
+    next(err);
+  }
+};

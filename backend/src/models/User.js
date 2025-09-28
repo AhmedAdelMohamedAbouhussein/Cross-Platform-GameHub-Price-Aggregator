@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import { nanoid } from "nanoid";
+
 
 import config from '../config.js';
 
@@ -57,6 +59,16 @@ const UserSchema = new mongoose.Schema({
         minlength: 2,
         maxlength: 50
     },
+    publicID: {
+        type: String,
+        unique: true,
+        required: true,
+        default: function () {
+            const base = (this.name || "User").replace(/\s+/g, ""); // fallback if no name
+            const randomTag = Math.floor(1000 + Math.random() * 9000);
+            return `${base}#${randomTag}-${nanoid(5)}`;
+        }
+    },
     email: { 
         type: String,
         index: true, 
@@ -79,6 +91,16 @@ const UserSchema = new mongoose.Schema({
             },
             message: "Password must contain at least 1 uppercase, 1 lowercase, and 1 number"
         }
+    },
+
+    bio: { 
+        type: String,
+        maxlength: 300, 
+        default: "" 
+    },
+    profileVisibility: { 
+        type: String,
+        enum: ["public", "friends", "private"], default: "public" 
     },
     isDeleted: { 
         type: Boolean, 
@@ -242,6 +264,7 @@ UserSchema.set('toJSON',
         delete ret.role;
         delete ret.__v; //remove version key
         delete ret.xboxGamertag
+
         if (ret.resendCount) 
         {
             if(ret.resendCount.emailVerification)

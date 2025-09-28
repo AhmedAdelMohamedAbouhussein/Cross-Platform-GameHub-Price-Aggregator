@@ -125,7 +125,6 @@ export const steamReturn = (req, res, next) => {
       await userModel.updateOne(
         { _id: userId },
         { $set:{...updateData, steamId: user._json.steamid} },
-        { upsert: true }
       );
 
       const friends = await getUserFriendList(user._json.steamid)
@@ -145,7 +144,6 @@ export const steamReturn = (req, res, next) => {
             }))
           }
         },
-        { upsert: true }
       );
       
       res.redirect(`${APP_FRONTEND_URL}/library`)

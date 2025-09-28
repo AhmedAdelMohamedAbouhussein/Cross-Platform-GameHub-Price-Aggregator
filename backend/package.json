@@ -23,6 +23,7 @@
     "googleapis": "^155.0.0",
     "mongoose": "^8.17.1",
     "multer": "^2.0.2",
+    "nanoid": "^5.1.6",
     "nodemailer": "^7.0.5",
     "passport": "^0.7.0",
     "passport-steam": "^1.0.18"
