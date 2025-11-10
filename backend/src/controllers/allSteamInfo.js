@@ -81,7 +81,7 @@ export async function getUserAchievements(steamId, games)
 
             return {
                 title: ach.name,        // should be apiname but idc 
-                description: ach.description || null,
+                description: ach.description || "No description available",
                 unlocked: unlocked,
                 dateUnlocked: ach.unlocktime ? new Date(ach.unlocktime * 1000) : null,
             };

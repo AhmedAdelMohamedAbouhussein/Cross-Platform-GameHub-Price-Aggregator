@@ -20,6 +20,37 @@
   transition: all 0.3s ease;
 }
 
+.toppanel {
+  margin-bottom: 20px;
+}
+.refreshButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  background-color: #2d2d2d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.refreshButton:hover {
+  background-color: #444;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
 .cardGrid {
   display: flex;
   flex-wrap: wrap;

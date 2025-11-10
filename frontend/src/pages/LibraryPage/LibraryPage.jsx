@@ -1,5 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import axios from "axios";
+import { FaSyncAlt } from "react-icons/fa"; // Font Awesome sync icon
+
+
 
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -11,7 +14,6 @@ import AuthContext from "../../contexts/AuthContext";
 
 function LibraryPage() {
   const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
-  const API_BASE = import.meta.env.MODE === "development" ? "" : BACKEND_URL;
 
   const { user } = useContext(AuthContext);
   const [ownedGames, setOwnedGames] = useState(null); // <-- state
@@ -22,7 +24,7 @@ function LibraryPage() {
 
     const fetchGames = async () => {
       try {
-        const res = await axios.post(`${API_BASE}/api/users/ownedgames`, {
+        const res = await axios.post(`${BACKEND_URL}/api/users/ownedgames`, {
           userId: user._id,
         });
         setOwnedGames(res.data.ownedGames); // <-- update state
@@ -35,7 +37,38 @@ function LibraryPage() {
     if (user?._id) {
       fetchGames();
     }
-  }, [user, API_BASE]);
+  }, []);
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const refreshPage = async () => 
+  {
+    if (refreshing) return;
+    setRefreshing(true);
+    try 
+    {
+      const body = { userId: user._id };
+      if (user.steamId) body.steamId = user.steamId;
+      if (user.xboxId) body.xboxId = user.xboxId;
+
+      await axios.post(`${BACKEND_URL}/refresh/refreshOwnedGames`, body);
+      
+      // Re-fetch updated games for this user
+      const res = await axios.post(`${BACKEND_URL}/api/users/ownedgames`, {
+        userId: user._id,
+      });
+      setOwnedGames(res.data.ownedGames); // <-- just update state, no reload
+      console.log("Refreshed owned games:", res.data.ownedGames);
+
+    } catch (err) 
+    {
+      console.error("Failed to refresh games:", err);
+    } finally 
+    {
+      setRefreshing(false);
+    }
+  };
+
 
   const renderCards = () => {
     if (!ownedGames) return <p>Loading games...</p>; // wait for fetch
@@ -72,6 +105,12 @@ function LibraryPage() {
       <div className={styles.body}>
         <Aside />
         <main className={styles.main}>
+          <div className={styles.toppanel}> 
+            <button className={styles.refreshButton} onClick={refreshPage} disabled={refreshing}>
+              <FaSyncAlt className={refreshing ? styles.spin : ""} /> 
+              {refreshing ? " Refreshing..." : " Refresh Library"}
+            </button>
+          </div>
           <div className={styles.cardGrid}>{renderCards()}</div>
         </main>
       </div>

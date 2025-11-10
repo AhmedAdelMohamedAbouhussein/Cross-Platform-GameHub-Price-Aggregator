@@ -15,7 +15,7 @@ const options = {
       version: "1.0.0",
       description: "API documentation for the My Gamehub backend",
     },
-    servers: [{ url: process.env.BACKEND_URL }],
+    //servers: [{ url: process.env.BACKEND_URL }],
   },
   apis: ["./backend/src/routes/*.js"],
 };
