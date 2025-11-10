@@ -6,6 +6,7 @@ import userModel from "../models/User.js"; //TODO
 
 import {getOwnedGames, getUserAchievements, getUserFriendList} from './allSteamInfo.js'
 
+const APP_FRONTEND_URL = config.frontendUrl;
 const APP_BACKEND_URL = config.appUrl;
 const STEAM_API_KEY = config.steam.apiKey;
 
@@ -90,8 +91,6 @@ export const syncWithSteam = async (req, res, next) =>
 // @route GET /sync/steam/return
 export const steamReturn = (req, res, next) => {
 
-    const APP_FRONTEND_URL = config.frontendUrl;
-
     passport.authenticate("steam", { failureRedirect: `${APP_FRONTEND_URL}/`, session: false }, async (err, user) => 
     {
     if (err) 
@@ -155,189 +154,112 @@ export const steamReturn = (req, res, next) => {
   })(req, res, next); // <-- still need this
 };
 
-const CLIENT_ID = config.azure.clientId;
-const TENANT_ID = config.azure.tenantId;
+
+
+
+
+
+// Xbox config
+const CLIENT_ID  = config.azure.clientId;
+const REDIRECT_URI  = config.xboxRedirectURL;
 const CLIENT_SECRET = config.azure.clientSecret;
-const XBOX_REDIRECT_URI = config.xboxRedirectURL;
+const TENANT_ID = config.azure.tenantId;
 
-
-//                                         **xbox**
-
-
-// 1. Redirect user to Microsoft login
-export function syncWithXbox(req, res) 
-{
-
-  const authUrl = `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(
-      XBOX_REDIRECT_URI
-  )}&response_mode=query&scope=openid%20offline_access%20profile%20email%20XboxLive.signin`;
-
+export function syncWithXbox(req, res) {
+  const authUrl = `https://login.live.com/oauth20_authorize.srf?` +
+    new URLSearchParams({
+      client_id: CLIENT_ID,
+      response_type: "code",
+      redirect_uri: REDIRECT_URI,
+      scope: "XboxLive.signin offline_access",
+    });
 
   res.redirect(authUrl);
 }
 
-// 2. Handle redirect + exchange code for tokens
-export async function xboxReturn(req, res) 
-{
-  const code = req.query.code;
-  if (!code) 
-  {
-      return res.status(400).send("No code provided");
-  }
 
-  try 
-  {
-    // Step 1. Exchange code for Microsoft tokens
+
+export async function xboxReturn(req, res) {
+  const code = req.query.code;
+  if (!code) return res.status(400).send("No code provided");
+
+  try {
+    // 1️⃣ Exchange code for Microsoft access + refresh tokens
     const tokenRes = await axios.post(
-      `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token`,
+      "https://login.live.com/oauth20_token.srf",
       new URLSearchParams({
         client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET,
+        redirect_uri: REDIRECT_URI,
         code,
-        redirect_uri: XBOX_REDIRECT_URI ,
         grant_type: "authorization_code",
+        scope: "XboxLive.signin offline_access", // include offline_access for refresh token
       }),
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
-    console.log({tokenRes: tokenRes.data});
-    
-    const now = Date.now();
-    const { access_token, refresh_token, expires_in } = tokenRes.data;
-    console.log("1 is done");
 
-    // Step 2. Authenticate with Xbox Live
-    const xblAuth = await axios.post(
+    const msAccessToken = tokenRes.data.access_token;
+    const msRefreshToken = tokenRes.data.refresh_token; // ← here’s your refresh token
+
+    // 2️⃣ Authenticate with Xbox Live
+    const xblRes = await axios.post(
       "https://user.auth.xboxlive.com/user/authenticate",
       {
-        Properties: {
-          AuthMethod: "RPS", // Remote Procedure Call Security Token indicates token is tied to a real signed-in Microsoft account (not guest or device-based).
-          SiteName: "user.auth.xboxlive.com",
-          RpsTicket: `d=${access_token}`, // Microsoft access_token prefixed with "d="
-        },
         RelyingParty: "http://auth.xboxlive.com",
         TokenType: "JWT",
+        Properties: {
+          AuthMethod: "RPS",
+          SiteName: "user.auth.xboxlive.com",
+          RpsTicket: `d=${msAccessToken}`,
+        },
       },
       { headers: { "Content-Type": "application/json" } }
     );
-    console.log({xblAuth: xblAuth.data});
 
-    const xblToken = xblAuth.data.Token; //proves the user signed in with Microsoft.
-    const userHash = xblAuth.data.DisplayClaims.xui[0].uhs; //It’s a unique identifier that Xbox assigns to the user session. You need it together with the Xbox access token to make calls to Xbox Live APIs.
+    const xblToken = xblRes.data.Token;
+    const userHash = xblRes.data.DisplayClaims.xui[0].uhs;
 
-    console.log("2 is done")
-
-    // Step 3. Get XSTS token (Xbox Secure Token Service)
-    const xstsAuth = await axios.post(
+    // 3️⃣ Get XSTS token
+    const xstsRes = await axios.post(
       "https://xsts.auth.xboxlive.com/xsts/authorize",
       {
-        Properties: {
-          SandboxId: "RETAIL",
-          UserTokens: [xblToken],
-        },
         RelyingParty: "http://xboxlive.com",
         TokenType: "JWT",
+        Properties: {
+          UserTokens: [xblToken],
+          SandboxId: "RETAIL",
+        },
       },
       { headers: { "Content-Type": "application/json" } }
     );
-    console.log({xstsAuth: xstsAuth.data});
 
-    const xstsToken = xstsAuth.data.Token; //proves the user is allowed to access Xbox Live services in a given sandbox (e.g. RETAIL). //lasts for 24 hours
-    const xboxId = xstsAuth.data.DisplayClaims.xui[0].xid; //XUID
-    const xboxGamertag = xstsAuth.data.DisplayClaims.xui[0].gtg;
+    const xstsToken = xstsRes.data.Token;
 
-    console.log(xboxId);
-    console.log(xboxGamertag);
+    // 4️⃣ Get Xbox profile (Gamertag)
+    const profileRes = await axios.get(
+      "https://profile.xboxlive.com/users/me/profile/settings?settings=Gamertag",
+      {
+        headers: {
+          Authorization: `XBL3.0 x=${userHash};${xstsToken}`,
+          "x-xbl-contract-version": "2",
+        },
+      }
+    );
+    const uuid = profileRes.data.profileUsers[0].id;
+    const gamertag = profileRes.data.profileUsers[0].settings[0].value;
 
-      console.log("3 is done")
+    // 5️⃣ Done — store tokens or redirect
+    // You can save msAccessToken + msRefreshToken + xstsToken + userHash + gamertag in DB
 
-    // Step 4. Store everything in session (or DB)
-    //req.session.tokens = {
-      //microsoftAccessToken: access_token,
-      //microsoftRefreshToken: refresh_token,
-      //expiresAt: now + expires_in * 1000,
-      //xblToken,
-      //xstsToken,
-      //userHash,
-    //};
+    console.log("Xbox Auth Success:", { uuid, gamertag, userHash, xstsToken, msAccessToken, msRefreshToken });
 
-    res.send("✅ Xbox authentication complete! You can now call Xbox APIs.");
+    res.redirect(`${APP_FRONTEND_URL}/library`)
+
   } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.status(500).send("Xbox authentication failed");
+    console.error("Xbox Auth Error:", err.response?.data || err.message);
+    res.status(500).json({
+      error: "Xbox authentication failed",
+      details: err.response?.data || err.message,
+    });
   }
 }
-
-
-
-/*
-
-const { userHash, xstsToken } = req.session.tokens;
-
-const profile = await axios.get("https://profile.xboxlive.com/users/me/profile", {
-  headers: {
-    Authorization: `XBL3.0 x=${userHash};${xstsToken}`,
-    "x-xbl-contract-version": "2",
-  },
-});
-
-console.log(profile.data);
-
-
-
-
-import express from "express";
-import axios from "axios";
-
-const router = express.Router();
-
-// GET achievements for a specific title
-router.get("/xbox/achievements/:xuid/:titleId", async (req, res) => {
-  const { xuid, titleId } = req.params;
-
-  try {
-    const response = await axios.get(
-      `https://achievements.xboxlive.com/users/xuid(${xuid})/achievements?titleId=${titleId}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "x-xbl-contract-version": "3",
-          Authorization: `XBL3.0 x=${req.session.userHash};${req.session.xstsToken}`
-        }
-      }
-    );
-
-    res.json(response.data);
-  } catch (error) {
-    console.error("Error fetching Xbox achievements:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to fetch achievements" });
-  }
-});
-
-export default router;
-
-
-
-// GET friends list
-router.get("/xbox/friends/:xuid", async (req, res) => {
-  const { xuid } = req.params;
-
-  try {
-    const response = await axios.get(
-      `https://social.xboxlive.com/users/xuid(${xuid})/people`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "x-xbl-contract-version": "3",
-          Authorization: `XBL3.0 x=${req.session.userHash};${req.session.xstsToken}`
-        }
-      }
-    );
-
-    res.json(response.data);
-  } catch (error) {
-    console.error("Error fetching Xbox friends:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to fetch friends" });
-  }
-});
-
-*/
