@@ -29,7 +29,7 @@ export const updateUser = async (req, res, next) =>
                 return res.status(409).json({message: "This email belongs to a deleted account. Would you like to restore the deleted account?", restoreLink: `/api/users/${req.body.email}/restore`});
             }
         }
-        const result = await userModel.updateOne({ email: email },{ $set: req.body });
+        const result = await userModel.updateOne({ email: email },{ $set: req.body }); //TODO : validate req.body fields before updating
 
         if (result.matchedCount === 0) 
         {

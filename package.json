@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "swagger-jsdoc": "^6.2.8"
+  }
+}

@@ -264,6 +264,7 @@ UserSchema.set('toJSON',
         delete ret.role;
         delete ret.__v; //remove version key
         delete ret.xboxGamertag
+        //delete ret._id;
 
         if (ret.resendCount) 
         {

@@ -1,0 +1,1619 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "My Gamehub API",
+    "version": "1.0.0",
+    "description": "API documentation for the My Gamehub backend"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080"
+    }
+  ],
+  "paths": {
+    "/api/auth/google/login": {
+      "post": {
+        "summary": "Login user via Google",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "4/0AX4XfWh..."
+                  },
+                  "rememberMe": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Login successful redirecting to Landing Page......"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid email or user not found"
+          },
+          "409": {
+            "description": "Email associated with deleted account"
+          }
+        }
+      }
+    },
+    "/api/auth/google/signup": {
+      "post": {
+        "summary": "Signup user via Google",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "4/0AX4XfWh..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully"
+          },
+          "409": {
+            "description": "Email already exists or deleted"
+          }
+        }
+      }
+    },
+    "/api/auth/authUser": {
+      "get": {
+        "summary": "Get currently logged in user",
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "User authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "Logout current user",
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully logged out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Logged out successfully"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/resetpassword": {
+      "post": {
+        "summary": "Reset password using a token",
+        "tags": [
+          "Auth"
+        ],
+        "description": "Use a valid reset token to update the user's password.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "userId",
+                  "token",
+                  "newPassword"
+                ],
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "example": "64ac2f9a2b4e3c0021234567"
+                  },
+                  "token": {
+                    "type": "string",
+                    "example": "abc123resetTokenExample"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "example": "NewStrongPassword1"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Password reset successful."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid password format or invalid/expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Password must be at least 8 characters long, contain one uppercase letter, one lowercase letter, and one number."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found or inactive",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User not found or inactive."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Server error during password reset."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/add/{friendId}": {
+      "post": {
+        "summary": "Send a friend request",
+        "tags": [
+          "Friends"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "friendId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Public ID of the user to send request to"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "publicID"
+                ],
+                "properties": {
+                  "publicID": {
+                    "type": "string",
+                    "example": "CurrentUser#1234"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Friend request sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Friend request sent!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request (self add or already sent)"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/friends/accept/{friendId}": {
+      "post": {
+        "summary": "Accept a pending friend request",
+        "tags": [
+          "Friends"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "friendId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Public ID of the user whose request is being accepted"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "publicID"
+                ],
+                "properties": {
+                  "publicID": {
+                    "type": "string",
+                    "example": "CurrentUser#1234"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Friend request accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Friend request accepted!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No pending request found"
+          },
+          "404": {
+            "description": "One or both users not found"
+          }
+        }
+      }
+    },
+    "/friends/reject/{friendId}": {
+      "post": {
+        "summary": "Reject a pending friend request",
+        "tags": [
+          "Friends"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "friendId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Public ID of the user whose request is being rejected"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "publicID"
+                ],
+                "properties": {
+                  "publicID": {
+                    "type": "string",
+                    "example": "CurrentUser#1234"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Friend request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Friend request rejected"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No pending request found"
+          },
+          "404": {
+            "description": "One or both users not found"
+          }
+        }
+      }
+    },
+    "/friends/remove/{friendId}": {
+      "post": {
+        "summary": "Remove an existing friend",
+        "tags": [
+          "Friends"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "friendId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Public ID of the friend to remove"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "publicID"
+                ],
+                "properties": {
+                  "publicID": {
+                    "type": "string",
+                    "example": "CurrentUser#1234"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Friend removed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Friend removed successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Friendship not found"
+          },
+          "404": {
+            "description": "One or both users not found"
+          }
+        }
+      }
+    },
+    "/games/": {
+      "get": {
+        "summary": "Catch-all route when category or game name is missing",
+        "tags": [
+          "Games"
+        ],
+        "responses": {
+          "404": {
+            "description": "Category or Game name is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "category or Game name is required"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/games/topselling": {
+      "get": {
+        "summary": "Get top selling games from Steam",
+        "tags": [
+          "Games"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of top selling games",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "description": [
+                        "Game header image URL",
+                        "Game page link"
+                      ]
+                    },
+                    "example": [
+                      "https://steamcdn-a.akamaihd.net/steam/apps/12345/header.jpg",
+                      "/games/Example Game"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Top sellers data not found"
+          },
+          "500": {
+            "description": "Failed to fetch top selling games"
+          }
+        }
+      }
+    },
+    "/games/landingpage": {
+      "get": {
+        "summary": "Get game images for the landing page",
+        "tags": [
+          "Games"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of landing page game images",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "example": "https://example.com/gameImage.jpg"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch game images"
+          }
+        }
+      }
+    },
+    "/games/{gameName}": {
+      "get": {
+        "summary": "Get detailed information about a game",
+        "tags": [
+          "Games"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "gameName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the game to fetch details for"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed game info including stores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "example": 12345
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Example Game"
+                      },
+                      "released": {
+                        "type": "string",
+                        "example": "2024-01-01"
+                      },
+                      "image": {
+                        "type": "string",
+                        "example": "https://example.com/gameImage.jpg"
+                      },
+                      "stores": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "example": [
+                          "Steam",
+                          "Epic Games"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Game name is required"
+          },
+          "404": {
+            "description": "Game not found"
+          },
+          "500": {
+            "description": "Failed to fetch game details"
+          }
+        }
+      }
+    },
+    "/api/mail/sendotp": {
+      "post": {
+        "summary": "Send OTP to a user for a specific purpose",
+        "tags": [
+          "OTP"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "description": "MongoDB ID of the user"
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "Email of the user"
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "enum": [
+                      "email_verification",
+                      "password_reset",
+                      "restore_account",
+                      "permanently_delete_account"
+                    ],
+                    "description": "Purpose of the OTP"
+                  }
+                },
+                "required": [
+                  "userId",
+                  "email",
+                  "purpose"
+                ],
+                "example": {
+                  "userId": "64f123abc456...",
+                  "email": "user@example.com",
+                  "purpose": "email_verification"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "verification email sent successfully, OTP will expire in 10 min"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing body parameters or invalid purpose"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "429": {
+            "description": "Maximum OTP resend attempts reached"
+          }
+        }
+      }
+    },
+    "/api/mail/verifyOtp": {
+      "post": {
+        "summary": "Verify OTP for a specific purpose",
+        "tags": [
+          "OTP"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "description": "MongoDB ID of the user"
+                  },
+                  "otp": {
+                    "type": "string",
+                    "description": "OTP code sent to the user"
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "enum": [
+                      "email_verification",
+                      "password_reset",
+                      "restore_account",
+                      "permanently_delete_account"
+                    ],
+                    "description": "Purpose of the OTP"
+                  }
+                },
+                "required": [
+                  "userId",
+                  "otp",
+                  "purpose"
+                ],
+                "example": {
+                  "userId": "64f123abc456...",
+                  "otp": "123456",
+                  "purpose": "email_verification"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP verified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Email verified successfully, redirecting to Landing Page......"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "verified": {
+                      "type": "boolean"
+                    },
+                    "resetToken": {
+                      "type": "string",
+                      "description": "Only returned for password reset"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing parameters, OTP expired, or invalid purpose"
+          },
+          "401": {
+            "description": "Invalid OTP"
+          },
+          "429": {
+            "description": "Too many failed OTP attempts"
+          }
+        }
+      }
+    },
+    "/settings/profileimage": {
+      "post": {
+        "summary": "Upload or update a user's profile image",
+        "tags": [
+          "Settings"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "profileImage": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file to upload"
+                  },
+                  "userId": {
+                    "type": "string",
+                    "description": "MongoDB ID of the user"
+                  }
+                },
+                "required": [
+                  "profileImage",
+                  "userId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile image uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Profile image uploaded successfully"
+                    },
+                    "profilePicture": {
+                      "type": "string",
+                      "description": "URL of the uploaded profile picture",
+                      "example": "https://res.cloudinary.com/your-cloud-name/image/upload/v123456/profile_pics/abc123.jpg"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing file or userId"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Server error during upload"
+          }
+        }
+      }
+    },
+    "/sync": {
+      "get": {
+        "summary": "Default endpoint for sync",
+        "tags": [
+          "Sync"
+        ],
+        "responses": {
+          "404": {
+            "description": "Must specify what platform to sync"
+          }
+        }
+      }
+    },
+    "/sync/steam": {
+      "get": {
+        "summary": "Initiate Steam authentication via OpenID",
+        "tags": [
+          "Sync"
+        ],
+        "responses": {
+          "200": {
+            "description": "Steam login initiated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Redirecting to Steam login"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Steam login failed"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/sync/steam/return": {
+      "get": {
+        "summary": "Handle Steam OAuth callback and fetch owned games and achievements",
+        "tags": [
+          "Sync"
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to frontend library page after successful sync"
+          },
+          "401": {
+            "description": "Steam login failed"
+          },
+          "500": {
+            "description": "Failed to update Steam data"
+          }
+        }
+      }
+    },
+    "/sync/xbox": {
+      "get": {
+        "summary": "Redirect user to Xbox/Microsoft login for account sync",
+        "tags": [
+          "Sync"
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirects to Microsoft login page"
+          }
+        }
+      }
+    },
+    "/sync/xbox/return": {
+      "get": {
+        "summary": "Handle Xbox OAuth callback and fetch XSTS token",
+        "tags": [
+          "Sync"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "code",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Authorization code from Microsoft login"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Xbox authentication completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Xbox authentication complete! You can now call Xbox APIs."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No code provided"
+          },
+          "500": {
+            "description": "Xbox authentication failed"
+          }
+        }
+      }
+    },
+    "/api/users/adduser": {
+      "post": {
+        "summary": "Add a new user",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserCreatedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "409": {
+            "description": "User already exists or associated with deleted account"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/users/{publicID}": {
+      "get": {
+        "summary": "Get a user by publicID",
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "publicID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Public ID of the user"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "$ref": "#/components/schemas/UserResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/users/getuseridbyemail": {
+      "post": {
+        "summary": "Get user ID by email",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User ID found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserIdResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/users/login": {
+      "post": {
+        "summary": "User login",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          },
+          "404": {
+            "description": "Invalid email"
+          },
+          "409": {
+            "description": "Account requires verification or is deleted"
+          }
+        }
+      }
+    },
+    "/api/users/ownedgames": {
+      "post": {
+        "summary": "Get all owned games for a user",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "example": "64ac2f9a2b4e3c0021234567"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of owned games",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnedGamesResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/api/users/ownedgames/{platform}/{id}": {
+      "post": {
+        "summary": "Get a specific owned game",
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Platform name (e.g., Steam, Xbox)"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Game ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "example": "64ac2f9a2b4e3c0021234567"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Owned game found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "game": {
+                      "type": "object",
+                      "example": {
+                        "title": "Hollow Knight",
+                        "hoursPlayed": 55,
+                        "platform": "Steam"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Game or user not found"
+          }
+        }
+      }
+    },
+    "/api/users/friendlist": {
+      "post": {
+        "summary": "Get a user's friend list",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "publicID": {
+                    "type": "string",
+                    "example": "JohnDoe#1234-ABCDE"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Friend list returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FriendsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/api/users/update/{email}": {
+      "put": {
+        "summary": "Update user info",
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "email",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Email of the user to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "409": {
+            "description": "Email already exists or belongs to deleted account"
+          }
+        }
+      }
+    },
+    "/api/users/delete/{email}": {
+      "delete": {
+        "summary": "Soft delete a user",
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "email",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Email of the user to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "name",
+          "password"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "john@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "StrongPassword123"
+          }
+        }
+      },
+      "UserCreatedResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "User signed up successfully, verification OTP sent"
+          },
+          "userId": {
+            "type": "string",
+            "example": "64ac2f9a2b4e3c0021234567"
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "publicID": {
+            "type": "string",
+            "example": "JohnDoe#1234-ABCDE"
+          },
+          "email": {
+            "type": "string",
+            "example": "john@example.com"
+          },
+          "bio": {
+            "type": "string",
+            "example": "Gamer and developer"
+          },
+          "profileVisibility": {
+            "type": "string",
+            "enum": [
+              "public",
+              "friends",
+              "private"
+            ],
+            "example": "public"
+          },
+          "profilePicture": {
+            "type": "string",
+            "example": "https://example.com/avatar.jpg"
+          },
+          "steamID": {
+            "type": "string",
+            "example": "76561198000000000"
+          },
+          "xboxid": {
+            "type": "string",
+            "example": "XBOX_USER_12345"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "john@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "StrongPassword123"
+          },
+          "rememberMe": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Login successful redirecting to Landing Page......"
+          }
+        }
+      },
+      "IdRequest": {
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "john@example.com"
+          }
+        }
+      },
+      "UserIdResponse": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "64ac2f9a2b4e3c0021234567"
+          }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "User deleted successfully"
+          }
+        }
+      },
+      "OwnedGamesResponse": {
+        "type": "object",
+        "properties": {
+          "ownedGames": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            },
+            "example": {
+              "Steam": {
+                "12345": {
+                  "title": "Hollow Knight",
+                  "playtime": 60
+                }
+              },
+              "Xbox": {
+                "67890": {
+                  "title": "Ori and the Blind Forest",
+                  "playtime": 20
+                }
+              }
+            }
+          }
+        }
+      },
+      "FriendsResponse": {
+        "type": "object",
+        "properties": {
+          "friends": {
+            "type": "object",
+            "example": {
+              "Steam": [
+                "Friend1#1234",
+                "Friend2#5678"
+              ],
+              "Xbox": [
+                "FriendA#9999"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "User authentication endpoints"
+    },
+    {
+      "name": "Friends",
+      "description": "API for managing friend requests and friendships"
+    },
+    {
+      "name": "Games",
+      "description": "API for fetching games, top sellers, landing page images, and game details"
+    },
+    {
+      "name": "OTP",
+      "description": "API for sending and verifying OTPs for email verification, password reset, account restore, and permanent deletion"
+    },
+    {
+      "name": "Settings",
+      "description": "User settings endpoints, including profile image upload"
+    },
+    {
+      "name": "Sync",
+      "description": "Sync external game accounts (Steam, Xbox) with user account"
+    },
+    {
+      "name": "Users",
+      "description": "API for managing users"
+    }
+  ]
+}

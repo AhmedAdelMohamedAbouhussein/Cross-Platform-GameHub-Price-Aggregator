@@ -32,10 +32,28 @@ const SESSION_SECRET = config.sessionSecret;
 //middleware
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true }));
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:3000"
+];
+
 app.use(cors({
-  origin: "http://localhost:5173",  // your frontend URL
-  credentials: true                 // ✅ needed for cookies/sessions
+    origin: function (origin, callback) 
+    {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) 
+        {
+            return callback(null, true);
+        } 
+        else 
+        {
+            return callback(new Error("Not allowed by CORS"));
+        }
+    },
+    credentials: true
 }));
+
 app.use(logger);
 app.use(session({   // Session middleware
     secret: SESSION_SECRET, 
@@ -56,7 +74,6 @@ app.use(session({   // Session middleware
 //routes
 app.use('/api/auth', Auth);
 app.use('/games', games);
-//app.use('/steam', steam);
 app.use('/api/users', usersCRUD);
 app.use('/sync', sync);
 app.use('/api/mail', NodeMailer);

@@ -74,14 +74,14 @@ export const getUserIdByEmail = async (req, res, next) =>
 const ONE_DAY = 1000 * 60 * 60 * 24;
 const SEVEN_DAYS = ONE_DAY * 7;
 
-export async function authenticateUser(email, password, rememberMe) {
+export async function authenticateUser(email, password) {
     if (!email || !password) 
     {
         throw { status: 400, message: "Email and password are required" };
     }
 
     // Check active user
-    const user = await userModel.findOne({ email, isDeleted: false }).select('+password');
+    const user = await userModel.findOne({ email, isDeleted: false }).select('+password +isVerified');
     if (user) 
     {
         const isMatch = await user.comparePassword(password);
@@ -129,7 +129,7 @@ export const loginUser = async (req, res, next) =>
     try
     {
         const { email, password, rememberMe } = req.body;
-        const result = await authenticateUser(email, password, rememberMe);
+        const result = await authenticateUser(email, password);
 
         if (result.status === 200) 
         {

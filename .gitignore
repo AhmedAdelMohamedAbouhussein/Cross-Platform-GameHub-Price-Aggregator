@@ -1,2 +1,4 @@
+node_modules
 bfg-1.14.0.jar
 .vscode
+.env
