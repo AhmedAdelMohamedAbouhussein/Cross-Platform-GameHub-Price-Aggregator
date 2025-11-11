@@ -157,7 +157,7 @@ export const steamReturn = (req, res, next) => {
 
 
 
-
+import {getXboxProfile, getXboxFriends, getXboxOwnedGames, getXboxAchievements, enrichOwnedGamesWithAchievements} from './allxboxinfo.js'
 
 // Xbox config
 const CLIENT_ID  = config.azure.clientId;
@@ -245,13 +245,26 @@ export async function xboxReturn(req, res) {
         },
       }
     );
-    const uuid = profileRes.data.profileUsers[0].id;
+    const xuid = profileRes.data.profileUsers[0].id;
     const gamertag = profileRes.data.profileUsers[0].settings[0].value;
 
     // 5️⃣ Done — store tokens or redirect
     // You can save msAccessToken + msRefreshToken + xstsToken + userHash + gamertag in DB
 
-    console.log("Xbox Auth Success:", { uuid, gamertag, userHash, xstsToken, msAccessToken, msRefreshToken });
+    console.log("Xbox Auth Success:", { xuid, gamertag, userHash, xstsToken, msAccessToken, msRefreshToken });
+
+    const profile = await getXboxProfile(xuid, userHash, xstsToken);
+    console.log("Profile:", profile);
+
+    const friends = await getXboxFriends(xuid, userHash, xstsToken);
+    console.log("Friends:", friends);
+    
+    const noAchGames = await getXboxOwnedGames(xuid, userHash, xstsToken);
+    console.log("Owned games:", noAchGames);
+    
+    const games = await enrichOwnedGamesWithAchievements(xuid, noAchGames, xstsToken);
+    console.log("Games with achievements:", games);
+    
 
     res.redirect(`${APP_FRONTEND_URL}/library`)
 
