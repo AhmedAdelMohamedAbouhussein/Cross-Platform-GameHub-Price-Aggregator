@@ -130,13 +130,6 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: null // optional, but nice to cache locally
     },
-    xboxAccessToken: { 
-        type: String, 
-        set: encrypt, 
-        get: decrypt,
-        default: null,
-        select: false
-    },
     xboxRefreshToken: { 
         type: String, 
         set: encrypt, 
@@ -250,7 +243,6 @@ UserSchema.set('toJSON',
     transform: function(doc, ret, options) //doc → the original Mongoose document
     { 
         delete ret.password; //delete ret.field → removes that field before sending it to the client This applies globally whenever .toJSON() is called (e.g., res.json(user))
-        delete ret.xboxAccessToken;
         delete ret.xboxRefreshToken;
         delete ret.xboxTokenExpiresAt;
         delete ret.ownedGames;

@@ -12,6 +12,7 @@ import ResetPassword from './pages/ResetPassword/ResetPassword'
 // Private pages (lazy loaded)
 const SyncWithSteam = lazy(() => import("./pages/SyncWithSteam/SyncWithSteam"));
 const SyncWithXbox = lazy(() => import("./pages/SyncWithXbox/SyncWithXbox"));
+const SyncWithEpic = lazy(() => import("./pages/SyncWithEpic/SyncWithEpic.jsx"));
 const GamePage = lazy(() => import("./pages/GamePage/gamePage"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage/LibraryPage"));
 const OwnedGamesDetails = lazy(() => import("./pages/OwnedGamesDetails/OwnedGamesDetails"));
@@ -41,6 +42,8 @@ function App()
                 <Route path="/library" element={user ? <LibraryPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
                 <Route path="/library/sync/steam" element={user ? <SyncWithSteam /> : <Navigate to="/login" replace state={{ from: location }} />}/>
                 <Route path="/library/sync/xbox" element={user ? <SyncWithXbox /> : <Navigate to="/login" replace state={{ from: location }} />}/>
+                <Route path="/library/sync/epic" element={user ? <SyncWithEpic /> : <Navigate to="/login" replace state={{ from: location }} />}/>
+
                 <Route path="/ownedgamedetails" element={user ? <OwnedGamesDetails /> : <Navigate to="/login" replace state={{ from: location }} />}/>
                 <Route path="/friends" element={user ? <FriendsPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
                 <Route path="/managefriends" element={user ? <AddFriendPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>

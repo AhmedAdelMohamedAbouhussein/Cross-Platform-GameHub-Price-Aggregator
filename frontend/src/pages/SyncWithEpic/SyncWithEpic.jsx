@@ -2,14 +2,14 @@ import Aside from "../../components/Aside/Aside";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 
-import styles from './SyncWithSteam.module.css'
+import styles from './SyncWithEpic.module.css'
 
-function SyncWithSteam ()
+function SyncWithEpic ()
 {
     const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
 
-    const syncwithsteam = () => {
-    window.location.href = `${BACKEND_URL}/sync/steam`; // full page redirect
+    const syncwithepic = () => {
+    window.location.href = `${BACKEND_URL}/sync/epic`; // full page redirect
 };
 
     return(
@@ -18,9 +18,9 @@ function SyncWithSteam ()
         <div className={styles.body}>
             <Aside/>
             <main className={styles.main}>
-                <h1>Connect your Steam account to sync your games</h1>
+                <h1>Connect your Epic account to sync your games</h1>
                 <div className={styles.buttonContainer}>  
-                    <button onClick={syncwithsteam} className={styles.button}>Sync With steam</button>
+                    <button onClick={syncwithepic} className={styles.button}>Sync With Epic</button>
                 </div>
             </main>
         </div>
@@ -28,4 +28,4 @@ function SyncWithSteam ()
     </div>
     )
 }
-export default SyncWithSteam;
+export default SyncWithEpic;

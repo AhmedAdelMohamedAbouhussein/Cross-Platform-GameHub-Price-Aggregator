@@ -1,9 +1,6 @@
 import mongoose from 'mongoose';
 
 const userGameSchema = new mongoose.Schema({
-        userId: { 
-            type: mongoose.Schema.Types.ObjectId, ref: "User" 
-        },
         gameName: {
             type: String,
             required: true,

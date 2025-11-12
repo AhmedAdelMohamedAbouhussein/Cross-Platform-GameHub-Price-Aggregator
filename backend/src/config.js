@@ -59,5 +59,14 @@ export default
         cloudName: process.env.CLOUDINARY_CLOUD_NAME,
         apiKey: process.env.CLOUDINARY_API_KEY,
         apiSecret: process.env.CLOUDINARY_API_SECRET,
+    },
+    epic:
+    {
+        productId: process.env.EPIC_PRODUCT_ID,
+        clientId: process.env.EPIC_CLIENT_ID,
+        clientSecret: process.env.EPIC_CLIENT_SECRET,
+        REDIRECT_URI: process.env.APP_BACKEND_URL + process.env.EPIC_REDIRECT_URI,
+        deploymentId: process.env.EPIC_DEPLOYMENT_ID,
+        sandboxId: process.env.EPIC_SANDBOX_ID,
     }
 };

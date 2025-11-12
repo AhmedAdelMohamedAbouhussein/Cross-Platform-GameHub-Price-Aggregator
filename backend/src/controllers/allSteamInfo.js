@@ -23,7 +23,7 @@ function formatPlaytime(minutes)
 }
 
 // ✅ Fetch owned games
-export async function getOwnedGames(userId, steamId) 
+export async function getOwnedGames(steamId) 
 {
     const steamLibrary = await axios.get(
         `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${steamId}&include_appinfo=true&format=json`
@@ -38,7 +38,6 @@ export async function getOwnedGames(userId, steamId)
 
     // Build game list
     const games = response.games.map((game) => ({
-        userId: userId,
         gameName: game.name,
         gameId: game.appid,
         platform: "steam",
