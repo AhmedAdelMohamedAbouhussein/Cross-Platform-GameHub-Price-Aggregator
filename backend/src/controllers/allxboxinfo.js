@@ -46,8 +46,9 @@ export async function getXboxFriends(xuid, userHash, xstsToken) {
         const friends = res.data.people.map(friend => ({
             externalId: friend.xuid,
             profileUrl: null,
-            friendsSince: friend.addedDateTimeUtc
+            friendsSince: new Date(friend.addedDateTimeUtc)
         }));
+        console.log("Xbox Friends Mapped:", friends);
 
         const detailedFriends = [];
 
@@ -63,6 +64,7 @@ export async function getXboxFriends(xuid, userHash, xstsToken) {
                 });
             }
         }
+        console.log("Xbox Friends Detailed:", detailedFriends);
         return detailedFriends;
     
 

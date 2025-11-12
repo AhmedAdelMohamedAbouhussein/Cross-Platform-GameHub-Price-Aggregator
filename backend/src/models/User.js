@@ -164,6 +164,7 @@ const UserSchema = new mongoose.Schema({
                 displayName: { type: String }, // optional, cached name
                 profileUrl: { type: String },
                 avatar: { type: String }, // optional, cached avatar
+                friendsSince: { type: Date },
                 status: { type: String, enum: ["pending", "accepted"], default: "pending" }, // track request
                 source: { type: String, enum: ["User", "Steam", "Xbox", "Epic", "PS", "Nintendo", "GOG"], default: "User" }, // where the friend comes from
                 requestedByMe: { type: Boolean, default: true }, // true if current user sent the request

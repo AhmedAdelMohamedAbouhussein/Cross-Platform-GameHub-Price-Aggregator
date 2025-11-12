@@ -101,55 +101,65 @@ export async function getUserAchievements(steamId, games)
 }
 
 
-export async function getUserFriendList(steamId) 
-{
-    try 
-    {
-        // Step 1: Get friend IDs
-        const response = await axios.get(`http://api.steampowered.com/ISteamUser/GetFriendList/v0001/`,
+export async function getUserFriendList(steamId) {
+    try {
+        // Step 1: Get friend IDs and friend_since timestamps
+        const response = await axios.get(
+            `http://api.steampowered.com/ISteamUser/GetFriendList/v0001/`,
             {
                 params: {
                     key: STEAM_API_KEY,
                     steamid: steamId,
-                    relationship: "friend"
-                }
+                    relationship: "friend",
+                },
             }
         );
 
         const friendList = response.data.friendslist?.friends || [];
-        const friendIDs = friendList.map(friend => friend.steamid);
+        if (friendList.length === 0) return [];
 
-        if (friendIDs.length === 0) return [];
+        // Map SteamID => friend_since timestamp
+        const friendsMap = Object.fromEntries(
+            friendList.map(f => [f.steamid, f.friend_since])
+        );
 
-        // Step 2: Split into chunks of 100 (Steam API limit)
+        // Step 2: Split friend IDs into chunks of 100 (Steam API limit)
+        const friendIDs = friendList.map(f => f.steamid);
         const chunkSize = 100;
         const chunks = [];
         for (let i = 0; i < friendIDs.length; i += chunkSize) {
             chunks.push(friendIDs.slice(i, i + chunkSize).join(","));
         }
 
-        // Step 3: Fetch player summaries in parallel
+        // Step 3: Fetch player summaries for each chunk
         const requests = chunks.map(chunk =>
             axios.get(`http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/`, {
                 params: {
                     key: STEAM_API_KEY,
-                    steamids: chunk
-                }
+                    steamids: chunk,
+                },
             })
         );
 
         const results = await Promise.all(requests);
 
-        // Step 4: Merge players into one array
+        // Step 4: Merge all players into a single array
         const allPlayers = results.flatMap(r => r.data.response.players);
 
-        // Step 5: Transform into your final format
-        const filteredFriends = allPlayers.map(friend => ({
-            externalId: friend.steamid,
-            displayName: friend.personaname,
-            profileUrl: friend.profileurl,
-            avatar: friend.avatarfull
-        }));
+        // Step 5: Combine summaries with friend_since
+        const filteredFriends = allPlayers.map(friend => {
+            const timestamp = friendsMap[friend.steamid];
+            return {
+                externalId: friend.steamid,
+                displayName: friend.personaname,
+                profileUrl: friend.profileurl,
+                avatar: friend.avatarfull,
+                friendsSince: timestamp ? new Date(Number(timestamp) * 1000) : null, // Convert Unix timestamp to JS Date
+            };
+        });
+
+        // Optional: Debug log
+        console.log("Fetched friends with friend_since:", filteredFriends);
 
         return filteredFriends;
 

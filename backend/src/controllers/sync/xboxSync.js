@@ -128,6 +128,7 @@ export async function xboxReturn(req, res)
                         displayName: f.displayName,
                         profileUrl: f.profileUrl,
                         avatar: f.avatar,
+                        friendsSince: f.friendsSince,
                         status: "accepted",
                         source: "xbox"
                     })),
