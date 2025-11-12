@@ -103,7 +103,7 @@ export const steamReturn = (req, res, next) => {
     }
 
     // ✅ Steam login succeeded
-    console.log("Steam user:", user);  // contains profile + steamid
+    //console.log("Steam user:", user);  // contains profile + steamid
 
     try 
     {

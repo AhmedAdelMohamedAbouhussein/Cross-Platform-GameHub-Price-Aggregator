@@ -158,9 +158,6 @@ export async function getUserFriendList(steamId) {
             };
         });
 
-        // Optional: Debug log
-        console.log("Fetched friends with friend_since:", filteredFriends);
-
         return filteredFriends;
 
     } catch (error) {
