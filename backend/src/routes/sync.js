@@ -2,6 +2,7 @@ import express from 'express';
 import { syncWithSteam, steamReturn} from '../controllers/sync/steamSync.js';
 import { syncWithXbox, xboxReturn } from '../controllers/sync/xboxSync.js';
 import { syncWithEpic, epicReturn } from '../controllers/sync/EpicSync.js';
+import { PSNloginWithNpsso } from '../controllers/sync/PSNSync.js'; 
 
 const router = express.Router();
 
@@ -112,5 +113,7 @@ router.get("/xbox/return", xboxReturn);
 router.get("/epic", syncWithEpic);
 
 router.get("/epic/return", epicReturn);
+
+router.post("/psn", PSNloginWithNpsso);
 
 export default router;

@@ -166,7 +166,7 @@ const UserSchema = new mongoose.Schema({
                 avatar: { type: String }, // optional, cached avatar
                 friendsSince: { type: Date },
                 status: { type: String, enum: ["pending", "accepted"], default: "pending" }, // track request
-                source: { type: String, enum: ["User", "Steam", "Xbox", "Epic", "PS", "Nintendo", "GOG"], default: "User" }, // where the friend comes from
+                source: { type: String, enum: ["User", "Steam", "Xbox", "Epic", "PSN", "Nintendo", "GOG"], default: "User" }, // where the friend comes from
                 requestedByMe: { type: Boolean, default: true }, // true if current user sent the request
             },
             { _id: false } // prevent subdocument _id

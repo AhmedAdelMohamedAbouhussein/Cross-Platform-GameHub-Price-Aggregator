@@ -57,27 +57,27 @@ function Aside() {
             </li>
             <li className={styles.listitems}>
               <FaSteam className={styles.icon}/>
-              <Link className={styles.links} to= "/library/sync/steam">Sync with Steam</Link>
+              <Link className={styles.links} to= "/library/sync/steam">Link Steam account</Link>
             </li>
             <li className={styles.listitems}>
               <SiEpicgames className={styles.icon}/>
-              <Link className={styles.links} to= "/library/sync/epic">Sync with Epic</Link>
+              <Link className={styles.links} to= "/library/sync/epic">Link Epic account</Link>
             </li>
             <li className={styles.listitems}>
               <SiPlaystation className={styles.icon}/>
-              <Link className={styles.links} to= "/library/sync/playstation">Sync with Playstation</Link>
+              <Link className={styles.links} to= "/library/sync/psn">Link PSN account</Link>
             </li>
             <li className={styles.listitems}>
               <FaXbox className={styles.icon}/>
-              <Link className={styles.links} to= "/library/sync/xbox">Sync with Xbox Live</Link>
+              <Link className={styles.links} to= "/library/sync/xbox">Link Xbox account</Link>
             </li>
             <li className={styles.listitems}>
               <SiNintendo className={styles.icon}/>
-              <Link className={styles.links} to= "/library/sync/nintendo">Sync with Nintendo</Link>
+              <Link className={styles.links} to= "/library/sync/nintendo">Link Nintendo acc.</Link>
             </li>
             <li className={styles.listitems}>
               <SiGogdotcom className={styles.icon}/>
-              <Link className={styles.links} to= "/library/sync/gog">Sync with GOG</Link>
+              <Link className={styles.links} to= "/library/sync/gog">Link GOG account</Link>
             </li>
           </ul>
         </div>

@@ -15,6 +15,7 @@ const userGameSchema = new mongoose.Schema({
         },
         hoursPlayed:{
             type: String,
+            default: null,
         },
         coverImage: {
             type: String, // URL to the game's cover image
@@ -31,7 +32,8 @@ const userGameSchema = new mongoose.Schema({
                 title: { type: String },
                 description: { type: String },
                 unlocked: { type: Boolean, default: false },
-                dateUnlocked: { type: Date }
+                dateUnlocked: { type: Date },
+                type: { type: String, enum: ["default", "Bronze", "Silver", "Gold", "Platinum"], default: "default" },
             }
         ],
         lastPlayed: {

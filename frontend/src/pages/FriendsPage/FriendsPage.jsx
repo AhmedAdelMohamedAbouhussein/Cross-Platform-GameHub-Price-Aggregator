@@ -60,7 +60,7 @@ function FriendsPage()
         { key: "Steam", label: "Steam Friends", icon: FaSteam, color: "#091cb2ff" },
         { key: "Xbox", label: "Xbox Friends", icon: FaXbox, color: "#107C10" },
         { key: "Epic", label: "Epic Games Friends", icon: SiEpicgames, color: "#444" },
-        { key: "PS", label: "PlayStation Friends", icon: SiPlaystation, color: "#003087" },
+        { key: "PSN", label: "PlayStation Friends", icon: SiPlaystation, color: "#003087" },
         { key: "Nintendo", label: "Nintendo Friends", icon: SiNintendo, color: "#E60012" },
         { key: "GOG", label: "GOG Friends", icon: SiGogdotcom, color: "#6c43a1" },
     ];
