@@ -52,8 +52,8 @@ export async function xboxReturn(req, res)
         console.log("Token Response:", tokenRes.data);
         const msAccessToken = tokenRes.data.access_token;
         const msRefreshToken = tokenRes.data.refresh_token; // ← here’s your refresh token
-        // Refresh token expiry: 90 days - 1 day
-        const xboxTokenExpiresAt = new Date(Date.now() + (90 * 24 * 60 * 60 * 1000) - (24 * 60 * 60 * 1000));
+        // Refresh token expiry: 60 days - 1 day
+        const xboxTokenExpiresAt = new Date(Date.now() + (60 * 24 * 60 * 60 * 1000) - (24 * 60 * 60 * 1000));
 
         // 2️⃣ Authenticate with Xbox Live
         const xblRes = await axios.post(

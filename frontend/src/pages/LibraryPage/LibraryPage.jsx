@@ -47,13 +47,11 @@ function LibraryPage() {
     setRefreshing(true);
     try 
     {
-      const body = { userId: user._id };
-      if (user.steamId) body.steamId = user.steamId;
-      if (user.xboxId) body.xboxId = user.xboxId;
-
-      console.log("Refreshing owned games with body:", body);
       
-      await axios.post(`${BACKEND_URL}/refresh/refreshOwnedGames`, body);
+      await axios.post(`${BACKEND_URL}/refresh/refreshOwnedGames`, {}, {
+        withCredentials: true
+      });
+
       
       // Re-fetch updated games for this user
       const res = await axios.post(`${BACKEND_URL}/api/users/ownedgames`, {

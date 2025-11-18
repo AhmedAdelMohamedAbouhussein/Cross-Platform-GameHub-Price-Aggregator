@@ -120,27 +120,36 @@ const UserSchema = new mongoose.Schema({
     },
     steamId: { 
         type: String,
-        default: null
+    },
+    PSNId: {
+        type: String,
     },
     xboxId: { 
         type: String,
-        default: null
     },
     xboxGamertag: {
         type: String,
-        default: null // optional, but nice to cache locally
     },
     xboxRefreshToken: { 
         type: String, 
         set: encrypt, 
         get: decrypt,
-        default: null,
         select: false
     },
     xboxTokenExpiresAt: { 
         type: Date, 
-        default: null
+        select: false
     },
+    PSNRefreshToken: { 
+        type: String, 
+        set: encrypt, 
+        get: decrypt,
+        select: false
+    },
+    PSNTokenExpiresAt: { 
+        type: Date,
+        select: false 
+    },  
     signupDate: { 
         type: Date, 
         default: Date.now 
@@ -246,6 +255,8 @@ UserSchema.set('toJSON',
         delete ret.password; //delete ret.field → removes that field before sending it to the client This applies globally whenever .toJSON() is called (e.g., res.json(user))
         delete ret.xboxRefreshToken;
         delete ret.xboxTokenExpiresAt;
+        delete ret.PSNRefreshToken;
+        delete ret.PSNTokenExpiresAt
         delete ret.ownedGames;
         delete ret.friends;
         delete ret.wishlist;
@@ -288,15 +299,15 @@ UserSchema.set('toJSON',
 
 
 // ✅ Explicit unique indexes with valid partial filters
-UserSchema.index(
-    { steamId: 1 },
-    { unique: true, partialFilterExpression: { steamId: { $type: "string" } } }
-);
+//UserSchema.index(
+//    { steamId: 1 },
+//    { unique: true, partialFilterExpression: { steamId: { $type: "string" } } }
+//);
 
-UserSchema.index(
-    { xboxId: 1 },
-    { unique: true, partialFilterExpression: { xboxId:  { $type: "string" } } }
-);
+//UserSchema.index(
+//    { xboxId: 1 },
+//    { unique: true, partialFilterExpression: { xboxId:  { $type: "string" } } }
+//);
 
 // Hash password before saving if present
 UserSchema.pre('save', async function (next) {

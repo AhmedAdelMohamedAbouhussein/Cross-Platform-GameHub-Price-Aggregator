@@ -1,5 +1,5 @@
 import { exchangeAccessCodeForAuthTokens, exchangeNpssoForAccessCode, getProfileFromUserName } from "psn-api";
-import { getAllOwnedGames, getFriendList } from "../allPSNinfo.js";
+import { getAllOwnedGames, getFriendList } from "../allPSNInfo.js";
 import userModel from "../../models/User.js";
 
 export const PSNloginWithNpsso = async (req, res) => 
@@ -18,8 +18,11 @@ export const PSNloginWithNpsso = async (req, res) =>
         const accessCode = await exchangeNpssoForAccessCode(npsso);
         const authorization = await exchangeAccessCodeForAuthTokens(accessCode);
 
-        //const response = await getProfileFromUserName(authorization, "me");
-        //console.log("1");
+        const PSNRefreshToken = authorization.refreshToken;
+        const PSNTokenExpiresAt = new Date( Date.now() + (authorization.refreshTokenExpiresIn * 1000) - (24 * 60 * 60 * 1000));
+
+        const response = await getProfileFromUserName(authorization, "me");
+        const PSNId = response.profile.onlineId;
 
         const friends = await getFriendList(authorization);
         console.log("2");
@@ -30,7 +33,8 @@ export const PSNloginWithNpsso = async (req, res) =>
                 $set: 
                 {
                     "friends.PSN": friends,
-                }
+                },
+                PSNId, PSNRefreshToken, PSNTokenExpiresAt 
             },
         );
 
@@ -42,7 +46,7 @@ export const PSNloginWithNpsso = async (req, res) =>
         for (const game of games) 
         {
             // Set/update the game under the platform map
-            let stringGameId = String(game.gameid);
+            let stringGameId = String(game.gameId);
             updateData[`ownedGames.${game.platform}.${stringGameId}`] = game;
         }
         
@@ -53,9 +57,9 @@ export const PSNloginWithNpsso = async (req, res) =>
         console.log("PSN sync completed for user:", userId);
         res.status(200).json({ message: "PSN synced successfully" });
     } 
-    catch (err) 
+    catch (error) 
     {
-        console.error(err);
-        res.status(500).json({ error: "PSN login failed. Ensure NPSSO is valid." });
+        const err = new Error("PSN login failed. Ensure NPSSO is valid.");
+        next(err);
     }
 };

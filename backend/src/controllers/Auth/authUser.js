@@ -16,7 +16,7 @@ export const authUser = async (req, res, next) =>
         }
 
         // Fetch user info from DB using the session's userId
-        const user = await userModel.findById(req.session.userId).populate('friends', 'name email profilePicture'); // populate friend info safely
+        const user = await userModel.findById(req.session.userId)
 
         if (!user) 
         {

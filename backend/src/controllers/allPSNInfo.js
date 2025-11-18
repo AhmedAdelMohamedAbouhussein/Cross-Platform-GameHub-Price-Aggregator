@@ -1,87 +1,138 @@
 import {
-
     getTitleTrophies,
     getUserTitles,
     getUserTrophiesEarnedForTitle,
     //TrophyRarity,
     getUserFriendsAccountIds,
-    getProfileFromAccountId 
+    getProfileFromAccountId
 } from "psn-api";
 
+import http from "http";
+import https from "https";
+import pLimit from "p-limit";
+
+// Global TCP keep-alive (same as Steam/Xbox)
+const agent = {
+    http: new http.Agent({ keepAlive: true }),
+    https: new https.Agent({ keepAlive: true })
+};
+
+// Concurrency limits
+const ACHIEVEMENT_CONCURRENCY = 10;
+const FRIENDS_CONCURRENCY = 5;
+const achievementLimit = pLimit(ACHIEVEMENT_CONCURRENCY);
+const friendsLimit = pLimit(FRIENDS_CONCURRENCY);
+
+// -------- FRIEND LIST --------
 
 export const getFriendList = async (authorization) => {
-    const response = await getUserFriendsAccountIds(authorization, "me");
+    const response = await getUserFriendsAccountIds(authorization, "me", {
+        agent
+    });
+
     const friends = response.friends || [];
 
-    // Fetch all friend profiles in parallel
     const friendProfiles = await Promise.all(
-        friends.map(async (friend) => {
-            const profile = await getProfileFromAccountId(authorization, friend);
-            return {
-                externalId: friend,
-                displayName: profile.onlineId,
-                avatar: profile.avatars[2]?.url || null,
-                status: "accepted",
-                source: "psn",
-                friendsSince: null,
-                profileUrl: "https://profile.playstation.com/" + profile.onlineId,
-            };
-        })
+        friends.map((friend) =>
+            friendsLimit(async () => {
+                const profile = await getProfileFromAccountId(
+                    authorization,
+                    friend,
+                    { agent }
+                );
+
+                return {
+                    externalId: friend,
+                    displayName: profile.onlineId,
+                    avatar: profile.avatars[2]?.url || null,
+                    status: "accepted",
+                    source: "psn",
+                    friendsSince: null,
+                    profileUrl: "https://profile.playstation.com/" + profile.onlineId
+                };
+            })
+        )
     );
 
     return friendProfiles;
 };
 
+// -------- OWNED GAMES --------
 
 export const getAllOwnedGames = async (authorization) => {
-    const result = await getUserTitles({ accessToken: authorization.accessToken }, "me");
+    const result = await getUserTitles(
+        { accessToken: authorization.accessToken },
+        "me",
+        { agent }
+    );
+
     const trophyTitles = result.trophyTitles || [];
 
-    // Fetch all games in parallel
     const games = await Promise.all(
-        trophyTitles.map(async (title, idx) => {
-            const npServiceName = title.trophyTitlePlatform.includes("PS5") ? undefined : "trophy";
+        trophyTitles.map((title, idx) =>
+            achievementLimit(async () => {
+                const npServiceName =
+                    title.trophyTitlePlatform.includes("PS5")
+                        ? undefined
+                        : "trophy";
 
-            const [titleTrophies, earnedTrophies] = await Promise.all([
-                getTitleTrophies(authorization, title.npCommunicationId, "all", { npServiceName }),
-                getUserTrophiesEarnedForTitle(authorization, "me", title.npCommunicationId, "all", { npServiceName })
-            ]);
+                const [titleTrophies, earnedTrophies] = await Promise.all([
+                    getTitleTrophies(
+                        authorization,
+                        title.npCommunicationId,
+                        "all",
+                        { npServiceName, agent }
+                    ),
+                    getUserTrophiesEarnedForTitle(
+                        authorization,
+                        "me",
+                        title.npCommunicationId,
+                        "all",
+                        { npServiceName, agent }
+                    )
+                ]);
 
-            const mergedTrophies = mergeTrophyLists(titleTrophies.trophies, earnedTrophies.trophies);
+                const mergedTrophies = mergeTrophyLists(
+                    titleTrophies.trophies,
+                    earnedTrophies.trophies
+                );
 
-            return {
-                gameName: title.trophyTitleName,
-                gameid: idx,
-                platform: "PSN",
-                progress: title.progress,
-                coverImage: title.trophyTitleIconUrl,
-                achievements: mergedTrophies,
-                hoursPlayed: null,
-                lastPlayed: null,
-            };
-        })
+                return {
+                    gameName: title.trophyTitleName,
+                    gameId: idx,
+                    platform: "PSN",
+                    progress: title.progress,
+                    coverImage: title.trophyTitleIconUrl,
+                    achievements: mergedTrophies,
+                    hoursPlayed: null,
+                    lastPlayed: null
+                };
+            })
+        )
     );
 
     return games;
 };
 
-
-
-
 // ---------------- Helper Functions ----------------
 
 const mergeTrophyLists = (titleTrophies, earnedTrophies) => {
-    const mergedTrophies = [];
+    const merged = [];
 
-    for (const earnedTrophy of earnedTrophies) {
-        const foundTitleTrophy = titleTrophies.find(
-            (t) => t.trophyId === earnedTrophy.trophyId
+    for (const earned of earnedTrophies) {
+        const base = titleTrophies.find(
+            (t) => t.trophyId === earned.trophyId
         );
 
-        mergedTrophies.push(normalizeTrophy({ ...earnedTrophy, ...foundTitleTrophy }));
+        merged.push(
+            normalizeTrophy({
+                ...base,
+                ...earned
+            })
+        );
     }
 
-    return mergedTrophies;
+    return merged;
 };
 
 const normalizeTrophy = (trophy) => {

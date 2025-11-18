@@ -1,15 +1,27 @@
 import axios from "axios";
 import pLimit from "p-limit";
+import http from "http";
+import https from "https";
 
-const CONCURRENT_LIMIT = 10; // Max 10 parallel requests
-const limit = pLimit(CONCURRENT_LIMIT);
+// Concurrency limits
+const ACHIEVEMENT_CONCURRENCY = 10;
+const FRIENDS_CONCURRENCY = 5;
+const achievementLimit = pLimit(ACHIEVEMENT_CONCURRENCY);
+const friendsLimit = pLimit(FRIENDS_CONCURRENCY);
+
+// Axios with TCP keep-alive for maximum speed
+const axiosClient = axios.create({
+    httpAgent: new http.Agent({ keepAlive: true }),
+    httpsAgent: new https.Agent({ keepAlive: true }),
+    timeout: 8000
+});
 
 /**
- * ✅ Get profile info for any Xbox user by XUID
+ * Fetch Xbox profile (NO CACHE)
  */
 export async function getXboxProfile(xuid, userHash, xstsToken) {
     try {
-        const res = await axios.get(
+        const res = await axiosClient.get(
             `https://profile.xboxlive.com/users/xuid(${xuid})/profile/settings?settings=Gamertag,GameDisplayPicRaw`,
             {
                 headers: {
@@ -20,23 +32,25 @@ export async function getXboxProfile(xuid, userHash, xstsToken) {
         );
 
         const user = res.data.profileUsers[0];
+
         return {
             xuid: user.id,
-            gamertag: user.settings.find((s) => s.id === "Gamertag")?.value,
-            avatar: user.settings.find((s) => s.id === "GameDisplayPicRaw")?.value,
+            gamertag: user.settings.find(s => s.id === "Gamertag")?.value,
+            avatar: user.settings.find(s => s.id === "GameDisplayPicRaw")?.value,
         };
+
     } catch (err) {
-        console.warn(`Failed to fetch profile for xuid ${xuid}: ${err.message}`);
+        console.warn(`Failed profile ${xuid}: ${err.message}`);
         return null;
     }
 }
 
 /**
- * Fetch Xbox friends list with concurrency limit
+ * Fetch friends list (fresh every time, no cache)
  */
 export async function getXboxFriends(xuid, userHash, xstsToken) {
     try {
-        const res = await axios.get(
+        const res = await axiosClient.get(
             `https://social.xboxlive.com/users/xuid(${xuid})/people?view=All`,
             {
                 headers: {
@@ -55,10 +69,10 @@ export async function getXboxFriends(xuid, userHash, xstsToken) {
             friendsSince: new Date(friend.addedDateTimeUtc),
         }));
 
-        // Fetch detailed profiles with concurrency limit
-        const detailedFriends = await Promise.all(
+        // Fetch profiles in parallel
+        const detailed = await Promise.all(
             friends.map(friend =>
-                limit(async () => {
+                friendsLimit(async () => {
                     const profile = await getXboxProfile(friend.externalId, userHash, xstsToken);
                     if (!profile) return null;
                     return {
@@ -71,8 +85,9 @@ export async function getXboxFriends(xuid, userHash, xstsToken) {
         );
 
         return detailedFriends.filter(f => f !== null);
+
     } catch (err) {
-        console.warn(`Failed to fetch Xbox friends: ${err.message}`);
+        console.warn(`Friends error: ${err.message}`);
         return [];
     }
 }
@@ -82,7 +97,7 @@ export async function getXboxFriends(xuid, userHash, xstsToken) {
  */
 export async function getXboxOwnedGames(xuid, userHash, xstsToken) {
     try {
-        const res = await axios.get(
+        const res = await axiosClient.get(
             `https://achievements.xboxlive.com/users/xuid(${xuid})/history/titles`,
             {
                 headers: {
@@ -96,7 +111,7 @@ export async function getXboxOwnedGames(xuid, userHash, xstsToken) {
 
         return res.data.titles.map(game => ({
             gameName: game.name,
-            gameId: Number(game.titleId),
+            gameId: game.titleId,
             platform: "xbox",
             lastPlayed: game.lastUnlock ? new Date(game.lastUnlock) : null,
             coverImage: null,
@@ -104,18 +119,19 @@ export async function getXboxOwnedGames(xuid, userHash, xstsToken) {
             achievements: [],
             progress: null,
         }));
+
     } catch (err) {
-        console.warn(`Failed to fetch Xbox owned games: ${err.response?.status} ${err.message}`);
+        console.warn(`Owned games error: ${err.message}`);
         return [];
     }
 }
 
 /**
- * Get achievements for a specific game
+ * Fetch achievements fresh every time
  */
 export async function getXboxAchievements(xuid, titleId, userHash, xstsToken) {
     try {
-        const res = await axios.get(
+        const res = await axiosClient.get(
             `https://achievements.xboxlive.com/users/xuid(${xuid})/achievements?titleId=${titleId}`,
             {
                 headers: {
@@ -125,43 +141,40 @@ export async function getXboxAchievements(xuid, titleId, userHash, xstsToken) {
             }
         );
 
-        const achievements = res.data.achievements || [];
-
-        return achievements.map(ach => ({
+        return (res.data.achievements || []).map(ach => ({
             title: ach.name,
-            description: ach.description || "No description available",
+            description: ach.description || "No description",
             unlocked: ach.progressState === "Achieved",
             dateUnlocked: ach.progressState === "Achieved" ? new Date(ach.progression?.timeUnlocked) : null,
         }));
+
     } catch (err) {
-        console.warn(
-            `Failed to fetch achievements for title ${titleId}:`,
-            err.response?.status,
-            err.response?.data || err.message
-        );
+        console.warn(`Achievements error ${titleId}: ${err.message}`);
         return [];
     }
 }
 
 /**
- * Enrich owned games with achievements & calculate progress with concurrency limit
+ * Enrich games with achievements (parallel, no cache)
  */
 export async function enrichOwnedGamesWithAchievements(xuid, games, userHash, xstsToken) {
-    const enrichedGames = await Promise.all(
+    return await Promise.all(
         games.map(game =>
-            limit(async () => {
-                const achievements = await getXboxAchievements(xuid, game.gameId, userHash, xstsToken);
-                const completedCount = achievements.filter(a => a.unlocked).length;
-                const progress = achievements.length ? Number(((completedCount / achievements.length) * 100).toFixed(2)) : 0;
+            achievementLimit(async () => {
+                const achievements = await getXboxAchievements(
+                    xuid,
+                    game.gameId,
+                    userHash,
+                    xstsToken
+                );
 
-                return {
-                    ...game,
-                    achievements,
-                    progress,
-                };
+                const completed = achievements.filter(a => a.unlocked).length;
+                const progress = achievements.length
+                    ? Number(((completed / achievements.length) * 100).toFixed(2))
+                    : 0;
+
+                return { ...game, achievements, progress };
             })
         )
     );
-
-    return enrichedGames;
 }
