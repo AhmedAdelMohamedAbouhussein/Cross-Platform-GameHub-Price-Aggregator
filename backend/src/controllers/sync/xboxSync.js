@@ -26,7 +26,6 @@ export function syncWithXbox(req, res) {
 }
 
 
-
 export async function xboxReturn(req, res) 
 {
     const userId = req.session.userId; 
@@ -49,7 +48,7 @@ export async function xboxReturn(req, res)
             }),
             { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
         );
-        console.log("Token Response:", tokenRes.data);
+
         const msAccessToken = tokenRes.data.access_token;
         const msRefreshToken = tokenRes.data.refresh_token; // ← here’s your refresh token
         // Refresh token expiry: 60 days - 1 day

@@ -1,28 +1,32 @@
 import { useState, useCallback, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./SettingsPage.module.css";
 import Cropper from "react-easy-crop";
 import axios from "axios";
 
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
+import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
 import getCroppedImg from "../../utils/cropImage";
 
 import AuthContext from "../../contexts/AuthContext.jsx";
 
 function SettingsPage() 
 {
-    const { user } = useContext(AuthContext); // 👈 get from context 
+    const { user } = useContext(AuthContext); 
     const BackendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL;
+    const navigate = useNavigate(); //navigate(0);
 
+    const [loading, setLoading] = useState(false);  
     const [selected, setSelected] = useState("profile");
 
     // Profile states
+    const [profilePic, setProfilePic] = useState(null); // final cropped profile picture URL
     const [username, setUsername] = useState("PlayerOne");
     const [bio, setBio] = useState("");
     const [visibility, setVisibility] = useState("friends");
 
     // Profile Picture states
-    const [profilePic, setProfilePic] = useState(null); // final cropped profile picture URL
     const [profilePicPreview, setProfilePicPreview] = useState(null); // preview before cropping
     const [croppingMode, setCroppingMode] = useState(false);
 
@@ -44,23 +48,33 @@ function SettingsPage()
 
     const handleCropDone = async () => {
         try {
+            setLoading(true);   
             const croppedBlob = await getCroppedImg(profilePicPreview, croppedArea);
 
             // Upload cropped image
             const formData = new FormData();
             formData.append("profileImage", croppedBlob, "profile.jpg");
-            formData.append("userId", user._id); // <-- send the user ID
 
-            await axios.post(`${BackendUrl}/setting/profileImage`, formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
-
+            await axios.post(
+                `${BackendUrl}/setting/profileImage`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                    withCredentials: true,
+                }
+            );
+            
             // Show final cropped picture
             setProfilePic(URL.createObjectURL(croppedBlob));
             setCroppingMode(false);
             setProfilePicPreview(null);
         } catch (error) {
             console.error("Upload failed:", error);
+        }
+        finally {
+            setLoading(false);   // ← HIDE LOADING
         }
     };
 
@@ -158,7 +172,7 @@ function SettingsPage()
                             <h3>Display Name</h3>
                             <input
                                 type="text"
-                                value={username}
+                                value={user.name}
                                 onChange={(e) => setUsername(e.target.value)}
                                 className={styles.input}
                             />
@@ -168,7 +182,7 @@ function SettingsPage()
                         <section className={styles.section}>
                             <h3>Bio</h3>
                             <textarea
-                                value={bio}
+                                value={user.bio}
                                 onChange={(e) => setBio(e.target.value)}
                                 className={styles.textarea}
                             />
@@ -256,6 +270,7 @@ function SettingsPage()
 
     return (
         <div className={styles.pageContainer}>
+            {loading && <LoadingScreen />}   {/* ← LOADING OVERLAY */}
             <Header />
             <div className={styles.spacer}>
                 <div className={styles.settingsWrapper}>

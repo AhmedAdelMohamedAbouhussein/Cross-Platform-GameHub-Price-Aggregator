@@ -9,35 +9,35 @@ import AuthContext from "../../contexts/AuthContext";
 
 import { FaGamepad, FaSteam, FaXbox } from "react-icons/fa";
 import { SiEpicgames, SiGogdotcom, SiNintendo, SiPlaystation } from "react-icons/si";
+import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
 
 function FriendsPage() 
 {
     const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
     const API_BASE = import.meta.env.MODE === "development" ? "" : BACKEND_URL;
 
-    const { user } = useContext(AuthContext); // assumes setUser updates context
-    const [friends, setFriends] = useState(null); // <-- store fetched friends
+    const { user } = useContext(AuthContext); 
+    const [friends, setFriends] = useState(null); 
+    const [loading, setLoading] = useState(true); // <-- add loading state
 
     const navigate = useNavigate();
 
-     // Fetch friend list on mount
+    // Fetch friend list on mount
     useEffect(() => {
         const fetchFriends = async () => {
+            setLoading(true); // start loading
             try {
                 const res = await axios.post(`${API_BASE}/api/users/friendlist`, {
                     publicID: user.publicID,
                 });
 
-                // Copy the friends object so we don't mutate the original
                 let allFriends = { ...res.data.friends };
 
-                // Only update the "User" array with populated user objects
                 const userFriends = await Promise.all(
                     (allFriends.User || []).map(async (friend) => {
                         console.log("Fetching details for friend:", friend.user);
                         const response = await axios.get(`${API_BASE}/api/users/${encodeURIComponent(friend.user)}`);
-                        return { ...friend, ...response.data.user }; 
-                        // merges original friend info with populated user
+                        return { ...friend, ...response.data.user };
                     })
                 );
 
@@ -47,13 +47,13 @@ function FriendsPage()
                 console.log("Fetched friends:", allFriends);
             } catch (err) {
                 console.error("Failed to fetch friends:", err);
+            } finally {
+                setLoading(false); // end loading
             }
         };
 
         if (user?.publicID) fetchFriends();
-    }, []); // Empty dependency array ensures this runs once on mount
-
-
+    }, [user]); // include user as dependency
 
     const platforms = [
         { key: "User", label: "App Friends", icon: FaGamepad, color: "#FFD700" },
@@ -65,94 +65,92 @@ function FriendsPage()
         { key: "GOG", label: "GOG Friends", icon: SiGogdotcom, color: "#6c43a1" },
     ];
 
-return (
-    <div className={Styles.container}>
-        <Header />
-        {platforms.map((platform) => {
-            const Icon = platform.icon;
-            return (
-                <div key={platform.key} className={Styles.page}>
-                    <div className={Styles.top}>
-                        <div className={Styles.iconCircle} style={{ backgroundColor: platform.color }}>
-                            <Icon size={36} />
-                        </div>
-                        <div className={Styles.info}>
-                            <h1 className={Styles.title}>{platform.label}</h1>
-                        </div>
-                        {platform.key === "User" && (
-                            <button
-                                className={Styles.addFriendBtn}
-                                onClick={() => navigate("/managefriends")}
-                            >
-                                Manage Friends
-                            </button>
-                        )}
-                    </div>
+    if (loading) {
+        return <LoadingScreen/>
+    }
 
-                    <ul className={Styles.friendList}>
-                        {friends?.[platform.key]?.filter(f => f.status === "accepted").length > 0 ? (
-                            friends[platform.key]
-                                .filter(friend => friend.status === "accepted")
-                                .map((friend, idx) => (
-                                    <li key={idx} className={Styles.friendBar}>
-                                        <div className={Styles.friendImage}>
-                                            
+    return (
+        <div className={Styles.container}>
+            <Header />
+            {platforms.map((platform) => {
+                const Icon = platform.icon;
+                return (
+                    <div key={platform.key} className={Styles.page}>
+                        <div className={Styles.top}>
+                            <div className={Styles.iconCircle} style={{ backgroundColor: platform.color }}>
+                                <Icon size={36} />
+                            </div>
+                            <div className={Styles.info}>
+                                <h1 className={Styles.title}>{platform.label}</h1>
+                            </div>
+                            {platform.key === "User" && (
+                                <button
+                                    className={Styles.addFriendBtn}
+                                    onClick={() => navigate("/managefriends")}
+                                >
+                                    Manage Friends
+                                </button>
+                            )}
+                        </div>
+
+                        <ul className={Styles.friendList}>
+                            {friends?.[platform.key]?.filter(f => f.status === "accepted").length > 0 ? (
+                                friends[platform.key]
+                                    .filter(friend => friend.status === "accepted")
+                                    .map((friend, idx) => (
+                                        <li key={idx} className={Styles.friendBar}>
+                                            <div className={Styles.friendImage}>
                                                 <img
                                                     src={friend.avatar || friend.profilePicture || "https://digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png"}
                                                     alt={friend.displayName || friend.name || "Friend avatar"}
                                                     className={Styles.avatar}
                                                 />
-                                            
-                                        </div>
-
-                                        <div className={Styles.friendInfo}>
-                                            {/* --- Handle User vs External --- */}
-                                            <div className={Styles.friendName}>
-                                                {platform.key === "User"
-                                                    ? friend.name || friend.email || "Unknown"
-                                                    : friend.displayName || "Unknown"}
                                             </div>
 
-                                            {platform.key === "User" ? (
-                                                <>
-                                                    <div className={Styles.friendId}> UserID: {friend.publicID} </div>
-                                                    {/* Internal link for User friends */}
-                                                    <Link to={`/friends/viewprofile/${friend.publicID}`} className={Styles.friendLink}> View Profile </Link>
-                                                </>
+                                            <div className={Styles.friendInfo}>
+                                                <div className={Styles.friendName}>
+                                                    {platform.key === "User"
+                                                        ? friend.name || friend.email || "Unknown"
+                                                        : friend.displayName || "Unknown"}
+                                                </div>
 
-                                            ) : (
-                                                <>
-                                                    {friend.externalId && (
-                                                        <div className={Styles.friendId}>
-                                                            {platform.key} ID: {friend.externalId}
-                                                        </div>
-                                                    )}
-                                                    {friend.profileUrl && (
-                                                        <a
-                                                            href={friend.profileUrl}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className={Styles.friendLink}
-                                                        >
-                                                            View Profile
-                                                        </a>
-                                                    )}
-                                                </>
-                                            )}
-                                        </div>
-                                    </li>
-                                ))
-                        ) : (
-                            <li className={Styles.noFriends}>No accepted friends found</li>
-                        )}
-                    </ul>
-                </div>
-            );
-        })}
-        <Footer />
-    </div>
-);
-
+                                                {platform.key === "User" ? (
+                                                    <>
+                                                        <div className={Styles.friendId}> UserID: {friend.publicID} </div>
+                                                        <Link to={`/friends/viewprofile/${friend.publicID}`} className={Styles.friendLink}> View Profile </Link>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        {friend.externalId && (
+                                                            <div className={Styles.friendId}>
+                                                                {platform.key} ID: {friend.externalId}
+                                                            </div>
+                                                        )}
+                                                        {friend.profileUrl && (
+                                                            <a
+                                                                href={friend.profileUrl}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className={Styles.friendLink}
+                                                            >
+                                                                View Profile
+                                                            </a>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        </li>
+                                    ))
+                            ) : (
+                                <li className={Styles.noFriends}>No accepted friends found</li>
+                            )}
+                        </ul>
+                    </div>
+                );
+            })}
+            <Footer />
+        </div>
+    );
 }
 
 export default FriendsPage;

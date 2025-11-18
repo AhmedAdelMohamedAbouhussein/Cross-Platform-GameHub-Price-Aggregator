@@ -3,6 +3,10 @@ import pLimit from "p-limit";
 import http from "http";
 import https from "https";
 
+import config from "../config.js";
+
+const RAWG_API_KEY = config.RAWG_API_KEY;
+
 // Concurrency limits
 const ACHIEVEMENT_CONCURRENCY = 10;
 const FRIENDS_CONCURRENCY = 5;
@@ -84,7 +88,7 @@ export async function getXboxFriends(xuid, userHash, xstsToken) {
             )
         );
 
-        return detailedFriends.filter(f => f !== null);
+        return detailed.filter(f => f !== null);
 
     } catch (err) {
         console.warn(`Friends error: ${err.message}`);
@@ -154,6 +158,43 @@ export async function getXboxAchievements(xuid, titleId, userHash, xstsToken) {
     }
 }
 
+
+
+const RAWG_CONCURRENCY = 10;
+const rawgLimit = pLimit(RAWG_CONCURRENCY);
+
+/**
+ * Fetch game cover from RAWG API
+ */
+async function getRawgGameCover(gameName, platformSlug = null) {
+    try {
+        const res = await axiosClient.get(`https://api.rawg.io/api/games`, {
+            params: {
+                key: RAWG_API_KEY,
+                search: gameName,
+                page_size: 5 // fetch a few results to improve matching
+            }
+        });
+
+        if (!res.data.results || res.data.results.length === 0) return null;
+
+        // Try to find the best match by name (case-insensitive)
+        const match = res.data.results.find(game => {
+            const nameMatch = game.name.toLowerCase() === gameName.toLowerCase();
+            if (!platformSlug) return nameMatch;
+            // Check if platform matches
+            const platformMatch = game.platforms?.some(p => p.platform.slug === platformSlug);
+            return nameMatch && platformMatch;
+        }) || res.data.results[0]; // fallback to first if no exact match
+
+        return match.background_image || null;
+
+    } catch (err) {
+        console.warn(`RAWG image error ${gameName}: ${err.message}`);
+        return null;
+    }
+}
+
 /**
  * Enrich games with achievements (parallel, no cache)
  */
@@ -173,7 +214,10 @@ export async function enrichOwnedGamesWithAchievements(xuid, games, userHash, xs
                     ? Number(((completed / achievements.length) * 100).toFixed(2))
                     : 0;
 
-                return { ...game, achievements, progress };
+                // Get RAWG cover image (rate-limited)
+                const coverImage = await rawgLimit(() => getRawgGameCover(game.gameName));
+
+                return { ...game, achievements, progress, coverImage };
             })
         )
     );

@@ -164,7 +164,8 @@ export const loginUser = async (req, res, next) =>
 // @route  POST /api/users/ownedgames
 export const getUserOwnedGames = async (req, res, next) => {
   try {
-    const { userId } = req.body;
+
+    const userId = req.session.userId; // ✅ correct now
 
     const user = await userModel.findById(userId).select("ownedGames");
 
@@ -191,7 +192,7 @@ export const getUserOwnedGames = async (req, res, next) => {
 // @route  POST /api/users/ownedgames/:platform/:id
 export const getUserOwnedGame = async (req, res, next) => {
   try {
-    const { userId } = req.body; // comes from frontend
+    const userId = req.session.userId; // ✅ correct now
     const { platform, id } = req.params; // platform + gameId in URL
 
     const user = await userModel.findById(userId).select("ownedGames");
@@ -240,7 +241,6 @@ export const getUserFriendList = async (req, res, next) => {
       }
     }
 
-    console.log("User friends:", friends);
     res.status(200).json({ friends });
   } catch (err) {
     next(err);

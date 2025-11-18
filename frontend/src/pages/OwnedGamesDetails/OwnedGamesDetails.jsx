@@ -7,6 +7,38 @@ import Styles from "./OwnedGamesDetails.module.css";
 import AuthContext from "../../contexts/AuthContext";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
+import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
+
+import bronzeIcon from "../../assets/bronze.png";
+import silverIcon from "../../assets/silver.png";
+import goldIcon from "../../assets/gold.png";
+import platinumIcon from "../../assets/plat.png";
+
+function getAchievementIcon(ach) {
+  const iconSize = 45; // scale up trophy images
+
+
+  switch (ach.type) {
+    case "bronze":
+      return <img src={bronzeIcon} alt="Bronze" width={iconSize + 5} height={iconSize + 20}  />;
+    case "silver":
+      return <img src={silverIcon} alt="Silver" width={iconSize + 5} height={iconSize + 20}  />;
+    case "gold":
+      return <img src={goldIcon} alt="Gold" width={iconSize + 5} height={iconSize + 20} />;
+    case "platinum":
+      return <img src={platinumIcon} alt="Platinum" width={iconSize + 5} height={iconSize + 20}  />;
+    default:
+      break;
+  }
+
+  if (ach.unlocked) {
+    return <FaUnlock color="#00ff80" size={iconSize} />;
+  } else {
+    return <FaLock color="#ff4c4c" size={iconSize}  />;
+  }
+}
+
+
 
 function OwnedGamesDetails() {
   const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
@@ -28,9 +60,7 @@ function OwnedGamesDetails() {
       try {
         const res = await axios.post(
           `${API_BASE}/api/users/ownedgames/${platform}/${id}`,
-          {
-            userId: user._id,
-          }
+          {}, {withCredentials: true}
         );
         setGame(res.data.game); // <-- update state
         console.log("Fetched owned game:", res.data.game);
@@ -41,7 +71,7 @@ function OwnedGamesDetails() {
       }
     };
 
-    if (user?._id && platform && id) {
+    if (user && platform && id) {
       fetchGame();
     }
   }, [user, API_BASE, platform, id]);
@@ -80,11 +110,7 @@ function OwnedGamesDetails() {
           style={{ background: ach.unlocked ? "#0c3718" : "#4f0f0d" }}
         >
           <div className={Styles.achIcon}>
-            {ach.unlocked ? (
-              <FaUnlock color="#00ff80" />
-            ) : (
-              <FaLock color="#ff4c4c" />
-            )}
+            {getAchievementIcon(ach)}
           </div>
           <div className={Styles.achText}>
             <h2>{ach.title}</h2>
@@ -97,13 +123,7 @@ function OwnedGamesDetails() {
   }
 
   if (loading) {
-    return (
-      <div className={Styles.container}>
-        <Header />
-        <p className={Styles.loading}>Loading game details...</p>
-        <Footer />
-      </div>
-    );
+    return <LoadingScreen />
   }
 
   if (!game) {

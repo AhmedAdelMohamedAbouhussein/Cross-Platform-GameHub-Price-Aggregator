@@ -4,18 +4,21 @@ import Header from "../../components/Header/Header.jsx";
 import Footer from "../../components/Footer/Footer.jsx";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
 
 function LandingPage() 
 {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
   const [games, setGames] = useState([]);
+  const [loading, setLoading] = useState(true); // <-- loading state
 
   // ✅ Fetch top-selling games on mount
   useEffect(() => 
   {
     async function getTopSellers() 
     {
+      setLoading(true); // start loading
       try 
       {
         const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
@@ -25,6 +28,10 @@ function LandingPage()
       catch (error) 
       {
         console.error('Error fetching top sellers:', error.message);
+      } 
+      finally 
+      {
+        setLoading(false); // end loading
       }
     }
 
@@ -52,6 +59,11 @@ function LandingPage()
 
     return () => clearInterval(scrollInterval); // Cleanup
   }, []);
+
+  if (loading) 
+  {
+    return <LoadingScreen/>
+  }
 
   return (
     <>

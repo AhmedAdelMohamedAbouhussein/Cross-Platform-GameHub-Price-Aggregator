@@ -15,7 +15,7 @@ export async function profileImage(req, res, next) {
             return res.status(400).json({ error: "No file uploaded" });
         }
 
-        const userId = req.body.userId;
+        const userId = req.session.userId;
         if (!userId) {
             return res.status(400).json({ error: "User ID not provided" });
         }

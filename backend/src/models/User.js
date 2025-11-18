@@ -51,6 +51,22 @@ function decrypt(data) {
     }
 }
 
+const generatePublicID = async function(name) {
+    let isUnique = false;
+    let newID;
+
+    while (!isUnique) {
+        const cleanName = (name || "User").replace(/\s+/g, "");
+        const randomDigits = Math.floor(10000 + Math.random() * 90000); // 5-digit number
+        newID = `${cleanName}#${randomDigits}`;
+
+        const existing = await mongoose.models.User.findOne({ publicID: newID });
+        if (!existing) isUnique = true;
+    }
+
+    return newID;
+};
+
 const UserSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -63,11 +79,6 @@ const UserSchema = new mongoose.Schema({
         type: String,
         unique: true,
         required: true,
-        default: function () {
-            const base = (this.name || "User").replace(/\s+/g, ""); // fallback if no name
-            const randomTag = Math.floor(1000 + Math.random() * 9000);
-            return `${base}#${randomTag}-${nanoid(5)}`;
-        }
     },
     email: { 
         type: String,
@@ -95,8 +106,7 @@ const UserSchema = new mongoose.Schema({
 
     bio: { 
         type: String,
-        maxlength: 300, 
-        default: "" 
+        maxlength: 300,  
     },
     profileVisibility: { 
         type: String,
@@ -160,7 +170,6 @@ const UserSchema = new mongoose.Schema({
             type: Map,
             of: userGameSchema
         },
-        default: {},
     },
     wishlist: [{ type: String }],
     friends: {
@@ -181,15 +190,6 @@ const UserSchema = new mongoose.Schema({
             { _id: false } // prevent subdocument _id
             )
         ],
-        default: {
-            User: [],
-            Steam: [],
-            Xbox: [],
-            Epic: [],
-            PS: [],
-            GOG: [],
-            Nintendo: [],
-        }
     },
     resendCount: {
         emailVerification: { 
@@ -268,6 +268,11 @@ UserSchema.set('toJSON',
         delete ret.role;
         delete ret.__v; //remove version key
         delete ret.xboxGamertag
+        delete ret._id
+        delete ret.steamId
+        delete ret.xboxId
+        delete ret.PSNId
+        delete ret.profileVisibility
         //delete ret._id;
 
         if (ret.resendCount) 
@@ -298,16 +303,12 @@ UserSchema.set('toJSON',
 });
 
 
-// ✅ Explicit unique indexes with valid partial filters
-//UserSchema.index(
-//    { steamId: 1 },
-//    { unique: true, partialFilterExpression: { steamId: { $type: "string" } } }
-//);
-
-//UserSchema.index(
-//    { xboxId: 1 },
-//    { unique: true, partialFilterExpression: { xboxId:  { $type: "string" } } }
-//);
+UserSchema.pre('validate', async function(next) {
+    if (!this.publicID) {
+        this.publicID = await generatePublicID(this.name);
+    }
+    next();
+});
 
 // Hash password before saving if present
 UserSchema.pre('save', async function (next) {

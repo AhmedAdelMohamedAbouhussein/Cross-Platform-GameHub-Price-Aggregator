@@ -6,6 +6,7 @@ import Styles from "./ManageFriendsPage.module.css";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import AuthContext from "../../contexts/AuthContext";
+import LoadingScreen from "../../components/LoadingScreen/LoadingScreen"; // <-- assuming you have this component
 
 function ManageFriendsPage() {
     const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
@@ -18,10 +19,12 @@ function ManageFriendsPage() {
     const [recieverid, setrecieverid] = useState("");
     const [feedback, setFeedback] = useState("");
     const [friends, setFriends] = useState(null);
+    const [loading, setLoading] = useState(true); // <-- loading state
 
     useEffect(() => {
         const fetchFriends = async () => {
             if (!user?.publicID) return;
+            setLoading(true); // start loading
             try {
                 const res = await axios.post(`${API_BASE}/api/users/friendlist`, {
                     publicID: user.publicID,
@@ -42,11 +45,15 @@ function ManageFriendsPage() {
                 setFriends(allFriends);
             } catch (err) {
                 console.error("Failed to fetch friends:", err);
+            } finally {
+                setLoading(false); // stop loading
             }
         };
 
         fetchFriends();
     }, [user]);
+
+    if (loading) return <LoadingScreen />; // <-- show loading screen
 
     const allFriends = friends ? Object.values(friends).flat().filter(f => f.source === "User") : [];
 
@@ -122,7 +129,7 @@ function ManageFriendsPage() {
                         <h2>Add Friend</h2>
                         <input
                             type="text"
-                            placeholder="Enter UserID"
+                            placeholder="Enter your friend's Public ID (top right corner)"
                             className={Styles.input}
                             onChange={(e) => setrecieverid(e.target.value)}
                         />

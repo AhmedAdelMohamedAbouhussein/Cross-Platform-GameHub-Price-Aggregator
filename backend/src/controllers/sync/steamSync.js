@@ -74,7 +74,6 @@ export const syncWithSteam = async (req, res, next) =>
                 error.status = 401
                 return next(error);
             }
-            console.log(user);
 
             // Return both passport profile + Steam API data
             res.status(200).json( {profile: user});

@@ -58,7 +58,9 @@ function Header() {
                                     />
                                     <div className={styles.profileInfo}>
                                         <span className={styles.profileName}>{user.name}</span>
-                                        <span className={styles.profileEmail}>{user.email}</span>
+                                        {/*<span className={styles.profileEmail}>{user.email}</span>*/}
+                                        <div><span className={styles.profileEmail}>PublicID: {user.publicID}</span></div>
+                                        
                                     </div>
                                     <div className={styles.accountArrow} onClick={toggleAccount}>
                                         {isAccountOpen ? <FaCaretUp /> : <FaCaretDown />}

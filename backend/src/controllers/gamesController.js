@@ -1,5 +1,8 @@
 import axios from 'axios';
 import gameImages from '../assets/landingPageURLs.js';
+import config from "../config.js";
+
+const RAWG_API_KEY = config.RAWG_API_KEY;
 
 // @desc  get topselling games from Steam API
 // @route  Get /games/topselling
@@ -53,8 +56,8 @@ export const getOneGameDetails = async (req, res, next) =>
     {
         const PREFERRED = ["Steam", "Epic Games", "PlayStation Store", "Microsoft Store", "Xbox Store", "Nintendo Store", "EA App (Origin)"];
 
-        const response = await axios.get(`https://api.rawg.io/api/games?search=${encodeURIComponent(gameName)}&key=${process.env.RAWG_API_KEY}`);
-
+        const response = await axios.get(`https://api.rawg.io/api/games?search=${gameName}&key=${RAWG_API_KEY}`);
+        console.log(response.data)
         if (response.status === 200 && response.data.count > 0) 
         {
             const filtered = response.data.results.filter(game => game.stores?.some(s => PREFERRED.includes(s.store.name)))

@@ -1,77 +1,59 @@
 import { useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { FaSyncAlt } from "react-icons/fa"; // Font Awesome sync icon
-
-
+import { FaSyncAlt } from "react-icons/fa";
 
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import Aside from "../../components/Aside/Aside";
 import Card from "../../components/Card/Card";
+import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
 import styles from "./LibraryPage.module.css";
 
 import AuthContext from "../../contexts/AuthContext";
 
 function LibraryPage() {
   const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
-
   const { user } = useContext(AuthContext);
-  const [ownedGames, setOwnedGames] = useState(null); // <-- state
+  const [ownedGames, setOwnedGames] = useState(null);
+  const [loading, setLoading] = useState(true); // start as loading
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Fetch owned games
+  const fetchGames = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.post(`${BACKEND_URL}/api/users/ownedgames`, {}, { withCredentials: true });
+      setOwnedGames(res.data.ownedGames);
+    } catch (err) {
+      console.error("Fetch failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Reset scroll + fetch on mount
   useEffect(() => {
     window.scrollTo(0, 0);
-
-    const fetchGames = async () => {
-      try {
-        const res = await axios.post(`${BACKEND_URL}/api/users/ownedgames`, {
-          userId: user._id,
-        });
-        setOwnedGames(res.data.ownedGames); // <-- update state
-        console.log("Fetched owned games:", res.data.ownedGames);
-      } catch (err) {
-        console.error("Fetch failed:", err);
-      }
-    };
-
-    if (user?._id) {
+    if (user) {
       fetchGames();
     }
-  }, []);
+  }, [user]);
 
-  const [refreshing, setRefreshing] = useState(false);
-
-  const refreshPage = async () => 
-  {
+  const refreshPage = async () => {
     if (refreshing) return;
     setRefreshing(true);
-    try 
-    {
-      
-      await axios.post(`${BACKEND_URL}/refresh/refreshOwnedGames`, {}, {
-        withCredentials: true
-      });
-
-      
-      // Re-fetch updated games for this user
-      const res = await axios.post(`${BACKEND_URL}/api/users/ownedgames`, {
-        userId: user._id,
-      });
-      setOwnedGames(res.data.ownedGames); // <-- just update state, no reload
-      console.log("Refreshed owned games:", res.data.ownedGames);
-
-    } catch (err) 
-    {
+    try {
+      await axios.post(`${BACKEND_URL}/refresh/refreshOwnedGames`, {}, { withCredentials: true });
+      await fetchGames(); // re-fetch updated games
+    } catch (err) {
       console.error("Failed to refresh games:", err);
-    } finally 
-    {
+    } finally {
       setRefreshing(false);
     }
   };
 
-
   const renderCards = () => {
-    if (!ownedGames) return <p>Loading games...</p>; // wait for fetch
+    if (!ownedGames) return null;
 
     // Convert plain object -> Map
     const ownedGamesMap = new Map(Object.entries(ownedGames));
@@ -80,9 +62,7 @@ function LibraryPage() {
       const gamesMap = new Map(Object.entries(gamesObj));
 
       // Sort by progress (highest first)
-      const sortedGames = Array.from(gamesMap.entries()).sort(
-        (a, b) => b[1].progress - a[1].progress
-      );
+      const sortedGames = Array.from(gamesMap.entries()).sort((a, b) => b[1].progress - a[1].progress);
 
       return sortedGames.map(([gameId, game]) => (
         <Card
@@ -98,6 +78,10 @@ function LibraryPage() {
       ));
     });
   };
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className={styles.container}>
