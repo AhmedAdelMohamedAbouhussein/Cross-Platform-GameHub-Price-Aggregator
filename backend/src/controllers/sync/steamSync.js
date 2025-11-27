@@ -115,7 +115,7 @@ export const steamReturn = (req, res, next) => {
         const updateData = {};
         for (const game of games) 
         {
-            // Set/update the game under the platform map
+            if (!game || !game.gameId) continue; // skip invalid
             updateData[`ownedGames.${game.platform}.${game.gameId}`] = game;
         }
 

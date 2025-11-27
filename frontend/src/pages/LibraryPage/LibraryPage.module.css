@@ -56,3 +56,22 @@
   flex-wrap: wrap;
   gap: 20px;
 }
+
+.filterPanel {
+  display: flex;
+  flex-direction: column;  
+  gap: 12px;               
+}
+
+/* Row 1: Search bar full width */
+.searchRow {
+  width: 100%;
+}
+
+/* Row 2: Filters side by side */
+.filtersRow {
+  display: flex;
+  gap: 30px;
+  justify-content: center; 
+  flex-wrap: wrap;         
+}

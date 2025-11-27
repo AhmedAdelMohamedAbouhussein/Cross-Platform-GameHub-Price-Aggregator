@@ -45,10 +45,10 @@ export const PSNloginWithNpsso = async (req, res) =>
         
         for (const game of games) 
         {
-            // Set/update the game under the platform map
-            let stringGameId = String(game.gameId);
-            updateData[`ownedGames.${game.platform}.${stringGameId}`] = game;
+            if (!game || !game.gameId) continue; // skip invalid
+            updateData[`ownedGames.${game.platform}.${game.gameId}`] = game;
         }
+
         
         await userModel.updateOne(
             { _id: userId },

@@ -6,7 +6,7 @@ const userGameSchema = new mongoose.Schema({
             required: true,
         },
         gameId: {
-            type: Number,
+            type: String,
             required: true,
         },
         platform: {

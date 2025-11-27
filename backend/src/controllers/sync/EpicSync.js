@@ -72,7 +72,7 @@ export async function epicReturn(req, res)
     const ownedGames = gamesRes.data?.elements?.map((game) => ({
       gameId: game.catalogItemId,
       gameName: game.entitlementName,
-      platform: "Epic",
+      platform: "epic",
       coverImage: null,
       achievements: [], // Epic doesn't expose them globally yet
       progress: 0,

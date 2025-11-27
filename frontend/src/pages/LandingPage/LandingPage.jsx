@@ -55,10 +55,10 @@ function LandingPage()
       {
         container.scrollLeft += scrollSpeed;
       }
-    }, 30); // Slower refresh rate (30ms)
+    }, 20); // Slower refresh rate (30ms)
 
     return () => clearInterval(scrollInterval); // Cleanup
-  }, []);
+  }, [games]);
 
   if (loading) 
   {

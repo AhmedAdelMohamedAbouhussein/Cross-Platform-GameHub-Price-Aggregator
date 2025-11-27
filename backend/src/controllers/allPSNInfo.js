@@ -99,13 +99,13 @@ export const getAllOwnedGames = async (authorization) => {
 
                 return {
                     gameName: title.trophyTitleName,
-                    gameId: idx,
+                    gameId: title.npCommunicationId,
                     platform: "PSN",
                     progress: title.progress,
                     coverImage: title.trophyTitleIconUrl,
                     achievements: mergedTrophies,
                     hoursPlayed: null,
-                    lastPlayed: null
+                    lastPlayed: title.lastUpdatedDateTime ? new Date(title.lastUpdatedDateTime) : null,
                 };
             })
         )

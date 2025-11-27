@@ -161,9 +161,8 @@ export const refreshOwnedGames = async (req, res, next) =>
 
                 for (const game of games) 
                 {
-                    // Set/update the game under the platform map
-                    let stringGameId = String(game.gameid);
-                    updateData[`ownedGames.${game.platform}.${stringGameId}`] = game;
+                    if (!game || !game.gameId) continue; // skip invalid
+                    updateData[`ownedGames.${game.platform}.${game.gameId}`] = game;
                 }
             }
             catch(error)

@@ -147,26 +147,58 @@ function OwnedGamesDetails() {
         <div className={Styles.top}>
           <div className={Styles.info}>
             <h1 className={Styles.gameTitle}>{game.gameName} Details</h1>
+            {platform === "steam" && 
+            <>
+              <div className={Styles.link}>
+                <label>Open Game at Steam Desktop App: </label>
+                <a className={Styles.storeLink} onClick={() => (window.location.href = `steam://store/${id}`)}> Steam Link </a>
+              </div>
+              <div className={Styles.link}>
+                <label>Open Game at Steam Website: </label>
+                <a className={Styles.storeLink} href={`https://store.steampowered.com/app/${id}`} target="_blank" rel="noopener noreferrer"> Steam Website </a>
+              </div>
+            </>}
+            {platform === "PSN" && (
             <div className={Styles.link}>
-              <label>Open Game at Steam Desktop App: </label>
+              <label>Open Game on PlayStation Store: </label>
               <a
                 className={Styles.storeLink}
-                onClick={() => (window.location.href = `steam://store/${id}`)}
-              >
-                Steam Link
-              </a>
-            </div>
-            <div className={Styles.link}>
-              <label>Open Game at Steam Website: </label>
-              <a
-                className={Styles.storeLink}
-                href={`https://store.steampowered.com/app/${id}`}
+                href={`https://store.playstation.com/en-us/search/${encodeURIComponent(game.gameName)}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Steam Website
+                PSN Store
               </a>
             </div>
+          )}
+
+          {platform === "xbox" && (
+            <div className={Styles.link}>
+              <label>Open Game on Xbox Store: </label>
+              <a
+                className={Styles.storeLink}
+                href={`https://www.microsoft.com/en-us/p/${encodeURIComponent(game.gameName)}`} 
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Xbox Store
+              </a>
+            </div>
+          )}
+
+          {platform === "epic" && (
+            <div className={Styles.link}>
+              <label>Open Game on Epic Games Store: </label>
+              <a
+                className={Styles.storeLink}
+                href={`https://www.epicgames.com/store/en-US/browse?q=${encodeURIComponent(game.gameName)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Epic Store
+              </a>
+            </div>
+          )}
             <p>
               You bought the game on:{" "}
               <strong style={{ color: "yellow" }}>{platform}</strong>

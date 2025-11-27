@@ -10,17 +10,16 @@ function Card(props)
     const id = props.id;
     const platform = props.platform.trim();
     const title = props.title;
-    const image = props.image.trim() !== "" 
+    const image = props.image.trim() !== "" || props.image.trim() !== null 
         ? props.image : "https://static.vecteezy.com/system/resources/previews/008/255/804/non_2x/page-not-found-error-404-system-updates-uploading-computing-operation-installation-programs-system-maintenance-graffiti-sprayed-page-not-found-error-404-isolated-on-white-background-vector.jpg";
     const progress = props.progress;
-    const lastPlayed = props.lastPlayed ? new Date(props.lastPlayed).toLocaleDateString() : "Game hasn't been played";
+    const lastPlayed = props.lastPlayed ? new Date(props.lastPlayed).toLocaleDateString() : null;
 
     const hoursPlayed = props.hoursPlayed;
 
     const navigate = useNavigate()
     const cardRef = useRef(null);
     const [isVisible, setIsVisible] = useState(false);
-
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -62,8 +61,8 @@ function Card(props)
                 <div className={styles.defaultOverlay}>
                     <p>Hover to see progress</p>
                 </div>
-                <p>Total Hours: {hoursPlayed}</p>
-                <p>Last Played: {lastPlayed}</p>
+                {props.hoursPlayed ? <p>Total Hours Played: {hoursPlayed}</p> : null}
+                {props.lastPlayed ? <p>Last Played on: {lastPlayed}</p> : null }
             </>
             ) : (
                 <div className={styles.placeholder}>Loading...</div>
