@@ -184,9 +184,9 @@
     display: none;
 }
 .uploadButton {
-    background: #27ae60;
+    background: #4caf50;
     padding: 8px 14px;
-    border-radius: 6px;
+    border-radius: 12px;
     color: white;
     cursor: pointer;
     transition: background 0.3s;
@@ -195,5 +195,32 @@
 }
 
 .uploadButton:hover {
-    background: #2ecc71;
+    background: #45a049;
+}
+
+.saveButton {
+    padding: 12px 24px;
+    font-weight: bold;
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-right: 12px;
+}
+.saveButton:hover {
+    background: #45a049;
+}
+
+.discardButton {
+    padding: 12px 24px;
+    font-weight: bold;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+}
+.discardButton:hover {
+    background: #d32f2f;
 }

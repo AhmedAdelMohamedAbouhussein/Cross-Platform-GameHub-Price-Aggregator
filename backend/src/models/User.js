@@ -272,7 +272,6 @@ UserSchema.set('toJSON',
         delete ret.steamId
         delete ret.xboxId
         delete ret.PSNId
-        delete ret.profileVisibility
         //delete ret._id;
 
         if (ret.resendCount) 

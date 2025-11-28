@@ -22,9 +22,9 @@ function SettingsPage()
 
     // Profile states
     const [profilePic, setProfilePic] = useState(null); // final cropped profile picture URL
-    const [username, setUsername] = useState("PlayerOne");
-    const [bio, setBio] = useState("");
-    const [visibility, setVisibility] = useState("friends");
+    const [username, setUsername] = useState(user.name);
+    const [bio, setBio] = useState(user.bio ? user.bio : "");
+    const [visibility, setVisibility] = useState(user.profileVisibility);
 
     // Profile Picture states
     const [profilePicPreview, setProfilePicPreview] = useState(null); // preview before cropping
@@ -33,6 +33,91 @@ function SettingsPage()
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedArea, setCroppedArea] = useState(null);
+
+    const [croppedBlob, setCroppedBlob] = useState(null);
+
+
+    //flags
+    const [imagechange, setImagechange] = useState(null);
+    const [namechange, setNamechange] = useState(null);
+    const [biochange, setBiochange] = useState(null);
+    const [profileVisibilitychange, setProfileVisibility] = useState(null);
+
+    const saveAllChanges = async() =>
+    {
+        setLoading(true);
+
+        try 
+        {
+            if(imagechange && croppedBlob)
+            {
+                const formData = new FormData();
+                formData.append("profileImage", croppedBlob, "profile.jpg");
+
+                await axios.post(
+                    `${BackendUrl}/setting/profileImage`,
+                    formData,
+                    {
+                        headers: {
+                            "Content-Type": "multipart/form-data",
+                        },
+                        withCredentials: true,
+                    }
+                );
+            }
+
+            // Update other fields
+            const payload = {};
+            if (biochange && bio) payload.bio = bio;
+            if (namechange && username) payload.username = username;
+            if (profileVisibilitychange  && profileVisibilitychange) payload.visibility = visibility;
+            
+            if (Object.keys(payload).length > 0) 
+            {
+                await axios.post(`${BackendUrl}/setting/updateProfile`, payload, {
+                    withCredentials: true,
+                });
+            }
+        
+            // Reset flags
+            setImagechange(false);
+            setNamechange(false);
+            setBiochange(false);
+            setProfileVisibility(false);
+            navigate(0);
+        
+        } 
+        catch (error) 
+        {
+            console.error("Save failed:", error);
+            alert("Failed to save changes. Try again.");
+        } 
+        finally 
+        {
+            setLoading(false);
+        }
+    }
+
+    const discardChanges = () => {
+    // Reset fields to initial user data
+    setProfilePic(user.profilePicture || null);
+    setUsername(user.name || "PlayerOne");
+    setBio(user.bio || "");
+    setVisibility(user.visibility || "friends");
+
+    // Reset profile picture cropping
+    setProfilePicPreview(null);
+    setCroppingMode(false);
+    setCroppedBlob(null);
+
+    // Reset all change flags
+    setImagechange(false);
+    setBiochange(false);
+    setProfileVisibility(false);
+    setNamechange(false)
+
+    navigate(0);
+};
 
     const handleProfilePicChange = (e) => {
         const file = e.target.files[0];
@@ -49,23 +134,10 @@ function SettingsPage()
     const handleCropDone = async () => {
         try {
             setLoading(true);   
-            const croppedBlob = await getCroppedImg(profilePicPreview, croppedArea);
+            const blob = await getCroppedImg(profilePicPreview, croppedArea);
+            setCroppedBlob(blob);
 
-            // Upload cropped image
-            const formData = new FormData();
-            formData.append("profileImage", croppedBlob, "profile.jpg");
-
-            await axios.post(
-                `${BackendUrl}/setting/profileImage`,
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                    withCredentials: true,
-                }
-            );
-            
+            setImagechange(true)
             // Show final cropped picture
             setProfilePic(URL.createObjectURL(croppedBlob));
             setCroppingMode(false);
@@ -172,8 +244,13 @@ function SettingsPage()
                             <h3>Display Name</h3>
                             <input
                                 type="text"
-                                value={user.name}
-                                onChange={(e) => setUsername(e.target.value)}
+                                value={username}
+                                onChange={(e) => 
+                                    {
+                                        setUsername(e.target.value)
+                                        setNamechange(true)
+                                    }
+                                }
                                 className={styles.input}
                             />
                         </section>
@@ -183,7 +260,12 @@ function SettingsPage()
                             <h3>Bio</h3>
                             <textarea
                                 value={user.bio}
-                                onChange={(e) => setBio(e.target.value)}
+                                onChange={(e) => 
+                                    {
+                                        setBio(e.target.value); 
+                                        setBiochange(true);
+                                    }
+                                }
                                 className={styles.textarea}
                             />
                         </section>
@@ -241,7 +323,12 @@ function SettingsPage()
                             <h3>Profile Visibility</h3>
                             <select
                                 value={visibility}
-                                onChange={(e) => setVisibility(e.target.value)}
+                                onChange={(e) => 
+                                    {
+                                        setVisibility(e.target.value)
+                                        setProfileVisibility(true);
+                                    }
+                                }
                                 className={styles.select}
                             >
                                 <option value="public">Public</option>
@@ -307,6 +394,14 @@ function SettingsPage()
                     {/* Main Content */}
                     <main className={styles.settingsContainer}>
                         {renderContent()}
+                        <div className={styles.saveStickyWrapper}>
+                            <button onClick={saveAllChanges} className={styles.saveButton}>
+                                Save All Changes
+                            </button>
+                            <button onClick={discardChanges} className={styles.discardButton}>
+                                Discard Changes
+                            </button>
+                        </div>
                     </main>
                 </div>
             </div>
