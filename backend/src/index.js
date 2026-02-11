@@ -35,8 +35,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = [
     "http://localhost:5173",
+    "http://172.17.128.1:5173",
     "http://localhost:3000",
-    "https://mariam-noncongruent-nonbeatifically.ngrok-free.dev" // ngrok domain 
+    "http://172.17.128.1:3000",
+    // ngrok domain 
 ];
 
 app.use(cors({
