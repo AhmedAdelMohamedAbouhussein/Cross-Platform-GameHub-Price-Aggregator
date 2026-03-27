@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import apiClient from "../../utils/apiClient.js";
 
 import Styles from "./ManageFriendsPage.module.css";
 import Header from "../../components/Header/Header";
@@ -9,8 +9,7 @@ import AuthContext from "../../contexts/AuthContext";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen"; // <-- assuming you have this component
 
 function ManageFriendsPage() {
-    const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
-    const API_BASE = import.meta.env.MODE === "development" ? "" : BACKEND_URL;
+    
 
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -26,7 +25,7 @@ function ManageFriendsPage() {
             if (!user?.publicID) return;
             setLoading(true); // start loading
             try {
-                const res = await axios.post(`${API_BASE}/api/users/friendlist`, {
+                const res = await apiClient.post(`/users/friendlist`, {
                     publicID: user.publicID,
                 });
 
@@ -34,8 +33,8 @@ function ManageFriendsPage() {
 
                 const userFriends = await Promise.all(
                     (allFriends.User || []).map(async (friend) => {
-                        const response = await axios.get(
-                            `${API_BASE}/api/users/${encodeURIComponent(friend.user)}`
+                        const response = await apiClient.get(
+                            `/users/${encodeURIComponent(friend.user)}`
                         );
                         return { ...friend, ...response.data.user };
                     })
@@ -59,7 +58,7 @@ function ManageFriendsPage() {
 
     const sendRequest = async (id) => {
         try {
-            const res = await axios.post(`${BACKEND_URL}/friends/add/${encodeURIComponent(id)}`, {
+            const res = await apiClient.post(`/friends/add/${encodeURIComponent(id)}`, {
                 publicID: user.publicID,
             });
             setFeedback(res.data.message || "Request sent!");
@@ -70,7 +69,7 @@ function ManageFriendsPage() {
 
     const acceptPendingRequest = async (id) => {
         try {
-            const res = await axios.post(`${BACKEND_URL}/friends/accept/${encodeURIComponent(id)}`, {
+            const res = await apiClient.post(`/friends/accept/${encodeURIComponent(id)}`, {
                 publicID: user.publicID,
             });
             setFeedback(res.data.message || "Request accepted!");
@@ -81,7 +80,7 @@ function ManageFriendsPage() {
 
     const rejectPendingRequest = async (id) => {
         try {
-            const res = await axios.post(`${BACKEND_URL}/friends/reject/${encodeURIComponent(id)}`, {
+            const res = await apiClient.post(`/friends/reject/${encodeURIComponent(id)}`, {
                 publicID: user.publicID,
             });
             setFeedback(res.data.message || "Request rejected!");
@@ -92,7 +91,7 @@ function ManageFriendsPage() {
 
     const removeRequest = async (id) => {
         try {
-            const res = await axios.post(`${BACKEND_URL}/friends/remove/${encodeURIComponent(id)}`, {
+            const res = await apiClient.post(`/friends/remove/${encodeURIComponent(id)}`, {
                 publicID: user.publicID,
             });
             setFeedback(res.data.message || "Friend removed!");

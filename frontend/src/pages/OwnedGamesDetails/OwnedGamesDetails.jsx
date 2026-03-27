@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FaLock, FaUnlock } from "react-icons/fa";
-import axios from "axios";
+import apiClient from "../../utils/apiClient.js";
 
 import Styles from "./OwnedGamesDetails.module.css";
 import AuthContext from "../../contexts/AuthContext";
@@ -41,8 +41,7 @@ function getAchievementIcon(ach) {
 
 
 function OwnedGamesDetails() {
-  const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
-  const API_BASE = import.meta.env.MODE === "development" ? "" : BACKEND_URL;
+  
 
   const [searchParams] = useSearchParams();
   const platform = searchParams.get("platform");
@@ -58,9 +57,9 @@ function OwnedGamesDetails() {
 
     const fetchGame = async () => {
       try {
-        const res = await axios.post(
-          `${API_BASE}/api/users/ownedgames/${platform}/${id}`,
-          {}, {withCredentials: true}
+        const res = await apiClient.post(
+          `/users/ownedgames/${platform}/${id}`,
+          {}
         );
         setGame(res.data.game); // <-- update state
         console.log("Fetched owned game:", res.data.game);
@@ -74,7 +73,7 @@ function OwnedGamesDetails() {
     if (user && platform && id) {
       fetchGame();
     }
-  }, [user, API_BASE, platform, id]);
+  }, [user, platform, id]);
 
   function formatDate(dateUnlocked) {
     const date = new Date(dateUnlocked);

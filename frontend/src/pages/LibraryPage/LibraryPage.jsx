@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import axios from "axios";
+import apiClient from "../../utils/apiClient.js";
 import { FaSyncAlt } from "react-icons/fa";
 
 import Header from "../../components/Header/Header";
@@ -16,7 +16,6 @@ import AuthContext from "../../contexts/AuthContext";
 import Fuse from "fuse.js";
 
 function LibraryPage() {
-  const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
   const { user } = useContext(AuthContext);
   const [ownedGames, setOwnedGames] = useState(null);
   const [loading, setLoading] = useState(true); // start as loading
@@ -31,7 +30,7 @@ function LibraryPage() {
   const fetchGames = async () => {
     setLoading(true);
     try {
-      const res = await axios.post(`${BACKEND_URL}/api/users/ownedgames`, {}, { withCredentials: true });
+      const res = await apiClient.post(`/users/ownedgames`, {});
       setOwnedGames(res.data.ownedGames);
     } catch (err) {
       console.error("Fetch failed:", err);
@@ -52,7 +51,7 @@ function LibraryPage() {
     if (refreshing) return;
     setRefreshing(true);
     try {
-      await axios.post(`${BACKEND_URL}/refresh/refreshOwnedGames`, {}, { withCredentials: true });
+      await apiClient.post(`/refresh/refreshOwnedGames`, {});
       await fetchGames(); // re-fetch updated games
     } catch (err) {
       console.error("Failed to refresh games:", err);

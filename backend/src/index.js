@@ -74,13 +74,13 @@ app.use(session({   // Session middleware
 
 //routes
 app.use('/api/auth', Auth);
-app.use('/games', games);
+app.use('/api/games', games);
 app.use('/api/users', usersCRUD);
-app.use('/sync', sync);
+app.use('/api/sync', sync);
 app.use('/api/mail', NodeMailer);
-app.use('/friends', Friends)
-app.use('/setting', Settings);
-app.use('/refresh', Refresh);
+app.use('/api/friends', Friends)
+app.use('/api/setting', Settings);
+app.use('/api/refresh', Refresh);
 
 //middleware
 app.use(notfound);

@@ -1,6 +1,7 @@
 import express from 'express';
 import { refreshOwnedGames } from "../controllers/refresh.js";
 import requireAuth from '../middleware/requireAuth.js';
+import { syncLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
@@ -65,6 +66,6 @@ const router = express.Router();
  *                   example: Failed to refresh owned games
  */
 
-router.post('/refreshOwnedGames', requireAuth, refreshOwnedGames);
+router.post('/refreshOwnedGames', requireAuth, syncLimiter, refreshOwnedGames);
 
 export default router;

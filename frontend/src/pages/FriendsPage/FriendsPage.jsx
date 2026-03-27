@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState} from "react";
 import Styles from "./FriendsPage.module.css";
 import { useNavigate, Link  } from 'react-router-dom';
-import axios from "axios";
+import apiClient from "../../utils/apiClient.js";
 
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -13,8 +13,7 @@ import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
 
 function FriendsPage() 
 {
-    const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
-    const API_BASE = import.meta.env.MODE === "development" ? "" : BACKEND_URL;
+    
 
     const { user } = useContext(AuthContext); 
     const [friends, setFriends] = useState(null); 
@@ -27,7 +26,7 @@ function FriendsPage()
         const fetchFriends = async () => {
             setLoading(true); // start loading
             try {
-                const res = await axios.post(`${API_BASE}/api/users/friendlist`, {
+                const res = await apiClient.post(`/users/friendlist`, {
                     publicID: user.publicID,
                 });
 
@@ -36,7 +35,7 @@ function FriendsPage()
                 const userFriends = await Promise.all(
                     (allFriends.User || []).map(async (friend) => {
                         console.log("Fetching details for friend:", friend.user);
-                        const response = await axios.get(`${API_BASE}/api/users/${encodeURIComponent(friend.user)}`);
+                        const response = await apiClient.get(`/users/${encodeURIComponent(friend.user)}`);
                         return { ...friend, ...response.data.user };
                     })
                 );

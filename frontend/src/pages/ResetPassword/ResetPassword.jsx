@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff} from "react-icons/fi";
-import axios from "axios";
+import apiClient from "../../utils/apiClient.js";
 
 import styles from './ResetPassword.module.css'
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
@@ -20,7 +20,6 @@ function ResetPassword()
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-    const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
     const navigate = useNavigate();
 
     function validatePassword(password , confirmPassword) 
@@ -56,7 +55,7 @@ function ResetPassword()
             }
             setLoading(true);
 
-            await axios.post(`${BACKEND_URL}/api/auth/resetpassword`,
+            await apiClient.post(`/auth/resetpassword`,
                 {userId: userId, token: token, newPassword: password}
             )
             navigate('/login');

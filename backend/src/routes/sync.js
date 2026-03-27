@@ -4,6 +4,7 @@ import { syncWithXbox, xboxReturn } from '../controllers/sync/xboxSync.js';
 import { syncWithEpic, epicReturn } from '../controllers/sync/EpicSync.js';
 import { PSNloginWithNpsso } from '../controllers/sync/PSNSync.js'; 
 import requireAuth from '../middleware/requireAuth.js';
+import { syncLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
@@ -50,7 +51,7 @@ router.get('/', (req, res) => {
  *       500:
  *         description: Server error
  */
-router.get('/steam', requireAuth, syncWithSteam);
+router.get('/steam', requireAuth, syncLimiter, syncWithSteam);
 
 /**
  * @swagger
@@ -78,7 +79,7 @@ router.get('/steam/return', requireAuth, steamReturn);
  *       302:
  *         description: Redirects to Microsoft login page
  */
-router.get("/xbox", requireAuth, syncWithXbox);
+router.get("/xbox", requireAuth, syncLimiter, syncWithXbox);
 
 /**
  * @swagger
@@ -111,10 +112,10 @@ router.get("/xbox", requireAuth, syncWithXbox);
  */
 router.get("/xbox/return", requireAuth, xboxReturn);
 
-router.get("/epic", requireAuth, syncWithEpic);
+router.get("/epic", requireAuth, syncLimiter, syncWithEpic);
 
 router.get("/epic/return", requireAuth, epicReturn);
 
-router.post("/psn", requireAuth, PSNloginWithNpsso);
+router.post("/psn", requireAuth, syncLimiter, PSNloginWithNpsso);
 
 export default router;

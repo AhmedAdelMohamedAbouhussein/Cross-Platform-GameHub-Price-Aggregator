@@ -1,5 +1,5 @@
 import express from 'express';
-import {getTopSellers, getLandingPageImages, getOneGameDetails} from '../controllers/gamesController.js';
+import { getTopSellers, getLandingPageImages, getOneGameDetails } from '../controllers/gamesController.js';
 
 const router = express.Router();
 
@@ -128,6 +128,6 @@ router.get('/landingpage', getLandingPageImages);
  *       500:
  *         description: Failed to fetch game details
  */
-router .get('/:gameName', getOneGameDetails);
+router.get('/:gameName', getOneGameDetails);
 
 export default router;

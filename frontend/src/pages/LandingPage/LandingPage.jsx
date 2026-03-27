@@ -3,7 +3,7 @@ import styles from "./LandingPage.module.css";
 import Header from "../../components/Header/Header.jsx";
 import Footer from "../../components/Footer/Footer.jsx";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import apiClient from "../../utils/apiClient.js";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
 
 function LandingPage() 
@@ -21,8 +21,7 @@ function LandingPage()
       setLoading(true); // start loading
       try 
       {
-        const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
-        const response = await axios.get(`${BACKEND_URL}/games/landingpage`);
+        const response = await apiClient.get(`/games/landingpage`);
         setGames(response.data);
       } 
       catch (error) 

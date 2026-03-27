@@ -1,15 +1,14 @@
 import styles from "./Header.module.css"; 
 import { Link } from 'react-router-dom';
 import { useContext, useState } from "react";
-import axios from 'axios';
+import apiClient from "../../utils/apiClient.js";
 
 import AuthContext from "../../contexts/AuthContext";  // <-- your auth provider
 import { FaCaretDown, FaCaretUp, FaCog, FaSignOutAlt } from "react-icons/fa";
 
 function Header() {
 
-    const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
-    const API_BASE = import.meta.env.MODE === "development" ? "" : BACKEND_URL;
+    
 
     const { user , setUser } = useContext(AuthContext); // <-- access logged-in user
     const [isAccountOpen, setIsAccountOpen] = useState(false);
@@ -22,9 +21,7 @@ function Header() {
     {
         try
         {
-            const response = await axios.post(`${API_BASE}/api/auth/logout`, {},
-                { withCredentials: true } // 🔑 so cookies/sessions work
-            );
+            const response = await apiClient.post(`/auth/logout`, {});
 
             console.log(response.data.message);
             setUser(null);

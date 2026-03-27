@@ -2,7 +2,7 @@ import { useState, useCallback, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./SettingsPage.module.css";
 import Cropper from "react-easy-crop";
-import axios from "axios";
+import apiClient from "../../utils/apiClient.js";
 
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -14,7 +14,6 @@ import AuthContext from "../../contexts/AuthContext.jsx";
 function SettingsPage() 
 {
     const { user } = useContext(AuthContext); 
-    const BackendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL;
     const navigate = useNavigate(); //navigate(0);
 
     const [loading, setLoading] = useState(false);  
@@ -54,14 +53,13 @@ function SettingsPage()
                 const formData = new FormData();
                 formData.append("profileImage", croppedBlob, "profile.jpg");
 
-                await axios.post(
-                    `${BackendUrl}/setting/profileImage`,
+                await apiClient.post(
+                    `/setting/profileImage`,
                     formData,
                     {
                         headers: {
                             "Content-Type": "multipart/form-data",
-                        },
-                        withCredentials: true,
+                        }
                     }
                 );
             }
@@ -74,9 +72,7 @@ function SettingsPage()
             
             if (Object.keys(payload).length > 0) 
             {
-                await axios.post(`${BackendUrl}/setting/updateProfile`, payload, {
-                    withCredentials: true,
-                });
+                await apiClient.post(`/setting/updateProfile`, payload);
             }
         
             // Reset flags

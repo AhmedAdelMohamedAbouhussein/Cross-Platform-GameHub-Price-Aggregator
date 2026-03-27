@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {useGoogleLogin} from '@react-oauth/google';
-import axios from 'axios';
+import apiClient from "../../utils/apiClient.js";
 
 import { FiEye, FiEyeOff, FiRotateCcw, FiTrash, FiMail} from "react-icons/fi";
 
@@ -13,9 +13,6 @@ import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
 
 function LoginPage() 
 {
-  const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
-  const API_BASE =import.meta.env.MODE === "development"? ""  : BACKEND_URL;
-  
   const navigate = useNavigate();
   const location = useLocation(); // 🔑 get previous location   //TODO
 
@@ -52,9 +49,8 @@ function LoginPage()
     {
       setLoading(true);
 
-      const response = await axios.post(`${API_BASE}/api/users/login`, 
-        {email: email.trim(), password: password , rememberMe: isChecked},
-        { withCredentials: true } // 🔑 so cookies/sessions work
+      const response = await apiClient.post(`/users/login`, 
+        {email: email.trim(), password: password , rememberMe: isChecked}
       );
       
       handleLoginSuccess(response.data.message);
@@ -101,13 +97,13 @@ function LoginPage()
       const {email} = formData; // destructure formData
 
       setLoading(true)
-      const response = await axios.post(`${API_BASE}/api/users/getuseridbyemail`, 
+      const response = await apiClient.post(`/users/getuseridbyemail`, 
         {email: email}
       );
 
       const userId =  response.data.userId;
       
-      await axios.post(`${BACKEND_URL}/api/mail/sendotp`, { userId, email, purpose: "password_reset"  });
+      await apiClient.post(`/mail/sendotp`, { userId, email, purpose: "password_reset"  });
 
       navigate(`/verify?userId=${userId}&email=${encodeURIComponent(email)}&purpose=password_reset`);
 
@@ -135,7 +131,7 @@ function LoginPage()
       try 
       {
         setLoading(true)
-        const response = await axios.post(`${API_BASE}/api/auth/google/login`, 
+        const response = await apiClient.post(`/auth/google/login`, 
           {code, rememberMe: isChecked},
           { withCredentials: true } // 🔑 so cookies/sessions work
         );
@@ -175,13 +171,13 @@ function LoginPage()
 
       setLoading(true);
 
-      const response = await axios.post(`${API_BASE}/api/users/getuseridbyemail`, 
+      const response = await apiClient.post(`/users/getuseridbyemail`, 
         {email: email}
       );
 
       const userId =  response.data.userId;
       
-      await axios.post(`${BACKEND_URL}/api/mail/sendotp`, { userId: userId, email: email, purpose: purpose });
+      await apiClient.post(`/mail/sendotp`, { userId: userId, email: email, purpose: purpose });
 
       navigate(`/verify?userId=${userId}&email=${encodeURIComponent(email)}&purpose=${purpose}`);
 

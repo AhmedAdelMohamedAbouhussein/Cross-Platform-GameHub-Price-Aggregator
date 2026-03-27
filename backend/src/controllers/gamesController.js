@@ -57,20 +57,44 @@ export const getOneGameDetails = async (req, res, next) =>
         const PREFERRED = ["Steam", "Epic Games", "PlayStation Store", "Microsoft Store", "Xbox Store", "Nintendo Store", "EA App (Origin)"];
 
         const response = await axios.get(`https://api.rawg.io/api/games?search=${gameName}&key=${RAWG_API_KEY}`);
-        console.log(response.data)
+        
         if (response.status === 200 && response.data.count > 0) 
         {
-            const filtered = response.data.results.filter(game => game.stores?.some(s => PREFERRED.includes(s.store.name)))
-                .map(game => ({
-                    id: game.id,
-                    name: game.name,
-                    released: game.released,
-                    image: game.background_image,
-                    stores: game.stores
-                ?.filter(s => PREFERRED.includes(s.store.name)).map(s => s.store.name)
-                }));
+            // Get the first game that has some preferred stores, or fallback to the first result
+            const firstGame = response.data.results.find(game => game.stores?.some(s => PREFERRED.includes(s.store.name))) 
+                           || response.data.results[0];
 
-        return res.json(filtered);
+            if (!firstGame) {
+                return next(new Error('Game not found'));
+            }
+
+            // Fetch the full details for this specific game
+            const detailResponse = await axios.get(`https://api.rawg.io/api/games/${firstGame.id}?key=${RAWG_API_KEY}`);
+            const details = detailResponse.data;
+
+            // Extract preferred stores with their direct purchase URLs
+            const formattedStores = details.stores
+                ?.filter(s => PREFERRED.includes(s.store.name))
+                .map(s => ({
+                    name: s.store.name,
+                    url: s.url
+                })) || [];
+
+            const gameProfile = {
+                id: details.id,
+                name: details.name,
+                description: details.description_raw || "No description available.",
+                released: details.released,
+                image: details.background_image,
+                metacritic: details.metacritic,
+                playtime: details.playtime,
+                developers: details.developers?.map(d => d.name) || [],
+                publishers: details.publishers?.map(p => p.name) || [],
+                genres: details.genres?.map(g => g.name) || [],
+                stores: formattedStores
+            };
+
+            return res.json(gameProfile);
         } 
         else 
         {

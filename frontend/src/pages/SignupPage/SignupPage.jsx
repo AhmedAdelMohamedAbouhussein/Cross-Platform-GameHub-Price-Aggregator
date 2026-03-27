@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {useGoogleLogin} from '@react-oauth/google';
-import axios from 'axios';
+import apiClient from "../../utils/apiClient.js";
 import { Link } from 'react-router-dom'; 
 import { useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff, FiRotateCcw, FiTrash} from "react-icons/fi";
@@ -14,7 +14,6 @@ function SignupPage()
 {
   const navigate = useNavigate();
 
-  const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
   const [formData, setFormData] = useState({ username: "", email: "", password: ""});
   const [feedback, setFeedback] = useState(null); // holds {type, message, redirectLink?, permanentDelete?}
   const [showPassword, setShowPassword] = useState(false);
@@ -63,7 +62,7 @@ function SignupPage()
     try 
     {
       setLoading(true);
-      const response = await axios.post(`${BACKEND_URL}/api/users/adduser`, {
+      const response = await apiClient.post(`/users/adduser`, {
         name: username,
         email: email,
         password: password
@@ -105,7 +104,7 @@ function SignupPage()
       try 
       {
         setLoading(true)
-        const response = await axios.post(`${BACKEND_URL}/api/auth/google/signup`, {
+        const response = await apiClient.post(`/auth/google/signup`, {
           code,
         });
 
@@ -204,7 +203,7 @@ export default SignupPage;
 
 ✅ Enforce HTTPS in production.
 ✅ Never expose backend secrets in import.meta.env.
-✅ Replace <a href={permanentDelete}> with a button that calls axios.delete(...) with auth headers.
+✅ Replace <a href={permanentDelete}> with a button that calls apiClient.delete(...) with auth headers.
 ✅ Don’t log tokens in console.
 ✅ Show generic error messages (don’t trust backend messages blindly).
 ✅ Let the backend enforce validation, not just frontend (frontend validation is bypassable).

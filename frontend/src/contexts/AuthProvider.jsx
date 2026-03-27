@@ -1,13 +1,12 @@
 import {useState, useEffect } from "react";
-import axios from "axios";
+import apiClient from "../utils/apiClient.js";
 
 import LoadingScreen from "../components/LoadingScreen/LoadingScreen";
 import AuthContext from "./AuthContext";
 
 function AuthProvider({ children }) 
 {
-    const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
-    const BACKEND_BASE = import.meta.env.MODE === "development"? ""  : BACKEND_URL;
+    
 
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -17,7 +16,7 @@ function AuthProvider({ children })
         setLoading(true);
         try 
         {
-            const res = await axios.get(`${BACKEND_BASE}/api/auth/authUser`, { withCredentials: true });
+            const res = await apiClient.get(`/auth/authUser`, { withCredentials: true });
             setUser(res.data.user);
             console.log("Fetched user:", res.data.user);
         } 

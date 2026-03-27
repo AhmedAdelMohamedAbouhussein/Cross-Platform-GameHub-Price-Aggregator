@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import axios from "axios";
+import apiClient from "../../utils/apiClient.js";
 import Header from "../../components/Header/Header";
 import Aside from "../../components/Aside/Aside";
 import Footer from "../../components/Footer/Footer";
@@ -10,7 +10,6 @@ import styles from './SyncWithPSN.module.css';
 function SyncWithPSN() 
 {
     const navigate = useNavigate();
-    const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
     const [status, setStatus] = useState(""); // status or error messages
     const [loading, setLoading] = useState(false);
 
@@ -23,9 +22,8 @@ function SyncWithPSN()
                 if (event.data.npsso) {
                     try {
                         const npsso = event.data.npsso;
-                        await axios.post(`${BACKEND_URL}/sync/psn`, 
-                            { npsso }, 
-                            { withCredentials: true }
+                        await apiClient.post(`/sync/psn`, 
+                            { npsso }
                         );
                         navigate("/library"); // Redirect on success
                     } catch (err) {
