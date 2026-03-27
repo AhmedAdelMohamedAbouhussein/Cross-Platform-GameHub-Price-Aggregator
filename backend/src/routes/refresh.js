@@ -1,5 +1,6 @@
 import express from 'express';
 import { refreshOwnedGames } from "../controllers/refresh.js";
+import requireAuth from '../middleware/requireAuth.js';
 
 const router = express.Router();
 
@@ -64,6 +65,6 @@ const router = express.Router();
  *                   example: Failed to refresh owned games
  */
 
-router.post('/refreshOwnedGames', refreshOwnedGames);
+router.post('/refreshOwnedGames', requireAuth, refreshOwnedGames);
 
 export default router;

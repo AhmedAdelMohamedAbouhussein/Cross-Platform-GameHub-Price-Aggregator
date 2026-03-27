@@ -3,6 +3,7 @@ import { syncWithSteam, steamReturn} from '../controllers/sync/steamSync.js';
 import { syncWithXbox, xboxReturn } from '../controllers/sync/xboxSync.js';
 import { syncWithEpic, epicReturn } from '../controllers/sync/EpicSync.js';
 import { PSNloginWithNpsso } from '../controllers/sync/PSNSync.js'; 
+import requireAuth from '../middleware/requireAuth.js';
 
 const router = express.Router();
 
@@ -49,7 +50,7 @@ router.get('/', (req, res) => {
  *       500:
  *         description: Server error
  */
-router.get('/steam', syncWithSteam);
+router.get('/steam', requireAuth, syncWithSteam);
 
 /**
  * @swagger
@@ -65,7 +66,7 @@ router.get('/steam', syncWithSteam);
  *       500:
  *         description: Failed to update Steam data
  */
-router.get('/steam/return', steamReturn);
+router.get('/steam/return', requireAuth, steamReturn);
 
 /**
  * @swagger
@@ -77,7 +78,7 @@ router.get('/steam/return', steamReturn);
  *       302:
  *         description: Redirects to Microsoft login page
  */
-router.get("/xbox", syncWithXbox);
+router.get("/xbox", requireAuth, syncWithXbox);
 
 /**
  * @swagger
@@ -108,12 +109,12 @@ router.get("/xbox", syncWithXbox);
  *       500:
  *         description: Xbox authentication failed
  */
-router.get("/xbox/return", xboxReturn);
+router.get("/xbox/return", requireAuth, xboxReturn);
 
-router.get("/epic", syncWithEpic);
+router.get("/epic", requireAuth, syncWithEpic);
 
-router.get("/epic/return", epicReturn);
+router.get("/epic/return", requireAuth, epicReturn);
 
-router.post("/psn", PSNloginWithNpsso);
+router.post("/psn", requireAuth, PSNloginWithNpsso);
 
 export default router;

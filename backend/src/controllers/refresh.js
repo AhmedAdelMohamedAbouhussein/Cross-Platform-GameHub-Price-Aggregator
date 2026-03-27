@@ -31,6 +31,7 @@ export const refreshOwnedGames = async (req, res, next) =>
 
         // object to collect all updates
         const updateData = {};
+        const errors = []; // collect per-platform errors instead of calling next()
 
         //* ----- STEAM -----
         if (steamId) 
@@ -46,8 +47,8 @@ export const refreshOwnedGames = async (req, res, next) =>
             }
             catch (error)
             {
-                const err = new Error('Error refreshing Steam games');
-                next(err);
+                console.error('Steam refresh error:', error.message);
+                errors.push({ platform: 'Steam', message: 'Error refreshing Steam games' });
             }
         }
 
@@ -124,15 +125,13 @@ export const refreshOwnedGames = async (req, res, next) =>
             }
             catch(error)
             {
-                const err = new Error('Error refreshing Xbox games');
-                next(err);
+                console.error('Xbox refresh error:', error.message);
+                errors.push({ platform: 'Xbox', message: 'Error refreshing Xbox games' });
             }
         }
         else if (xuid && (!xboxTokenExpiresAt || new Date() > xboxTokenExpiresAt))
         {
-            const error = new Error("Xbox refresh token expired or invalid. Please re-link your Xbox account.");
-            error.status = 400;
-            return next(error);
+            errors.push({ platform: 'Xbox', message: 'Xbox refresh token expired or invalid. Please re-link your Xbox account.' });
         }
 
         //* ----- PSN -----
@@ -167,15 +166,13 @@ export const refreshOwnedGames = async (req, res, next) =>
             }
             catch(error)
             {
-                const err = new Error('Error refreshing PSN games');
-                next(err);
+                console.error('PSN refresh error:', error.message);
+                errors.push({ platform: 'PSN', message: 'Error refreshing PSN games' });
             }
         }
         else if (PSNId && (!PSNRefreshToken || new Date() > PSNTokenExpiresAt))
         {
-            const error = new Error("PSN refresh token expired or invalid. Please re-link your PSN account.");
-            error.status = 400;
-            return next(error);
+            errors.push({ platform: 'PSN', message: 'PSN refresh token expired or invalid. Please re-link your PSN account.' });
         }
 
         // only update if there are new/changed games
@@ -186,6 +183,13 @@ export const refreshOwnedGames = async (req, res, next) =>
             );
         }
 
+
+        if (errors.length > 0) {
+            return res.status(200).json({ 
+                message: "Owned games refreshed with some errors", 
+                errors 
+            });
+        }
 
         return res.status(200).json({ message: "Owned games refreshed successfully" });
     } 

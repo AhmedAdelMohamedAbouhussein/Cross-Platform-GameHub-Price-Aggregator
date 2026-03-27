@@ -1,6 +1,7 @@
 import express from "express";
 import upload from "../middleware/multer.js";
 import { profileImage } from "../controllers/settings/profileImage.js";
+import requireAuth from '../middleware/requireAuth.js';
 
 const router = express.Router();
 /**
@@ -55,6 +56,6 @@ const router = express.Router();
  *       500:
  *         description: Server error during upload
  */
-router.post("/profileimage", upload.single("profileImage"), profileImage);
+router.post("/profileimage", requireAuth, upload.single("profileImage"), profileImage);
 
 export default router;

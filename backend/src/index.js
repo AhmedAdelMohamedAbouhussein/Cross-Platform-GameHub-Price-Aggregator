@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
 import mongoose from 'mongoose';
-import MongoStore  from 'connect-mongo';
+import MongoStore from 'connect-mongo';
 
 import config from './config.js'
 
@@ -31,27 +31,24 @@ const NODE_ENV = config.nodeEnv;
 const SESSION_SECRET = config.sessionSecret;
 
 //middleware
-app.use(express.json()); 
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = [
     "http://localhost:5173",
-    "http://172.17.128.1:5173",
+    //"http://172.17.128.1:5173",
     "http://localhost:3000",
-    "http://172.17.128.1:3000",
+    //"http://172.17.128.1:3000",
     // ngrok domain 
 ];
 
 app.use(cors({
-    origin: function (origin, callback) 
-    {
+    origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) 
-        {
+        if (allowedOrigins.includes(origin)) {
             return callback(null, true);
-        } 
-        else 
-        {
+        }
+        else {
             return callback(new Error("Not allowed by CORS"));
         }
     },
@@ -60,14 +57,14 @@ app.use(cors({
 
 app.use(logger);
 app.use(session({   // Session middleware
-    secret: SESSION_SECRET, 
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
         mongoUrl: MONGO_URL,
         collectionName: 'sessions'
     }),
-    cookie: 
+    cookie:
     {
         httpOnly: true,
         secure: config.nodeEnv === "production", // set true only if using HTTPS
@@ -90,28 +87,24 @@ app.use(notfound);
 app.use(errorHandeler);
 
 mongoose.connect(MONGO_URL)
-    .then(async () => 
-    {
+    .then(async () => {
         console.log('Connected to MongoDB');
-        
-        if (NODE_ENV !== 'production') 
-        {
+
+        if (NODE_ENV !== 'production') {
             mongoose.set('autoIndex', true);
             await userModel.init();
             await OtpSchema.init();
             await ResetPasswordSchema.init();
-        } 
-        else 
-        {
+        }
+        else {
             mongoose.set('autoIndex', false);
         }
-        
+
         app.listen(PORT, "0.0.0.0", () => {
             console.log(` Server is running on ${APP_BACKEND_URL}`);
         });
     })
-    .catch((error) => 
-    {
+    .catch((error) => {
         console.error(' MongoDB connection error:', error);
         process.exit(1); // Stop the app if DB connection fails
     });

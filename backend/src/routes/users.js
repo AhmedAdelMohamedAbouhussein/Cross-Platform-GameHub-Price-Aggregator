@@ -3,6 +3,7 @@ import { addUser } from '../controllers/users/create/addAndRestoreUsers.js';
 import { getUserById, getUserIdByEmail, loginUser, getUserFriendList, getUserOwnedGames, getUserOwnedGame} from '../controllers/users/record/getUser.js';
 import { updateUser } from '../controllers/users/update/updateUserInfo.js';
 import { softDeletUser } from '../controllers/users/delete/softAndHardDeleteUser.js';
+import requireAuth from '../middleware/requireAuth.js';
 
 const router = express.Router();
 
@@ -288,7 +289,7 @@ router.post('/login', loginUser);
  *       404:
  *         description: User not found
  */
-router.post('/ownedgames', getUserOwnedGames);
+router.post('/ownedgames', requireAuth, getUserOwnedGames);
 
 /**
  * @swagger
@@ -336,7 +337,7 @@ router.post('/ownedgames', getUserOwnedGames);
  *       404:
  *         description: Game or user not found
  */
-router.post('/ownedgames/:platform/:id', getUserOwnedGame);
+router.post('/ownedgames/:platform/:id', requireAuth, getUserOwnedGame);
 
 /**
  * @swagger
@@ -364,7 +365,7 @@ router.post('/ownedgames/:platform/:id', getUserOwnedGame);
  *       404:
  *         description: User not found
  */
-router.post('/friendlist', getUserFriendList);
+router.post('/friendlist', requireAuth, getUserFriendList);
 
 
 /**
@@ -399,7 +400,7 @@ router.post('/friendlist', getUserFriendList);
  *         description: Email already exists or belongs to deleted account
  */
 
-router.put('/update/:email', updateUser);
+router.put('/update/:email', requireAuth, updateUser);
 
 /**
  * @swagger
@@ -424,6 +425,6 @@ router.put('/update/:email', updateUser);
  *       404:
  *         description: User not found
  */
-router.delete('/delete/:email', softDeletUser);
+router.delete('/delete/:email', requireAuth, softDeletUser);
 
 export default router;

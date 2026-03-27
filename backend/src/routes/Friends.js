@@ -4,6 +4,7 @@ import { addFriends } from '../controllers/Friends/addFriends.js';
 import { acceptFriends } from '../controllers/Friends/acceptFriends.js';
 import { rejectFriends } from '../controllers/Friends/rejectFriends.js';
 import { removeFriends } from '../controllers/Friends/removeFriends.js';
+import requireAuth from '../middleware/requireAuth.js';
 
 
 const router = express.Router();
@@ -57,7 +58,7 @@ const router = express.Router();
  *       404:
  *         description: User not found
  */
-router.post("/add/:friendId", addFriends);
+router.post("/add/:friendId", requireAuth, addFriends);
 
 /**
  * @swagger
@@ -100,7 +101,7 @@ router.post("/add/:friendId", addFriends);
  *       404:
  *         description: One or both users not found
  */
-router.post("/accept/:friendId", acceptFriends);
+router.post("/accept/:friendId", requireAuth, acceptFriends);
 
 /**
  * @swagger
@@ -143,7 +144,7 @@ router.post("/accept/:friendId", acceptFriends);
  *       404:
  *         description: One or both users not found
  */
-router.post("/reject/:friendId", rejectFriends);
+router.post("/reject/:friendId", requireAuth, rejectFriends);
 
 /**
  * @swagger
@@ -186,6 +187,6 @@ router.post("/reject/:friendId", rejectFriends);
  *       404:
  *         description: One or both users not found
  */
-router.post("/remove/:friendId", removeFriends);
+router.post("/remove/:friendId", requireAuth, removeFriends);
 
 export default router;
