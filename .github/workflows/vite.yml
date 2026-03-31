@@ -6,10 +6,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    #strategy:
-      #matrix:
-        #os: [ubuntu-latest, windows-latest, macos-latest]
-    #runs-on: ${ matrix.os } // add {} later when using matrix 
 
     steps:
       - name: Checkout Code
@@ -27,27 +23,28 @@ jobs:
       - name: Build Vite App
         run: npm run build
         working-directory: frontend
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages-artifact
+          path: frontend/dist
 
   deploy:
-    needs: build  # ✅ Only run if all build jobs succeed
+    needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+        
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
         with:
-          node-version: 22
-
-      - name: Install Dependencies
-        run: npm ci
-        working-directory: frontend
-
-      - name: Build Vite App
-        run: npm run build
-        working-directory: frontend
+          name: github-pages-artifact
+          path: frontend/dist
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

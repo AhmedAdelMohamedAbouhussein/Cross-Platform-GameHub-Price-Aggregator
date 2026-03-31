@@ -1,27 +1,33 @@
-name: Build and Publish image to DockerHub
+name: Build and Publish images to DockerHub
 
 on:
   workflow_dispatch:
 
 jobs:
-  publish_image:
+  publish_backend:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Print working directory (for debug)
-        run: pwd
-
-      - name: List files (for debug)
-        run: ls -R
-
-      - name: Build Docker Image
-        run: docker build -f docker/Dockerfile -t ahmedadelabouhussein/web_app:latest .
-      
       - name: Log in to DockerHub
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Push Image to DockerHub
-        run: docker push ahmedadelabouhussein/web_app:latest
+      - name: Build and Push Backend Image
+        run: |
+          docker build -t ahmedadelabouhussein/web_app_backend:latest ./backend
+          docker push ahmedadelabouhussein/web_app_backend:latest
+
+  publish_frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to DockerHub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Frontend Image
+        run: |
+          docker build -t ahmedadelabouhussein/web_app_frontend:latest ./frontend
+          docker push ahmedadelabouhussein/web_app_frontend:latest
