@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/Web_App',
+  base: '/MyGameHub',
   server: {
     host: '0.0.0.0',
     port: 5173,
@@ -18,5 +18,11 @@ export default defineConfig({
     allowedHosts: [
       'mariam-noncongruent-nonbeatifically.ngrok-free.dev' // 👈 add your ngrok domain here
     ]
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.js'],
+    css: false,
   }
 })

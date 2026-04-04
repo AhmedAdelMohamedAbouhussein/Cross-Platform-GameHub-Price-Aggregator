@@ -4,7 +4,8 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -27,13 +28,15 @@
     "mongoose": "^8.17.1",
     "multer": "^2.0.2",
     "nanoid": "^5.1.6",
-    "nodemailer": "^7.0.5",
+    "nodemailer": "^8.0.4",
     "p-limit": "^7.2.0",
     "passport": "^0.7.0",
     "passport-steam": "^1.0.18",
     "psn-api": "^2.15.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.0",
+    "vitest": "^3.2.4"
   }
 }
