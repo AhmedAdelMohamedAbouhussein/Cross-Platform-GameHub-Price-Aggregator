@@ -16,6 +16,21 @@ vi.mock('connect-mongo', () => ({
     },
 }));
 
+// ── Mock Redis BEFORE app.js is imported ─────────────────────────────────────
+vi.mock('redis', () => {
+    const mockClient = {
+        connect: vi.fn().mockResolvedValue(),
+        get: vi.fn().mockResolvedValue(null),
+        set: vi.fn().mockResolvedValue('OK'),
+        del: vi.fn().mockResolvedValue(1),
+        on: vi.fn(),
+        quit: vi.fn().mockResolvedValue(),
+    };
+
+    return { createClient: () => mockClient };
+});
+
+
 import app from '../app.js';
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
