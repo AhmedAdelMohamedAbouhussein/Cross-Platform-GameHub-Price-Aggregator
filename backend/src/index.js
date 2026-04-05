@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import config from './config.js';
+import config from './config/env.js';
 import app from './app.js';
 
 import userModel from './models/User.js'

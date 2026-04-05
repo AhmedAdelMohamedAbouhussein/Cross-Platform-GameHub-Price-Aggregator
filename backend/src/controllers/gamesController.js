@@ -1,6 +1,6 @@
 import axios from 'axios';
 import gameImages from '../assets/landingPageURLs.js';
-import config from "../config.js";
+import config from "../config/env.js";
 
 const RAWG_API_KEY = config.RAWG_API_KEY;
 

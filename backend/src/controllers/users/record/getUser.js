@@ -1,5 +1,5 @@
 import userModel from "../../../models/User.js";
-import config from '../../../config.js'
+import config from '../../../config/env.js'
 
 const APP_BACKEND_URL = config.appUrl;
 const APP_FRONTEND_URL = config.frontendUrl;

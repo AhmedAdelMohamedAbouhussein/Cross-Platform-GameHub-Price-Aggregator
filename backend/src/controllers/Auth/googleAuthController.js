@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 import { UserRefreshClient, OAuth2Client } from 'google-auth-library';
-import config from '../../config.js'
+import config from '../../config/env.js'
 import userModel from '../../models/User.js'
 
 const CI = config.google.clientId;

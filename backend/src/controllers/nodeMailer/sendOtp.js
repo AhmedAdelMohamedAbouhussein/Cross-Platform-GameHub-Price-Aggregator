@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer';
 import OtpSchema from '../../models/Otp.js'
 import userModel from '../../models/User.js';
 
-import config from '../../config.js'
+import config from '../../config/env.js'
 
 let transporter = nodemailer.createTransport({
     service: "gmail",

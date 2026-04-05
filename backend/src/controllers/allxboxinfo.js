@@ -3,7 +3,7 @@ import pLimit from "p-limit";
 import http from "http";
 import https from "https";
 
-import config from "../config.js";
+import config from "../config/env.js";
 
 const RAWG_API_KEY = config.RAWG_API_KEY;
 

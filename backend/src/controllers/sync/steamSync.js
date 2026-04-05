@@ -1,7 +1,7 @@
 import axios from 'axios';
 import passport from "passport";
 import SteamStrategy from "passport-steam";
-import config from '../../config.js'
+import config from '../../config/env.js'
 import userModel from "../../models/User.js"; //TODO
 
 import {getOwnedGames, getUserAchievements, getUserFriendList} from '../allSteamInfo.js'

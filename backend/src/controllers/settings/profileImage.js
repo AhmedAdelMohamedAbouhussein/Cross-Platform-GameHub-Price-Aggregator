@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import userModel from "../../models/User.js";
-import config from "../../config.js";
+import config from "../../config/env.js";
 
 // Configure Cloudinary
 cloudinary.config({

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 
-import config from '../config.js';
+import config from '../config/env.js';
 
 const BCRYPT_SALT_ROUNDS = config.security.bcryptSaltRounds
 

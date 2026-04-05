@@ -32,7 +32,8 @@
     "p-limit": "^7.2.0",
     "passport": "^0.7.0",
     "passport-steam": "^1.0.18",
-    "psn-api": "^2.15.0"
+    "psn-api": "^2.15.0",
+    "redis": "^5.11.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",

@@ -1,9 +1,10 @@
 import express from 'express';
 import cors from 'cors';
-import session from 'express-session';
-import MongoStore from 'connect-mongo';
 
-import config from './config.js'
+import corsOptions from './config/cors.js';
+import sessionMiddleware from './config/session.js';
+
+import redisClient from './config/redis.js';
 
 import Auth from './routes/Auth.js';
 import games from './routes/games.js';
@@ -20,42 +21,18 @@ import notfound from './middleware/notfound.js';
 
 const app = express();
 
+
+// ── redis ──────────────────────────────────────────────────────────
+
+await redisClient.connect();
+
 // ── Core middleware ──────────────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const allowedOrigins = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-];
-
-app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-        return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true
-}));
-
+app.use(cors(corsOptions));
 app.use(logger);
-
-app.use(session({
-    secret: config.sessionSecret || 'test-secret',
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-        mongoUrl: config.mongoLocal || 'mongodb://localhost/test',
-        collectionName: 'sessions'
-    }),
-    cookie: {
-        httpOnly: true,
-        secure: config.nodeEnv === "production",
-        sameSite: config.nodeEnv === "production" ? "none" : "lax",
-    }
-}));
+app.use(sessionMiddleware);
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', Auth);

@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { nanoid } from "nanoid";
 
 
-import config from '../config.js';
+import config from '../config/env.js';
 
 import userGameSchema from './UserGames.js'
 

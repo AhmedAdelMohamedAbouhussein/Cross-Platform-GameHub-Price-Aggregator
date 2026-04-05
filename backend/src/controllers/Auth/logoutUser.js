@@ -1,4 +1,4 @@
-import config from '../../config.js'
+import config from '../../config/env.js'
 
 // @desc   Logout user
 // @route  POST /api/auth/logout

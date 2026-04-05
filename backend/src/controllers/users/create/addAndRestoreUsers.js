@@ -1,6 +1,6 @@
 
 import userModel from '../../../models/User.js'
-import config from '../../../config.js'
+import config from '../../../config/env.js'
 import { sendOtpToUser } from '../../nodeMailer/sendOtp.js'
 
 // @desc  
