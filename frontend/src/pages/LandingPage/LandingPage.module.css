@@ -4,7 +4,7 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  background:  #182848;
+  background: #182848;
 }
 
 .GameImageContainer {
@@ -135,6 +135,7 @@
       0 0 30px blue,
       0 0 35px magenta;
   }
+
   25% {
     text-shadow:
       0 0 5px orange,
@@ -145,6 +146,7 @@
       0 0 30px magenta,
       0 0 35px red;
   }
+
   50% {
     text-shadow:
       0 0 5px yellow,
@@ -155,6 +157,7 @@
       0 0 30px red,
       0 0 35px orange;
   }
+
   75% {
     text-shadow:
       0 0 5px green,
@@ -165,6 +168,7 @@
       0 0 30px orange,
       0 0 35px yellow;
   }
+
   100% {
     text-shadow:
       0 0 5px red,

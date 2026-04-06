@@ -1,5 +1,5 @@
 import express from 'express';
-import { getTopSellers, getLandingPageImages, getOneGameDetails } from '../controllers/gamesController.js';
+import { getTopSellers, getLandingPageImages, getOneGameDetails, searchGames } from '../controllers/gamesController.js';
 
 const router = express.Router();
 
@@ -128,6 +128,22 @@ router.get('/landingpage', getLandingPageImages);
  *       500:
  *         description: Failed to fetch game details
  */
+/**
+ * @swagger
+ * /games/search:
+ *   get:
+ *     summary: Search for games by name
+ *     tags: [Games]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Search query
+ */
+router.get('/search', searchGames);
+
 router.get('/:gameName', getOneGameDetails);
 
 export default router;

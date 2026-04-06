@@ -21,6 +21,7 @@ const OwnedGamesDetails = lazy(() => import("./pages/OwnedGamesDetails/OwnedGame
 const FriendsPage = lazy(() => import('./pages/FriendsPage/FriendsPage'));
 const AddFriendPage = lazy(() => import('./pages/ManageFriendsPage/ManageFriendsPage.jsx'));
 const SettingsPage = lazy(() => import(`./pages/SettingsPage/SettingsPage.jsx`));
+const BrowseGamesPage = lazy(() => import("./pages/BrowsePage/BrowsePage"));
 
 function App() 
 {
@@ -33,6 +34,7 @@ function App()
                 {/* Public pages */}
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/games/:gameName" element={<GamePage />} />
+                <Route path="/games" element={<BrowseGamesPage />} />
                 <Route path="/verify" element={<Verify />} />
                 <Route path="/resetpassword" element={<ResetPassword />} />
 

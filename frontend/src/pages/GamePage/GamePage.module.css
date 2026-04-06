@@ -119,6 +119,112 @@
     background: rgba(102, 204, 51, 0.15);
 }
 
+/* ── Hero Actions ── */
+.heroActions {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.watchTrailerBtn {
+    background: #ffd700;
+    color: #000;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.watchTrailerBtn:hover {
+    background: #ffec80;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+}
+
+/* ── Videos Section ── */
+.videosSection {
+    background: #162028;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 30px;
+}
+
+.videoWrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.videoPlayer {
+    width: 100%;
+    height: 100%;
+}
+
+/* ── Hero Actions ── */
+.heroActions {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.watchTrailerBtn {
+    background: #ffd700;
+    color: #000;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.watchTrailerBtn:hover {
+    background: #ffec80;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+}
+
+/* ── Videos Section ── */
+.videosSection {
+    background: #162028;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 30px;
+}
+
+.videoWrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.videoPlayer {
+    width: 100%;
+    height: 100%;
+}
+
 /* ── Main content ── */
 .mainContent {
     display: flex;
@@ -155,10 +261,51 @@
 }
 
 .description {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: #d0d0d0;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: #e0e0e0;
+    margin-bottom: 20px;
     white-space: pre-wrap;
+}
+
+.requirementsSection {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.reqGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 25px;
+}
+
+.reqCard {
+    background: rgba(0, 0, 0, 0.2);
+    border-left: 3px solid #66cc33;
+    padding: 15px 20px;
+    border-radius: 4px 8px 8px 4px;
+}
+
+.reqType {
+    color: #66cc33;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.reqText {
+    font-size: 0.95rem;
+    color: #cccccc;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.noReqs {
+    opacity: 0.7;
 }
 
 /* ── Tags and Details ── */
@@ -213,39 +360,354 @@
 }
 
 /* Platform-specific colors */
-.storeSteam { background: #1b2838; border: 1px solid #66c0f4; }
-.storeSteam:hover { background: #2a3f5a; }
+.storeSteam {
+    background: #1b2838;
+    border: 1px solid #66c0f4;
+}
 
-.storeEpic { background: #2a2a2a; border: 1px solid #f5f5f5; }
-.storeEpic:hover { background: #404040; }
+.storeSteam:hover {
+    background: #2a3f5a;
+}
 
-.storePlayStation { background: #003087; border: 1px solid #0070d1; }
-.storePlayStation:hover { background: #0046c4; }
+.storeEpic {
+    background: #2a2a2a;
+    border: 1px solid #f5f5f5;
+}
+
+.storeEpic:hover {
+    background: #404040;
+}
+
+.storePlayStation {
+    background: #003087;
+    border: 1px solid #0070d1;
+}
+
+.storePlayStation:hover {
+    background: #0046c4;
+}
 
 .storeMicrosoft,
-.storeXbox { background: #107c10; border: 1px solid #3edd3e; }
-.storeXbox:hover { background: #15a015; }
+.storeXbox {
+    background: #107c10;
+    border: 1px solid #3edd3e;
+}
 
-.storeNintendo { background: #e60012; border: 1px solid #ff4d4d; }
-.storeNintendo:hover { background: #ff1a2b; }
+.storeXbox:hover {
+    background: #15a015;
+}
 
-.storeEA { background: #1a1a2e; border: 1px solid #ff4e00; color: #ff4e00; }
-.storeEA:hover { background: #2a2a4a; }
+.storeNintendo {
+    background: #e60012;
+    border: 1px solid #ff4d4d;
+}
 
-.storeDefault { background: #2a3540; border: 1px solid #5a6a7a; }
-.storeDefault:hover { background: #3a4856; }
+.storeNintendo:hover {
+    background: #ff1a2b;
+}
 
+.storeEA {
+    background: #1a1a2e;
+    border: 1px solid #ff4e00;
+    color: #ff4e00;
+}
+
+.storeEA:hover {
+    background: #2a2a4a;
+}
+
+.storeDefault {
+    background: #2a3540;
+    border: 1px solid #5a6a7a;
+}
+
+.storeDefault:hover {
+    background: #3a4856;
+}
+
+
+/* ── Deals Section ── */
+.dealsSection {
+    background: #162028;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 215, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.dealsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.bestDealCard {
+    background: linear-gradient(145deg, #1e2a35, #162028);
+    border: 2px solid #ffd700;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.15);
+    transition: transform 0.2s;
+}
+
+.bestDealCard:hover {
+    transform: scale(1.02);
+}
+
+.bestDealBadge {
+    position: absolute;
+    top: -12px;
+    background: #ffd700;
+    color: #000;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.priceDisplay {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 10px 0;
+}
+
+.shopName {
+    color: #a0a0a0;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.historyLowBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(102, 204, 51, 0.1);
+    color: #66cc33;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid rgba(102, 204, 51, 0.3);
+}
+
+.historyLowsContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.historyLowSub {
+    display: flex;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: #a0a0a0;
+}
+
+.getDealBtn {
+    background: #ffd700;
+    color: #000;
+    padding: 10px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 800;
+    margin-top: 15px;
+    transition: background 0.2s, box-shadow 0.2s;
+    width: 100%;
+}
+
+.getDealBtn:hover {
+    background: #ffec80;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.descriptionSection {
+    margin-bottom: 40px;
+}
+
+.descriptionText {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #ccced1;
+    white-space: pre-wrap;
+}
+
+.requirementsSection {
+    background: rgba(42, 71, 94, 0.15);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 35px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+.reqGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 35px;
+    margin-top: 25px;
+}
+
+.reqCard {
+    background: rgba(0, 0, 0, 0.25);
+    border-left: 4px solid #66cc33;
+    padding: 25px;
+    border-radius: 6px 16px 16px 6px;
+    height: 100%;
+}
+
+.reqType {
+    color: #66cc33;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+    font-weight: 800;
+}
+
+.reqText {
+    font-size: 0.95rem;
+    color: #c0c0c0;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+.noDataPlaceholder {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 60px;
+    text-align: center;
+    color: #808080;
+    font-style: italic;
+}
+
+/* ── Attribution Section ── */
+.attributionContainer {
+    margin-top: 50px;
+    padding-top: 25px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.75rem;
+    color: #666e7a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.attributionContainer a {
+    color: #ffd700;
+    text-decoration: none;
+    font-weight: 600;
+    transition: opacity 0.2s;
+}
+
+.attributionContainer a:hover {
+    opacity: 0.8;
+}
+
+.alternativePrices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.altPriceRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    text-decoration: none;
+    color: white;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.altPriceRow:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(4px);
+}
+
+.altPriceValue {
+    font-weight: 700;
+    color: #ffd700;
+}
+
+.divider {
+    color: #404040;
+    pointer-events: none;
+}
+
+.storeLowBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(74, 144, 226, 0.1);
+    color: #4a90e2;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid rgba(74, 144, 226, 0.3);
+}
+
+.altStoreInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+}
+
+.altStoreLow {
+    font-size: 0.7rem;
+    color: #4a90e2;
+    font-weight: 600;
+}
+
+.attributionContainer a {
+    color: #ffd700;
+    text-decoration: none;
+    font-weight: 600;
+    transition: opacity 0.2s;
+}
+
+.attributionContainer a:hover {
+    opacity: 0.8;
+}
 /* ── Responsive ── */
 @media (max-width: 900px) {
     .mainContent {
         flex-direction: column;
     }
-    
+
     .hero {
         height: 300px;
     }
-    
+
     .heroTitle {
         font-size: 2.2rem;
+    }
+
+    .dealsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .attributionContainer {
+        justify-content: center;
+        flex-wrap: wrap;
+        text-align: center;
     }
 }

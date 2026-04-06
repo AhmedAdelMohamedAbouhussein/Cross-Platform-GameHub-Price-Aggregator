@@ -8,6 +8,7 @@
   background-color: #222c3e;
   color: white;
 }
+
 /* Change placeholder color */
 .searchInput::placeholder {
   color: white;

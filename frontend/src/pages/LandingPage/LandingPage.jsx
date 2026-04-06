@@ -6,30 +6,24 @@ import { useNavigate } from "react-router-dom";
 import apiClient from "../../utils/apiClient.js";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
 
-function LandingPage() 
-{
+function LandingPage() {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true); // <-- loading state
 
   // ✅ Fetch top-selling games on mount
-  useEffect(() => 
-  {
-    async function getTopSellers() 
-    {
+  useEffect(() => {
+    async function getTopSellers() {
       setLoading(true); // start loading
-      try 
-      {
+      try {
         const response = await apiClient.get(`/games/landingpage`);
         setGames(response.data);
-      } 
-      catch (error) 
-      {
+      }
+      catch (error) {
         console.error('Error fetching top sellers:', error.message);
-      } 
-      finally 
-      {
+      }
+      finally {
         setLoading(false); // end loading
       }
     }
@@ -38,20 +32,16 @@ function LandingPage()
   }, []);
 
   //  Auto-scroll logic
-  useEffect(() => 
-  {
+  useEffect(() => {
     const container = scrollRef.current;
     let scrollSpeed = 1; // px per interval (slower than before)
 
-    const scrollInterval = setInterval(() => 
-    {
+    const scrollInterval = setInterval(() => {
       if (!container) return;
-      if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 1) 
-        {
+      if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 1) {
         container.scrollLeft = 0; // Loop to start
       }
-      else 
-      {
+      else {
         container.scrollLeft += scrollSpeed;
       }
     }, 20); // Slower refresh rate (30ms)
@@ -59,9 +49,8 @@ function LandingPage()
     return () => clearInterval(scrollInterval); // Cleanup
   }, [games]);
 
-  if (loading) 
-  {
-    return <LoadingScreen/>
+  if (loading) {
+    return <LoadingScreen />
   }
 
   return (
@@ -71,8 +60,8 @@ function LandingPage()
       <div className={styles.landingContainer}>
         <div className={styles.GameImageContainer} ref={scrollRef}>
           {games.map(([src, redirect], index) => (
-            <img key={index} className={styles.gameImage} src={src} alt={`Top selling game ${index + 1}`} loading="lazy" onClick={() => {navigate(`/games/${redirect}`)}} />
-            ))
+            <img key={index} className={styles.gameImage} src={src} alt={`Top selling game ${index + 1}`} loading="lazy" onClick={() => { navigate(`/games/${redirect}`) }} />
+          ))
           }
         </div>
 
