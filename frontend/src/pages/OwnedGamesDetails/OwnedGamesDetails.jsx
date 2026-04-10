@@ -1,5 +1,6 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { FaLock, FaUnlock } from "react-icons/fa";
 import apiClient from "../../utils/apiClient.js";
 
@@ -15,18 +16,17 @@ import goldIcon from "../../assets/gold.png";
 import platinumIcon from "../../assets/plat.png";
 
 function getAchievementIcon(ach) {
-  const iconSize = 45; // scale up trophy images
-
+  const iconSize = 45;
 
   switch (ach.type) {
     case "bronze":
-      return <img src={bronzeIcon} alt="Bronze" width={iconSize + 5} height={iconSize + 20}  />;
+      return <img src={bronzeIcon} alt="Bronze" width={iconSize + 5} height={iconSize + 20} />;
     case "silver":
-      return <img src={silverIcon} alt="Silver" width={iconSize + 5} height={iconSize + 20}  />;
+      return <img src={silverIcon} alt="Silver" width={iconSize + 5} height={iconSize + 20} />;
     case "gold":
       return <img src={goldIcon} alt="Gold" width={iconSize + 5} height={iconSize + 20} />;
     case "platinum":
-      return <img src={platinumIcon} alt="Platinum" width={iconSize + 5} height={iconSize + 20}  />;
+      return <img src={platinumIcon} alt="Platinum" width={iconSize + 5} height={iconSize + 20} />;
     default:
       break;
   }
@@ -34,46 +34,36 @@ function getAchievementIcon(ach) {
   if (ach.unlocked) {
     return <FaUnlock color="#00ff80" size={iconSize} />;
   } else {
-    return <FaLock color="#ff4c4c" size={iconSize}  />;
+    return <FaLock color="#ff4c4c" size={iconSize} />;
   }
 }
 
-
+const fetchOwnedGameDetails = async (platform, id) => {
+  const res = await apiClient.post(`/users/ownedgames/${platform}/${id}`, {});
+  return res.data.game;
+};
 
 function OwnedGamesDetails() {
-  
 
   const [searchParams] = useSearchParams();
   const platform = searchParams.get("platform");
   const id = searchParams.get("id");
 
   const { user } = useContext(AuthContext);
-  const [game, setGame] = useState(null); // <-- state
-  const [loading, setLoading] = useState(true);
 
-  // Reset scroll + fetch on mount
+  const {
+    data: game,
+    isLoading
+  } = useQuery({
+    queryKey: ["ownedGame", platform, id, user?.id],
+    queryFn: () => fetchOwnedGameDetails(platform, id),
+    enabled: !!user && !!platform && !!id,
+    staleTime: 1000 * 60 * 5
+  });
+
   useEffect(() => {
     window.scrollTo(0, 0);
-
-    const fetchGame = async () => {
-      try {
-        const res = await apiClient.post(
-          `/users/ownedgames/${platform}/${id}`,
-          {}
-        );
-        setGame(res.data.game); // <-- update state
-        console.log("Fetched owned game:", res.data.game);
-      } catch (err) {
-        console.error("Fetch failed:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user && platform && id) {
-      fetchGame();
-    }
-  }, [user, platform, id]);
+  }, []);
 
   function formatDate(dateUnlocked) {
     const date = new Date(dateUnlocked);
@@ -121,7 +111,7 @@ function OwnedGamesDetails() {
     });
   }
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingScreen />
   }
 
@@ -146,6 +136,7 @@ function OwnedGamesDetails() {
         <div className={Styles.top}>
           <div className={Styles.info}>
             <h1 className={Styles.gameTitle}>{game.gameName} Details</h1>
+
             {platform === "steam" && 
             <>
               <div className={Styles.link}>
@@ -157,47 +148,49 @@ function OwnedGamesDetails() {
                 <a className={Styles.storeLink} href={`https://store.steampowered.com/app/${id}`} target="_blank" rel="noopener noreferrer"> Steam Website </a>
               </div>
             </>}
+
             {platform === "PSN" && (
-            <div className={Styles.link}>
-              <label>Open Game on PlayStation Store: </label>
-              <a
-                className={Styles.storeLink}
-                href={`https://store.playstation.com/en-us/search/${encodeURIComponent(game.gameName)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                PSN Store
-              </a>
-            </div>
-          )}
+              <div className={Styles.link}>
+                <label>Open Game on PlayStation Store: </label>
+                <a
+                  className={Styles.storeLink}
+                  href={`https://store.playstation.com/en-us/search/${encodeURIComponent(game.gameName)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  PSN Store
+                </a>
+              </div>
+            )}
 
-          {platform === "xbox" && (
-            <div className={Styles.link}>
-              <label>Open Game on Xbox Store: </label>
-              <a
-                className={Styles.storeLink}
-                href={`https://www.microsoft.com/en-us/p/${encodeURIComponent(game.gameName)}`} 
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Xbox Store
-              </a>
-            </div>
-          )}
+            {platform === "xbox" && (
+              <div className={Styles.link}>
+                <label>Open Game on Xbox Store: </label>
+                <a
+                  className={Styles.storeLink}
+                  href={`https://www.microsoft.com/en-us/p/${encodeURIComponent(game.gameName)}`} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Xbox Store
+                </a>
+              </div>
+            )}
 
-          {platform === "epic" && (
-            <div className={Styles.link}>
-              <label>Open Game on Epic Games Store: </label>
-              <a
-                className={Styles.storeLink}
-                href={`https://www.epicgames.com/store/en-US/browse?q=${encodeURIComponent(game.gameName)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Epic Store
-              </a>
-            </div>
-          )}
+            {platform === "epic" && (
+              <div className={Styles.link}>
+                <label>Open Game on Epic Games Store: </label>
+                <a
+                  className={Styles.storeLink}
+                  href={`https://www.epicgames.com/store/en-US/browse?q=${encodeURIComponent(game.gameName)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Epic Store
+                </a>
+              </div>
+            )}
+
             <p>
               You bought the game on:{" "}
               <strong style={{ color: "yellow" }}>{platform}</strong>
@@ -210,10 +203,12 @@ function OwnedGamesDetails() {
               Last played: <strong style={{ color: "yellow" }}>{lastPlayed}</strong>
             </p>
           </div>
+
           <div className={Styles.imgContainer}>
             <img src={game.coverImage} alt={game.gameName} loading="lazy" />
           </div>
         </div>
+
         <div className={Styles.achContainer}>{renderAchievements()}</div>
       </div>
       <Footer />

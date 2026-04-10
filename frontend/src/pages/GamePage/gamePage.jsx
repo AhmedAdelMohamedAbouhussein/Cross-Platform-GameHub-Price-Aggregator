@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import apiClient from "../../utils/apiClient.js";
 
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
@@ -33,41 +34,45 @@ function formatDate(dateStr) {
     });
 }
 
+const fetchGame = async (gameName) => {
+    const response = await apiClient.get(`/games/${encodeURIComponent(gameName)}`);
+    return response.data;
+};
+
 const GamePage = () => {
     const { gameName } = useParams();
     const navigate = useNavigate();
 
-    const [game, setGame] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const {
+        data: game,
+        isLoading,
+        isError,
+        error
+    } = useQuery({
+        queryKey: ["game", gameName],
+        queryFn: () => fetchGame(gameName),
+        enabled: !!gameName,
+        staleTime: 1000 * 60 * 5,
+        retry: 2
+    });
 
     useEffect(() => {
         window.scrollTo(0, 0);
-
-        async function fetchGame() {
-            try {
-                const response = await apiClient.get(`/games/${encodeURIComponent(gameName)}`);
-                setGame(response.data);
-            }
-            catch (err) {
-                setError(err.response?.data?.message || err.response?.data?.error || "Failed to fetch game details");
-            }
-            finally {
-                setLoading(false);
-            }
-        }
-        fetchGame();
     }, [gameName]);
 
-    if (loading) return <LoadingScreen />;
+    if (isLoading) return <LoadingScreen />;
 
-    if (error) {
+    if (isError) {
         return (
             <div className={styles.container}>
                 <Header />
                 <div className={styles.errorContainer}>
                     <h2>😕 Something went wrong</h2>
-                    <p>{error}</p>
+                    <p>
+                        {error?.response?.data?.message ||
+                         error?.response?.data?.error ||
+                         "Failed to fetch game details"}
+                    </p>
                     <button className={styles.backButton} onClick={() => navigate("/")}>
                         Back to Home
                     </button>

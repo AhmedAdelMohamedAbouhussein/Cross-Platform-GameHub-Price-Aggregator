@@ -687,6 +687,7 @@
 .attributionContainer a:hover {
     opacity: 0.8;
 }
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
     .mainContent {

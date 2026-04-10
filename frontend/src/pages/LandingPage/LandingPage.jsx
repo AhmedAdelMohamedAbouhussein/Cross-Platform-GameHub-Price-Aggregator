@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import styles from "./LandingPage.module.css";
 import Header from "../../components/Header/Header.jsx";
 import Footer from "../../components/Footer/Footer.jsx";
@@ -6,51 +7,61 @@ import { useNavigate } from "react-router-dom";
 import apiClient from "../../utils/apiClient.js";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
 
+const fetchTopSellers = async () => {
+  const response = await apiClient.get(`/games/landingpage`);
+  return response.data;
+};
+
 function LandingPage() {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
-  const [games, setGames] = useState([]);
-  const [loading, setLoading] = useState(true); // <-- loading state
 
-  // ✅ Fetch top-selling games on mount
-  useEffect(() => {
-    async function getTopSellers() {
-      setLoading(true); // start loading
-      try {
-        const response = await apiClient.get(`/games/landingpage`);
-        setGames(response.data);
-      }
-      catch (error) {
-        console.error('Error fetching top sellers:', error.message);
-      }
-      finally {
-        setLoading(false); // end loading
-      }
-    }
+  const {
+    data: games = [],
+    isLoading,
+    isError,
+    error
+  } = useQuery({
+    queryKey: ["landingGames"],
+    queryFn: fetchTopSellers,
+    staleTime: 1000 * 60 * 5,
+    retry: 2
+  });
 
-    getTopSellers();
-  }, []);
-
-  //  Auto-scroll logic
+  // Auto-scroll logic
   useEffect(() => {
     const container = scrollRef.current;
-    let scrollSpeed = 1; // px per interval (slower than before)
+    let scrollSpeed = 1;
 
     const scrollInterval = setInterval(() => {
       if (!container) return;
       if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 1) {
-        container.scrollLeft = 0; // Loop to start
+        container.scrollLeft = 0;
       }
       else {
         container.scrollLeft += scrollSpeed;
       }
-    }, 20); // Slower refresh rate (30ms)
+    }, 20);
 
-    return () => clearInterval(scrollInterval); // Cleanup
+    return () => clearInterval(scrollInterval);
   }, [games]);
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingScreen />
+  }
+
+  if (isError) {
+    return (
+      <>
+        <Header />
+        <div className={styles.landingContainer}>
+          <p style={{ textAlign: "center" }}>
+            {error?.message || "Failed to load games"}
+          </p>
+        </div>
+        <Footer />
+      </>
+    );
   }
 
   return (
@@ -60,9 +71,15 @@ function LandingPage() {
       <div className={styles.landingContainer}>
         <div className={styles.GameImageContainer} ref={scrollRef}>
           {games.map(([src, redirect], index) => (
-            <img key={index} className={styles.gameImage} src={src} alt={`Top selling game ${index + 1}`} loading="lazy" onClick={() => { navigate(`/games/${redirect}`) }} />
-          ))
-          }
+            <img
+              key={index}
+              className={styles.gameImage}
+              src={src}
+              alt={`Top selling game ${index + 1}`}
+              loading="lazy"
+              onClick={() => { navigate(`/games/${redirect}`) }}
+            />
+          ))}
         </div>
 
         <div className={styles.contentContainer}>

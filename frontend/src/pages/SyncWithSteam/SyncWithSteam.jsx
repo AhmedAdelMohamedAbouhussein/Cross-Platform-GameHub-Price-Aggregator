@@ -9,7 +9,7 @@ function SyncWithSteam ()
     const BACKEND_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL;
 
     const syncwithsteam = () => {
-    window.location.href = `${BACKEND_URL}/sync/steam`; // full page redirect
+    window.location.href = `${BACKEND_URL}/api/sync/steam`; // full page redirect
 };
 
     return(

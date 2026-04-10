@@ -16,7 +16,7 @@ const STEAM_API_KEY = config.steam.apiKey;
 passport.use(
     new SteamStrategy(
     {
-        returnURL: `${APP_BACKEND_URL}/sync/steam/return`,
+        returnURL: `${APP_BACKEND_URL}/api/sync/steam/return`,
         realm: APP_BACKEND_URL,
         apiKey: STEAM_API_KEY,
     },
