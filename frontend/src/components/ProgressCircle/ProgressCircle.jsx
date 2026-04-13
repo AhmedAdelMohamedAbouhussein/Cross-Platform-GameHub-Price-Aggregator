@@ -1,39 +1,57 @@
-import styles from './ProgressCircle.module.css'
+function ProgressCircle({ progress }) {
+    const radius = 40;
+    const strokeWidth = 8;
+    const circumference = 2 * Math.PI * radius;
+    const dashOffset = circumference * (1 - progress / 100);
+    const size = (radius + strokeWidth) * 2;
 
-function ProgressCircle({ progress }) 
-{
-  const radius = 45;
-  const strokeWidth = 10;
-  const circumference = 2 * Math.PI * radius;
-  const dashOffset = circumference * (1 - progress / 100);
-
-  return (
-    <svg width="100" height="100" className={styles.progressCircle}>
-      <circle
-        cx="50"
-        cy="50"
-        r={radius}
-        stroke="#e6e6e6"
-        strokeWidth={strokeWidth}
-        fill="none"
-      />
-      <circle
-        cx="50"
-        cy="50"
-        r={radius}
-        stroke="#4caf50"
-        strokeWidth={strokeWidth}
-        fill="none"
-        strokeDasharray={circumference}
-        strokeDashoffset={dashOffset}
-        strokeLinecap="round"
-        transform="rotate(-90 50 50)"
-      />
-      <text x="50%" y="50%" textAnchor="middle" dy="0.3em" className={styles.progressCircleText}>
-        {progress}%
-      </text>
-    </svg>
-  );
+    return (
+        <div className="flex flex-col items-center gap-1">
+            <svg width={size} height={size} className="drop-shadow-lg">
+                {/* Background ring */}
+                <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    stroke="#1a252f"
+                    strokeWidth={strokeWidth}
+                    fill="none"
+                    opacity="0.6"
+                />
+                {/* Progress ring */}
+                <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    stroke="url(#progressGradient)"
+                    strokeWidth={strokeWidth}
+                    fill="none"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={dashOffset}
+                    strokeLinecap="round"
+                    transform={`rotate(-90 ${size / 2} ${size / 2})`}
+                    className="transition-all duration-700 ease-out"
+                />
+                {/* Gradient definition */}
+                <defs>
+                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#3b82f6" />
+                        <stop offset="100%" stopColor="#60a5fa" />
+                    </linearGradient>
+                </defs>
+                {/* Text */}
+                <text
+                    x="50%"
+                    y="50%"
+                    textAnchor="middle"
+                    dy="0.35em"
+                    className="fill-text-primary text-sm font-bold"
+                >
+                    {progress}%
+                </text>
+            </svg>
+        </div>
+    );
 }
 
 export default ProgressCircle;

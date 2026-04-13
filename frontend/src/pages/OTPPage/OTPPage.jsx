@@ -1,9 +1,8 @@
 import { useState, useContext } from "react";
-import { useSearchParams } from "react-router-dom";
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import apiClient from "../../utils/apiClient.js";
 
-import styles from "./OTPPage.module.css";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
 import AuthContext from "../../contexts/AuthContext.jsx";
 
@@ -11,95 +10,103 @@ function OTPPage() {
     const [searchParams] = useSearchParams();
     const userId = searchParams.get("userId");
     const email = decodeURIComponent(searchParams.get("email"));
-    const purpose = searchParams.get("purpose")
+    const purpose = searchParams.get("purpose");
 
     const [otp, setOtp] = useState("");
-    const [feedback, setFeedback] = useState("");
     const [loading, setLoading] = useState(false);
-    const { fetchUser } = useContext(AuthContext); // 👈 get from context 
+    const { fetchUser } = useContext(AuthContext);
 
     const navigate = useNavigate();
 
-    // Dynamic page title
     const getTitle = () => {
         switch (purpose) {
             case "email_verification":
                 return "Email Verification";
             case "password_reset":
-                return "Password Reset Verification";
+                return "Password Reset";
             case "restore_account":
-                return "Restore Account Verification";
+                return "Restore Account";
             case "permanently_delete_account":
-                return "Delete Account Verification";
+                return "Delete Account";
             default:
                 return "OTP Verification";
         }
     };
 
+    const getSubtitle = () => {
+        switch (purpose) {
+            case "email_verification":
+                return "Enter the 6-digit code sent to your email to verify your account";
+            case "password_reset":
+                return "Enter the 6-digit code to reset your password";
+            case "restore_account":
+                return "Enter the code to restore your deleted account";
+            case "permanently_delete_account":
+                return "Enter the code to permanently delete your account";
+            default:
+                return "Enter the verification code";
+        }
+    };
 
-    // Send a new OTP
     const handleSendOtp = async () => {
         if (!userId || !email || !purpose) {
-            setFeedback("Invalid verification link: missing user information");
+            toast.error("Invalid verification link: missing user information");
             return;
         }
 
         setLoading(true);
-        setFeedback("");
         try {
             const res = await apiClient.post(`/mail/sendotp`, { userId, email, purpose });
-
-            setFeedback(res.data.message || "OTP sent successfully!");
+            toast.success(res.data.message || "OTP sent successfully!");
 
             if (res.data.message === "user already verified") {
                 navigate('/login', { replace: true });
             }
-
         }
         catch (err) {
-            setFeedback(err.response?.data?.message || err.message || "Error sending OTP");
+            toast.error(err.response?.data?.message || err.message || "Error sending OTP");
         }
         finally {
             setLoading(false);
         }
     };
 
-    // Submit OTP for verification
     const handleSubmitOtp = async () => {
         if (!userId || !purpose) {
-            setFeedback("Invalid verification link: missing user information");
+            toast.error("Invalid verification link: missing user information");
             return;
         }
 
         if (!otp) {
-            return setFeedback("Please enter the OTP");
+            toast.error("Please enter the OTP");
+            return;
         }
 
         if (!/^\d{6}$/.test(otp)) {
-            return setFeedback("OTP must be exactly 6 digits");
+            toast.error("OTP must be exactly 6 digits");
+            return;
         }
 
         setLoading(true);
-        setFeedback("");
         try {
             let res;
             if (purpose === "email_verification") {
                 res = await apiClient.post(`/mail/verifyotp`,
-                    { userId: userId, otp: otp, purpose: purpose },
-                    { withCredentials: true } // 🔑 so cookies/sessions work
+                    { userId, otp, purpose },
+                    { withCredentials: true }
                 );
             }
             else {
-                res = await apiClient.post(`/mail/verifyotp`, { userId: userId, otp: otp, purpose: purpose });
+                res = await apiClient.post(`/mail/verifyotp`, { userId, otp, purpose });
             }
 
-            setFeedback(res.data.message || "OTP verified successfully!");
+            toast.success(res.data.message || "OTP verified successfully!");
 
             if (purpose === "password_reset") {
                 navigate(`/resetpassword?userId=${res.data.userId}&token=${encodeURIComponent(res.data.resetToken)}`, { replace: true });
             }
             else if (purpose === "email_verification") {
-                await fetchUser(); // ⏳ wait until it finishes
+                await fetchUser();
                 navigate("/", { replace: true });
             }
             else if (purpose === "restore_account") {
@@ -110,7 +117,7 @@ function OTPPage() {
             }
         }
         catch (err) {
-            setFeedback(err.response?.data?.message || err.message || "Invalid OTP");
+            toast.error(err.response?.data?.message || err.message || "Invalid OTP");
         }
         finally {
             setLoading(false);
@@ -122,19 +129,51 @@ function OTPPage() {
     }
 
     return (
-        <div className={styles.pageContainer}>
-            <div className={styles.container}>
-                <h1>{getTitle()}</h1>
+        <div className="page-container">
+            <main className="flex-1 flex items-center justify-center px-4 py-12 sm:py-16">
+                <div className="w-full max-w-md animate-slide-up">
+                    <div className="card-surface p-6 sm:p-8 space-y-6">
+                        <div className="text-center">
+                            <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                                <span className="text-3xl">🔐</span>
+                            </div>
+                            <h1 className="text-2xl font-bold text-text-primary">{getTitle()}</h1>
+                            <p className="text-sm text-text-muted mt-2">{getSubtitle()}</p>
+                            {email && (
+                                <p className="text-xs text-text-secondary mt-1">
+                                    Sent to <span className="text-accent">{email}</span>
+                                </p>
+                            )}
+                        </div>
 
-                <input type="text" placeholder="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value)} className={styles.input} maxLength={6} />
+                        <input
+                            type="text"
+                            placeholder="Enter 6-digit OTP"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            className="input-field text-center text-xl tracking-[0.5em] font-mono"
+                            maxLength={6}
+                        />
 
-                <div className={styles.buttonContainer}>
-                    <button onClick={handleSubmitOtp} className={styles.button} disabled={loading}>Submit OTP</button>
-                    <button onClick={handleSendOtp} className={styles.button} disabled={loading}>Send New OTP</button>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button
+                                onClick={handleSubmitOtp}
+                                className="btn-primary flex-1 py-3"
+                                disabled={loading}
+                            >
+                                Verify OTP
+                            </button>
+                            <button
+                                onClick={handleSendOtp}
+                                className="btn-secondary flex-1 py-3"
+                                disabled={loading}
+                            >
+                                Resend Code
+                            </button>
+                        </div>
+                    </div>
                 </div>
-
-                {feedback && <p className={styles.feedback} style={{ color: feedback.type === "error" ? "red" : "green" }}>{feedback.message}</p>}
-            </div>
+            </main>
         </div>
     );
 }

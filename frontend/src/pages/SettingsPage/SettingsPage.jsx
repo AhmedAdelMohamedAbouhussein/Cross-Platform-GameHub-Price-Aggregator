@@ -1,6 +1,6 @@
 import { useState, useCallback, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import styles from "./SettingsPage.module.css";
+import { toast } from "sonner";
 import Cropper from "react-easy-crop";
 import apiClient from "../../utils/apiClient.js";
 
@@ -10,116 +10,92 @@ import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
 import getCroppedImg from "../../utils/cropImage";
 
 import AuthContext from "../../contexts/AuthContext.jsx";
+import { FaUser, FaShieldAlt, FaLock, FaExclamationTriangle } from "react-icons/fa";
 
-function SettingsPage() 
-{
-    const { user } = useContext(AuthContext); 
-    const navigate = useNavigate(); //navigate(0);
+function SettingsPage() {
+    const { user } = useContext(AuthContext);
+    const navigate = useNavigate();
 
-    const [loading, setLoading] = useState(false);  
+    const [loading, setLoading] = useState(false);
     const [selected, setSelected] = useState("profile");
 
     // Profile states
-    const [profilePic, setProfilePic] = useState(null); // final cropped profile picture URL
+    const [profilePic, setProfilePic] = useState(null);
     const [username, setUsername] = useState(user.name);
     const [bio, setBio] = useState(user.bio ? user.bio : "");
     const [visibility, setVisibility] = useState(user.profileVisibility);
 
     // Profile Picture states
-    const [profilePicPreview, setProfilePicPreview] = useState(null); // preview before cropping
+    const [profilePicPreview, setProfilePicPreview] = useState(null);
     const [croppingMode, setCroppingMode] = useState(false);
 
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedArea, setCroppedArea] = useState(null);
-
     const [croppedBlob, setCroppedBlob] = useState(null);
 
-
-    //flags
+    // flags
     const [imagechange, setImagechange] = useState(null);
     const [namechange, setNamechange] = useState(null);
     const [biochange, setBiochange] = useState(null);
     const [profileVisibilitychange, setProfileVisibility] = useState(null);
 
-    const saveAllChanges = async() =>
-    {
+    const saveAllChanges = async () => {
         setLoading(true);
-
-        try 
-        {
-            if(imagechange && croppedBlob)
-            {
+        try {
+            if (imagechange && croppedBlob) {
                 const formData = new FormData();
                 formData.append("profileImage", croppedBlob, "profile.jpg");
-
-                await apiClient.post(
-                    `/setting/profileImage`,
-                    formData,
-                    {
-                        headers: {
-                            "Content-Type": "multipart/form-data",
-                        }
-                    }
-                );
+                await apiClient.post(`/setting/profileImage`, formData, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                });
             }
 
-            // Update other fields
             const payload = {};
             if (biochange && bio) payload.bio = bio;
             if (namechange && username) payload.username = username;
-            if (profileVisibilitychange  && profileVisibilitychange) payload.visibility = visibility;
-            
-            if (Object.keys(payload).length > 0) 
-            {
+            if (profileVisibilitychange && profileVisibilitychange) payload.visibility = visibility;
+
+            if (Object.keys(payload).length > 0) {
                 await apiClient.post(`/setting/updateProfile`, payload);
             }
-        
-            // Reset flags
+
             setImagechange(false);
             setNamechange(false);
             setBiochange(false);
             setProfileVisibility(false);
+            toast.success("Changes saved successfully!");
             navigate(0);
-        
-        } 
-        catch (error) 
-        {
+        }
+        catch (error) {
             console.error("Save failed:", error);
-            alert("Failed to save changes. Try again.");
-        } 
-        finally 
-        {
+            toast.error("Failed to save changes. Try again.");
+        }
+        finally {
             setLoading(false);
         }
-    }
+    };
 
     const discardChanges = () => {
-    // Reset fields to initial user data
-    setProfilePic(user.profilePicture || null);
-    setUsername(user.name || "PlayerOne");
-    setBio(user.bio || "");
-    setVisibility(user.visibility || "friends");
-
-    // Reset profile picture cropping
-    setProfilePicPreview(null);
-    setCroppingMode(false);
-    setCroppedBlob(null);
-
-    // Reset all change flags
-    setImagechange(false);
-    setBiochange(false);
-    setProfileVisibility(false);
-    setNamechange(false)
-
-    navigate(0);
-};
+        setProfilePic(user.profilePicture || null);
+        setUsername(user.name || "PlayerOne");
+        setBio(user.bio || "");
+        setVisibility(user.visibility || "friends");
+        setProfilePicPreview(null);
+        setCroppingMode(false);
+        setCroppedBlob(null);
+        setImagechange(false);
+        setBiochange(false);
+        setProfileVisibility(false);
+        setNamechange(false);
+        navigate(0);
+    };
 
     const handleProfilePicChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             setProfilePicPreview(URL.createObjectURL(file));
-            setCroppingMode(true); // force user to crop
+            setCroppingMode(true);
         }
     };
 
@@ -129,20 +105,19 @@ function SettingsPage()
 
     const handleCropDone = async () => {
         try {
-            setLoading(true);   
+            setLoading(true);
             const blob = await getCroppedImg(profilePicPreview, croppedArea);
             setCroppedBlob(blob);
-
-            setImagechange(true)
-            // Show final cropped picture
-            setProfilePic(URL.createObjectURL(croppedBlob));
+            setImagechange(true);
+            setProfilePic(URL.createObjectURL(blob));
             setCroppingMode(false);
             setProfilePicPreview(null);
         } catch (error) {
             console.error("Upload failed:", error);
+            toast.error("Failed to process image");
         }
         finally {
-            setLoading(false);   // ← HIDE LOADING
+            setLoading(false);
         }
     };
 
@@ -151,17 +126,27 @@ function SettingsPage()
         setProfilePicPreview(null);
     };
 
+    const menuItems = [
+        { key: "profile", label: "Profile", icon: FaUser },
+        { key: "account", label: "Account", icon: FaLock },
+        { key: "privacy", label: "Privacy", icon: FaShieldAlt },
+        { key: "danger", label: "Danger Zone", icon: FaExclamationTriangle },
+    ];
+
     const renderContent = () => {
         switch (selected) {
             case "profile":
                 return (
-                    <div>
-                        <h2 className={styles.title}>Profile Settings</h2>
+                    <div className="space-y-8">
+                        <div>
+                            <h2 className="text-xl font-bold text-text-primary mb-1">Profile Settings</h2>
+                            <p className="text-sm text-text-muted">Customize how others see you</p>
+                        </div>
 
                         {/* Profile Picture */}
-                        <section className={styles.section}>
-                            <h3>Profile Picture</h3>
-                            <div className={styles.profilePicWrapper}>
+                        <section className="space-y-4">
+                            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Profile Picture</h3>
+                            <div className="flex flex-col items-center gap-4">
                                 {!croppingMode ? (
                                     <>
                                         <img
@@ -170,42 +155,37 @@ function SettingsPage()
                                                 "https://digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png"
                                             }
                                             alt="Profile"
-                                            className={styles.profilePic}
+                                            className="w-24 h-24 rounded-full object-cover ring-4 ring-accent/20"
                                         />
-                                        <input
-                                            type="file"
-                                            id="profilePicUpload"
-                                            accept="image/*"
-                                            onChange={handleProfilePicChange}
-                                            className={styles.hiddenFileInput}
-                                        />
-                                        <label
-                                            htmlFor="profilePicUpload"
-                                            className={styles.uploadButton}
-                                        >
-                                            Upload Image
-                                        </label>
+                                        <div>
+                                            <input
+                                                type="file"
+                                                id="profilePicUpload"
+                                                accept="image/*"
+                                                onChange={handleProfilePicChange}
+                                                className="hidden"
+                                            />
+                                            <label htmlFor="profilePicUpload" className="btn-secondary cursor-pointer text-sm">
+                                                Upload Image
+                                            </label>
+                                        </div>
                                     </>
                                 ) : (
-                                    <div>
-                                        <div className={styles.cropContainer}>
-                                            <div className={styles.cropArea}>
-                                                <Cropper
-                                                    image={profilePicPreview}
-                                                    crop={crop}
-                                                    zoom={zoom}
-                                                    aspect={1}
-                                                    cropShape="round"
-                                                    showGrid={false}
-                                                    onCropChange={setCrop}
-                                                    onZoomChange={setZoom}
-                                                    onCropComplete={onCropComplete}
-                                                />
-                                            </div>
+                                    <div className="w-full space-y-4">
+                                        <div className="relative w-full aspect-square max-w-sm mx-auto rounded-xl overflow-hidden bg-midnight-900">
+                                            <Cropper
+                                                image={profilePicPreview}
+                                                crop={crop}
+                                                zoom={zoom}
+                                                aspect={1}
+                                                cropShape="round"
+                                                showGrid={false}
+                                                onCropChange={setCrop}
+                                                onZoomChange={setZoom}
+                                                onCropComplete={onCropComplete}
+                                            />
                                         </div>
-
-                                        {/* Controls */}
-                                        <div className={styles.controls}>
+                                        <div className="flex flex-col items-center gap-3">
                                             <input
                                                 type="range"
                                                 min={1}
@@ -213,21 +193,11 @@ function SettingsPage()
                                                 step={0.1}
                                                 value={zoom}
                                                 onChange={(e) => setZoom(Number(e.target.value))}
-                                                className={styles.zoomSlider}
+                                                className="w-full max-w-xs accent-accent"
                                             />
-                                            <div className={styles.cropButtons}>
-                                                <button
-                                                    onClick={handleCropDone}
-                                                    className={styles.button}
-                                                >
-                                                    Done
-                                                </button>
-                                                <button
-                                                    onClick={handleCropCancel}
-                                                    className={styles.deleteButton}
-                                                >
-                                                    Cancel
-                                                </button>
+                                            <div className="flex gap-3">
+                                                <button onClick={handleCropDone} className="btn-primary text-sm">Done</button>
+                                                <button onClick={handleCropCancel} className="btn-danger text-sm">Cancel</button>
                                             </div>
                                         </div>
                                     </div>
@@ -236,96 +206,82 @@ function SettingsPage()
                         </section>
 
                         {/* Username */}
-                        <section className={styles.section}>
-                            <h3>Display Name</h3>
+                        <section className="space-y-2">
+                            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Display Name</h3>
                             <input
                                 type="text"
                                 value={username}
-                                onChange={(e) => 
-                                    {
-                                        setUsername(e.target.value)
-                                        setNamechange(true)
-                                    }
-                                }
-                                className={styles.input}
+                                onChange={(e) => {
+                                    setUsername(e.target.value);
+                                    setNamechange(true);
+                                }}
+                                className="input-field max-w-md"
                             />
                         </section>
 
                         {/* Bio */}
-                        <section className={styles.section}>
-                            <h3>Bio</h3>
+                        <section className="space-y-2">
+                            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Bio</h3>
                             <textarea
-                                value={user.bio}
-                                onChange={(e) => 
-                                    {
-                                        setBio(e.target.value); 
-                                        setBiochange(true);
-                                    }
-                                }
-                                className={styles.textarea}
+                                value={bio}
+                                onChange={(e) => {
+                                    setBio(e.target.value);
+                                    setBiochange(true);
+                                }}
+                                className="input-field max-w-md min-h-[100px] resize-y"
+                                placeholder="Tell us about yourself..."
                             />
                         </section>
 
                         {/* Social Links */}
-                        <section className={styles.section}>
-                            <h3>Social Links</h3>
+                        <section className="space-y-2">
+                            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Social Links</h3>
+                            <p className="text-xs text-text-muted">Coming soon...</p>
                         </section>
                     </div>
                 );
 
             case "account":
                 return (
-                    <div>
-                        <h2 className={styles.title}>Account Settings</h2>
-                        <section className={styles.section}>
-                            <h3>Change Email</h3>
-                            <input
-                                type="email"
-                                placeholder="New Email"
-                                className={styles.input}
-                            />
-                            <button className={styles.button}>
-                                Send Verification Link
-                            </button>
+                    <div className="space-y-8">
+                        <div>
+                            <h2 className="text-xl font-bold text-text-primary mb-1">Account Settings</h2>
+                            <p className="text-sm text-text-muted">Manage your email and password</p>
+                        </div>
+
+                        <section className="space-y-3">
+                            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Change Email</h3>
+                            <input type="email" placeholder="New Email" className="input-field max-w-md" />
+                            <button className="btn-primary text-sm">Send Verification Link</button>
                         </section>
 
-                        <section className={styles.section}>
-                            <h3>Change Password</h3>
-                            <input
-                                type="password"
-                                placeholder="Current Password"
-                                className={styles.input}
-                            />
-                            <input
-                                type="password"
-                                placeholder="New Password"
-                                className={styles.input}
-                            />
-                            <input
-                                type="password"
-                                placeholder="Confirm New Password"
-                                className={styles.input}
-                            />
-                            <button className={styles.button}>Update Password</button>
+                        <section className="space-y-3">
+                            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Change Password</h3>
+                            <input type="password" placeholder="Current Password" className="input-field max-w-md" />
+                            <input type="password" placeholder="New Password" className="input-field max-w-md" />
+                            <input type="password" placeholder="Confirm New Password" className="input-field max-w-md" />
+                            <button className="btn-primary text-sm">Update Password</button>
                         </section>
                     </div>
                 );
 
             case "privacy":
                 return (
-                    <div>
-                        <h2 className={styles.title}>Privacy Settings</h2>
-                        <section className={styles.section}>
-                            <h3>Profile Visibility</h3>
+                    <div className="space-y-8">
+                        <div>
+                            <h2 className="text-xl font-bold text-text-primary mb-1">Privacy Settings</h2>
+                            <p className="text-sm text-text-muted">Control who can see your profile</p>
+                        </div>
+
+                        <section className="space-y-3">
+                            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Profile Visibility</h3>
                             <select
                                 value={visibility}
-                                onChange={(e) => 
-                                    {
-                                        setVisibility(e.target.value)
-                                        setProfileVisibility(true);
-                                    }
-                                }
-                                className={styles.select}
+                                onChange={(e) => {
+                                    setVisibility(e.target.value);
+                                    setProfileVisibility(true);
+                                }}
+                                className="select-field max-w-md"
                             >
                                 <option value="public">Public</option>
                                 <option value="friends">Friends Only</option>
@@ -337,70 +293,77 @@ function SettingsPage()
 
             case "danger":
                 return (
-                    <div>
-                        <h2 className={styles.title}>Danger Zone</h2>
-                        <section className={`${styles.section} ${styles.dangerZone}`}>
-                            <p>This action is irreversible. Proceed with caution.</p>
-                            <button className={styles.deleteButton}>Delete Account</button>
-                        </section>
+                    <div className="space-y-8">
+                        <div>
+                            <h2 className="text-xl font-bold text-danger mb-1">Danger Zone</h2>
+                            <p className="text-sm text-text-muted">Irreversible actions. Proceed with caution.</p>
+                        </div>
+
+                        <div className="border border-danger/30 rounded-xl p-6 bg-danger/5 space-y-4">
+                            <p className="text-sm text-text-secondary">
+                                Once you delete your account, all data will be permanently removed.
+                            </p>
+                            <button className="btn-danger">Delete Account</button>
+                        </div>
                     </div>
                 );
 
             default:
-                return <h2>Select an option from the sidebar</h2>;
+                return <h2 className="text-text-muted">Select an option from the sidebar</h2>;
         }
     };
 
     return (
-        <div className={styles.pageContainer}>
-            {loading && <LoadingScreen />}   {/* ← LOADING OVERLAY */}
+        <div className="page-container">
+            {loading && <LoadingScreen />}
             <Header />
-            <div className={styles.spacer}>
-                <div className={styles.settingsWrapper}>
-                    {/* Sidebar */}
-                    <aside className={styles.sidebar}>
-                        <ul>
-                            <li
-                                onClick={() => setSelected("profile")}
-                                className={selected === "profile" ? styles.active : ""}
-                            >
-                                Profile
-                            </li>
-                            <li
-                                onClick={() => setSelected("account")}
-                                className={selected === "account" ? styles.active : ""}
-                            >
-                                Account
-                            </li>
-                            <li
-                                onClick={() => setSelected("privacy")}
-                                className={selected === "privacy" ? styles.active : ""}
-                            >
-                                Privacy
-                            </li>
-                            <li
-                                onClick={() => setSelected("danger")}
-                                className={selected === "danger" ? styles.active : ""}
-                            >
-                                Danger Zone
-                            </li>
-                        </ul>
-                    </aside>
+            <main className="flex-1">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+                    <div className="flex flex-col lg:flex-row gap-6">
+                        {/* Sidebar / Horizontal tabs on mobile */}
+                        <nav className="lg:w-56 flex-shrink-0">
+                            <div className="flex lg:flex-col gap-1 p-1 bg-midnight-700 rounded-xl border border-midnight-500/30 overflow-x-auto lg:overflow-visible">
+                                {menuItems.map(item => {
+                                    const Icon = item.icon;
+                                    return (
+                                        <button
+                                            key={item.key}
+                                            onClick={() => setSelected(item.key)}
+                                            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none ${
+                                                selected === item.key
+                                                    ? item.key === 'danger'
+                                                        ? 'bg-danger/10 text-danger'
+                                                        : 'bg-accent/10 text-accent'
+                                                    : 'text-text-secondary hover:text-text-primary hover:bg-midnight-600'
+                                            }`}
+                                        >
+                                            <Icon size={16} className="flex-shrink-0" />
+                                            <span className="hidden sm:inline">{item.label}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </nav>
 
-                    {/* Main Content */}
-                    <main className={styles.settingsContainer}>
-                        {renderContent()}
-                        <div className={styles.saveStickyWrapper}>
-                            <button onClick={saveAllChanges} className={styles.saveButton}>
-                                Save All Changes
-                            </button>
-                            <button onClick={discardChanges} className={styles.discardButton}>
-                                Discard Changes
-                            </button>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                            <div className="card-surface p-4 sm:p-6 lg:p-8">
+                                {renderContent()}
+
+                                {/* Save bar */}
+                                <div className="flex flex-col sm:flex-row gap-3 mt-8 pt-6 border-t border-midnight-500/30">
+                                    <button onClick={saveAllChanges} className="btn-primary flex-1 sm:flex-none">
+                                        Save All Changes
+                                    </button>
+                                    <button onClick={discardChanges} className="btn-secondary flex-1 sm:flex-none">
+                                        Discard Changes
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </main>
+                    </div>
                 </div>
-            </div>
+            </main>
             <Footer />
         </div>
     );

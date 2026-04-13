@@ -1,38 +1,37 @@
 import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 import apiClient from "../../utils/apiClient.js";
 import Header from "../../components/Header/Header";
 import Aside from "../../components/Aside/Aside";
 import Footer from "../../components/Footer/Footer";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
-import styles from './SyncWithPSN.module.css';
+import { SiPlaystation } from "react-icons/si";
+import { FaBars } from "react-icons/fa";
 
-function SyncWithPSN() 
-{
+function SyncWithPSN() {
     const navigate = useNavigate();
-    const [status, setStatus] = useState(""); // status or error messages
     const [loading, setLoading] = useState(false);
+    const [mobileAsideOpen, setMobileAsideOpen] = useState(false);
 
     const sync = () => {
         setLoading(true);
-        setStatus("Syncing...");
+        toast.info("Syncing with PlayStation...");
 
         const handleMessage = async (event) => {
             if (event.data.type === "NPSSO_RESPONSE") {
                 if (event.data.npsso) {
                     try {
                         const npsso = event.data.npsso;
-                        await apiClient.post(`/sync/psn`, 
-                            { npsso }
-                        );
-                        navigate("/library"); // Redirect on success
+                        await apiClient.post(`/sync/psn`, { npsso });
+                        toast.success("PlayStation synced successfully!");
+                        navigate("/library");
                     } catch (err) {
-                        setStatus("Sync failed");
+                        toast.error("Sync failed");
                         console.error(err.response?.data?.error || err.message);
-                        console.log("Failed NPSSO:", event.data.npsso);
                     }
                 } else {
-                    setStatus("NPSSO not found. Please log in to PSN.");
+                    toast.error("NPSSO not found. Please log in to PSN.");
                 }
                 setLoading(false);
                 window.removeEventListener("message", handleMessage);
@@ -44,20 +43,35 @@ function SyncWithPSN()
     };
 
     return (
-        <div className={styles.container}>
-            {loading && <LoadingScreen />} {/* overlay loading screen */}
-
+        <div className="page-container">
+            {loading && <LoadingScreen />}
             <Header />
-            <div className={styles.body}>
-                <Aside/>
-                <main className={styles.main}>
-                    <h1>Connect your PlayStation account</h1>
-                    <div className={styles.buttonContainer}>
-                        <button onClick={sync} className={styles.button} disabled={loading}>
+            <div className="flex-1 flex">
+                <Aside />
+                <Aside isOpen={mobileAsideOpen} onClose={() => setMobileAsideOpen(false)} />
+                <main className="flex-1 flex items-center justify-center px-4 py-12">
+                    <div className="card-surface p-8 sm:p-12 max-w-md w-full text-center space-y-6 animate-slide-up">
+                        <button
+                            onClick={() => setMobileAsideOpen(true)}
+                            className="lg:hidden absolute top-20 left-4 p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-midnight-600 transition-colors"
+                        >
+                            <FaBars size={18} />
+                        </button>
+                        <div className="w-20 h-20 rounded-2xl bg-blue-900/30 flex items-center justify-center mx-auto">
+                            <SiPlaystation className="text-blue-300" size={40} />
+                        </div>
+                        <h1 className="text-2xl font-bold text-text-primary">Connect PlayStation</h1>
+                        <p className="text-sm text-text-secondary">
+                            Link your PlayStation Network account to sync your game library and trophies.
+                        </p>
+                        <button
+                            onClick={sync}
+                            className="btn-primary w-full py-3 text-base"
+                            disabled={loading}
+                        >
                             Sync With PSN
                         </button>
                     </div>
-                    {status && <p className={styles.status}>{status}</p>}
                 </main>
             </div>
             <Footer />

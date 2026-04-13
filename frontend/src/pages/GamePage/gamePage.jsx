@@ -6,22 +6,16 @@ import apiClient from "../../utils/apiClient.js";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
-import styles from "./GamePage.module.css";
 
-// Map store names from RAWG to CSS class + display label
-const STORE_STYLES = {
-    "Steam": { className: "storeSteam", label: "Steam" },
-    "Epic Games": { className: "storeEpic", label: "Epic Games" },
-    "PlayStation Store": { className: "storePlayStation", label: "PlayStation Store" },
-    "Microsoft Store": { className: "storeMicrosoft", label: "Microsoft Store" },
-    "Xbox Store": { className: "storeXbox", label: "Xbox Store" },
-    "Nintendo Store": { className: "storeNintendo", label: "Nintendo Store" },
-    "EA App (Origin)": { className: "storeEA", label: "EA App" },
+const STORE_COLORS = {
+    "Steam": "bg-blue-900/30 border-blue-500/30 hover:bg-blue-900/50",
+    "Epic Games": "bg-gray-900/30 border-gray-500/30 hover:bg-gray-900/50",
+    "PlayStation Store": "bg-blue-800/30 border-blue-400/30 hover:bg-blue-800/50",
+    "Microsoft Store": "bg-green-900/30 border-green-500/30 hover:bg-green-900/50",
+    "Xbox Store": "bg-green-900/30 border-green-500/30 hover:bg-green-900/50",
+    "Nintendo Store": "bg-red-900/30 border-red-400/30 hover:bg-red-900/50",
+    "EA App (Origin)": "bg-orange-900/30 border-orange-400/30 hover:bg-orange-900/50",
 };
-
-function getStoreStyle(storeName) {
-    return STORE_STYLES[storeName] || { className: "storeDefault", label: storeName };
-}
 
 function formatDate(dateStr) {
     if (!dateStr) return "TBA";
@@ -64,19 +58,20 @@ const GamePage = () => {
 
     if (isError) {
         return (
-            <div className={styles.container}>
+            <div className="page-container">
                 <Header />
-                <div className={styles.errorContainer}>
-                    <h2>😕 Something went wrong</h2>
-                    <p>
-                        {error?.response?.data?.message ||
-                         error?.response?.data?.error ||
-                         "Failed to fetch game details"}
-                    </p>
-                    <button className={styles.backButton} onClick={() => navigate("/")}>
-                        Back to Home
-                    </button>
-                </div>
+                <main className="flex-1 flex items-center justify-center px-4">
+                    <div className="card-surface p-8 text-center space-y-4 max-w-md animate-fade-in">
+                        <span className="text-5xl">😕</span>
+                        <h2 className="text-xl font-bold text-text-primary">Something went wrong</h2>
+                        <p className="text-sm text-text-secondary">
+                            {error?.response?.data?.message || error?.response?.data?.error || "Failed to fetch game details"}
+                        </p>
+                        <button className="btn-primary" onClick={() => navigate("/")}>
+                            Back to Home
+                        </button>
+                    </div>
+                </main>
                 <Footer />
             </div>
         );
@@ -85,265 +80,276 @@ const GamePage = () => {
     if (!game) return null;
 
     return (
-        <div className={styles.container}>
+        <div className="page-container">
             <Header />
-            <div className={styles.page}>
 
+            <main className="flex-1">
                 {/* Hero Section */}
-                <div className={styles.hero}>
-                    {game.image ? (
-                        <img
-                            className={styles.heroImage}
-                            src={game.image}
-                            alt={game.name}
-                        />
-                    ) : (
-                        <div className={styles.heroImage} style={{ background: '#1b2838' }} />
+                <section className="relative overflow-hidden">
+                    <div className="absolute inset-0">
+                        {game.image && (
+                            <img
+                                className="w-full h-full object-cover opacity-20 blur-xl scale-110"
+                                src={game.image}
+                                alt=""
+                            />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-b from-midnight-900/50 via-midnight-800/80 to-midnight-800" />
+                    </div>
+
+                    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 lg:py-20">
+                        <div className="flex flex-col lg:flex-row gap-8 items-start">
+                            {game.image && (
+                                <img
+                                    className="w-full max-w-xs sm:max-w-sm lg:max-w-md rounded-xl shadow-2xl shadow-black/40 border border-midnight-500/20 flex-shrink-0"
+                                    src={game.image}
+                                    alt={game.name}
+                                />
+                            )}
+                            <div className="space-y-4 animate-slide-up">
+                                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-text-primary">
+                                    {game.name}
+                                </h1>
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="badge bg-midnight-700 text-text-secondary">
+                                        📅 {formatDate(game.released)}
+                                    </span>
+                                    {game.playtime > 0 && (
+                                        <span className="badge bg-midnight-700 text-text-secondary">
+                                            ⏱️ Avg {game.playtime}h
+                                        </span>
+                                    )}
+                                    {game.metacritic && (
+                                        <span className="badge bg-success/10 text-success border border-success/20">
+                                            ⭐ {game.metacritic}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {game.trailer && (
+                                    <button
+                                        className="btn-primary inline-flex items-center gap-2"
+                                        onClick={() => document.getElementById('trailers-section')?.scrollIntoView({ behavior: 'smooth' })}
+                                    >
+                                        ▶️ Watch Trailer
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+                    {/* Trailer Section */}
+                    {game.trailer && (
+                        <section id="trailers-section" className="card-surface p-4 sm:p-6">
+                            <h2 className="section-title mb-4">🎬 Official Trailer</h2>
+                            <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                                <iframe
+                                    className="absolute inset-0 w-full h-full"
+                                    src={`${game.trailer.embedUrl}?rel=0&modestbranding=1`}
+                                    title={`${game.name} Trailer`}
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                />
+                            </div>
+                        </section>
                     )}
 
-                    <div className={styles.heroContent}>
-                        <h1 className={styles.heroTitle}>{game.name}</h1>
-                        <div className={styles.statsRow}>
-                            <span className={styles.statBadge}>
-                                📅 Released: {formatDate(game.released)}
-                            </span>
-                            {game.playtime > 0 && (
-                                <span className={styles.statBadge}>
-                                    ⏱️ Avg Playtime: {game.playtime}h
-                                </span>
-                            )}
-                            {game.metacritic && (
-                                <span className={`${styles.statBadge} ${styles.metacritic}`}>
-                                    ⭐ Metacritic: {game.metacritic}
-                                </span>
-                            )}
-                        </div>
+                    {/* Deals Section */}
+                    {(game.deals || game.historyLow) && (
+                        <section className="card-surface p-4 sm:p-6 space-y-4">
+                            <h2 className="section-title">💰 Best Deals & Prices</h2>
 
-                        {/* Hero Actions */}
-                        {game.trailer && (
-                            <div className={styles.heroActions}>
-                                <button
-                                    className={styles.watchTrailerBtn}
-                                    onClick={() => document.getElementById('trailers-section')?.scrollIntoView({ behavior: 'smooth' })}
-                                >
-                                    ▶️ Watch Trailer
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                {/* Best Deal */}
+                                <div className="bg-midnight-800 rounded-xl p-5 border border-accent/20 space-y-4">
+                                    {game.deals && game.deals.length > 0 ? (
+                                        <>
+                                            <span className="badge bg-accent/10 text-accent border border-accent/20">Best Deal</span>
+                                            <div className="text-3xl font-extrabold text-accent">${game.deals[0].price}</div>
+                                            <p className="text-sm text-text-secondary">
+                                                available at <strong className="text-text-primary">{game.deals[0].store}</strong>
+                                            </p>
 
-                {/* Gameplay & Trailers Section */}
-                {game.trailer && (
-                    <div id="trailers-section" className={styles.videosSection}>
-                        <h2 className={styles.sectionTitle}>🎬 Gameplay & Official Trailer</h2>
-                        <div className={styles.videoWrapper}>
-                            <iframe
-                                className={styles.videoPlayer}
-                                src={`${game.trailer.embedUrl}?rel=0&modestbranding=1`}
-                                title={`${game.name} Trailer`}
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/* Price Comparison & Deals Section */}
-                {(game.deals || game.historyLow) && (
-                    <div className={styles.dealsSection}>
-                        <h2 className={styles.sectionTitle}>💰 Best Deals & Price Comparison</h2>
-                        <div className={styles.dealsGrid}>
-
-                            {/* Best Current Deal */}
-                            <div className={styles.bestDealCard}>
-                                {game.deals && game.deals.length > 0 ? (
-                                    <>
-                                        <span className={styles.bestDealBadge}>Best Deal</span>
-                                        <div className={styles.priceDisplay}>
-                                            ${game.deals[0].price}
-                                        </div>
-                                        <div className={styles.shopName}>
-                                            available at <strong>{game.deals[0].store}</strong>
-                                        </div>
-
-                                        {game.historyLow && (
-                                            <div className={styles.historyLowsContainer}>
-                                                <div className={styles.historyLowBadge}>
-                                                    📉 All-Time Low: ${game.historyLow.all}
-                                                </div>
-                                                <div className={styles.historyLowSub}>
-                                                    <span>1 Year Low: ${game.historyLow.y1}</span>
-                                                    <span>3 Month Low: ${game.historyLow.m3}</span>
-                                                </div>
-                                                {game.deals[0].storeLow && (
-                                                    <div className={styles.storeLowBadge}>
-                                                        🏪 {game.deals[0].store} Low: ${game.deals[0].storeLow}
+                                            {game.historyLow && (
+                                                <div className="space-y-2 pt-2 border-t border-midnight-500/30">
+                                                    <span className="badge bg-success/10 text-success text-xs">
+                                                        📉 All-Time Low: ${game.historyLow.all}
+                                                    </span>
+                                                    <div className="flex flex-wrap gap-3 text-xs text-text-muted">
+                                                        <span>1Y Low: ${game.historyLow.y1}</span>
+                                                        <span>3M Low: ${game.historyLow.m3}</span>
                                                     </div>
-                                                )}
-                                            </div>
-                                        )}
+                                                    {game.deals[0].storeLow && (
+                                                        <span className="text-xs text-text-muted">
+                                                            🏪 {game.deals[0].store} Low: ${game.deals[0].storeLow}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
 
-                                        <a
-                                            href={game.deals[0].url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={styles.getDealBtn}
-                                        >
-                                            Get This Deal ↗
-                                        </a>
-                                    </>
-                                ) : (
-                                    <div className={styles.description}>No active deals found at the moment.</div>
+                                            <a
+                                                href={game.deals[0].url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="btn-primary inline-block text-center w-full"
+                                            >
+                                                Get This Deal ↗
+                                            </a>
+                                        </>
+                                    ) : (
+                                        <p className="text-text-muted text-sm">No active deals found at the moment.</p>
+                                    )}
+                                </div>
+
+                                {/* Other stores */}
+                                {/* Other stores */}
+                                {game.deals && game.deals.length > 1 && (
+                                    <div className="bg-midnight-800 rounded-xl p-5 border border-midnight-500/30 space-y-2">
+                                        <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">
+                                            Other Stores
+                                        </p>
+
+                                        {game.deals.slice(1).map((deal, idx) => (
+                                            <a
+                                                key={idx}
+                                                href={deal.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-between px-4 py-3 rounded-lg bg-midnight-700 hover:bg-midnight-600 border border-midnight-500/20 transition-colors"
+                                            >
+                                                <div className="space-y-0.5">
+                                                    <span className="text-sm font-medium text-text-primary">
+                                                        {deal.store}
+                                                    </span>
+
+                                                    {deal.storeLow && (
+                                                        <span className="block text-xs text-text-muted">
+                                                            All Time Low: ${deal.storeLow}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <span className="text-sm font-bold text-accent">
+                                                    ${deal.price} ↗
+                                                </span>
+                                            </a>
+                                        ))}
+                                    </div>
                                 )}
                             </div>
 
-                            {/* Alternative Prices */}
-                            {game.deals && game.deals.length > 1 && (
-                                <div className={styles.alternativePrices}>
-                                    <div className={styles.detailLabel} style={{ marginBottom: '10px' }}>Other Stores</div>
-                                    {game.deals.slice(1, 6).map((deal, idx) => (
-                                        <a
-                                            key={idx}
-                                            href={deal.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={styles.altPriceRow}
-                                        >
-                                            <div className={styles.altStoreInfo}>
-                                                <span>{deal.store}</span>
-                                                {deal.storeLow && (
-                                                    <span className={styles.altStoreLow}> All-Time Low: ${deal.storeLow}</span>
-                                                )}
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted pt-2 border-t border-midnight-500/30">
+                                <span>Data by <a href="https://isthereanydeal.com" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">IsThereAnyDeal</a></span>
+                                <span>•</span>
+                                <span>Game data by <a href="https://rawg.io" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">RAWG</a></span>
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Main Content: Description + Details */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Left: Description & Requirements */}
+                        <div className="lg:col-span-2 space-y-6">
+                            {game.description && (
+                                <div className="card-surface p-4 sm:p-6">
+                                    <h2 className="section-title mb-4">About</h2>
+                                    <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line">
+                                        {game.description}
+                                    </p>
+                                </div>
+                            )}
+
+                            {(game.minimumreq || game.recommendedreq) && (
+                                <div className="card-surface p-4 sm:p-6">
+                                    <h2 className="section-title mb-4">⚙️ System Requirements (PC)</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {game.minimumreq && (
+                                            <div className="bg-midnight-800 rounded-lg p-4 border border-midnight-500/20">
+                                                <h3 className="text-sm font-semibold text-warning mb-2">Minimum</h3>
+                                                <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-line">{game.minimumreq}</p>
                                             </div>
-                                            <span className={styles.altPriceValue}>
-                                                ${deal.price} ↗
-                                            </span>
-                                        </a>
-                                    ))}
+                                        )}
+                                        {game.recommendedreq && (
+                                            <div className="bg-midnight-800 rounded-lg p-4 border border-midnight-500/20">
+                                                <h3 className="text-sm font-semibold text-success mb-2">Recommended</h3>
+                                                <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-line">{game.recommendedreq}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {(!game.description && !game.minimumreq && !game.recommendedreq) && (
+                                <div className="card-surface p-8 text-center">
+                                    <p className="text-text-muted">Detailed information for this title is currently unavailable.</p>
                                 </div>
                             )}
                         </div>
 
-                        {/* Data Source Attributions */}
-                        <div className={styles.attributionContainer}>
-                            <span>Data provided by <a href="https://isthereanydeal.com" target="_blank" rel="noopener noreferrer">IsThereAnyDeal</a></span>
-                            <span className={styles.divider}>|</span>
-                            <span>Game data & images from <a href="https://rawg.io" target="_blank" rel="noopener noreferrer">RAWG</a></span>
-                        </div>
-                    </div>
-                )}
-
-                {/* Main Content Layout */}
-                <div className={styles.mainContent}>
-
-                    {/* Left Column: Description & System Requirements */}
-                    <div className={styles.leftCol}>
-
-                        {/* About Section */}
-                        {game.description && (
-                            <div className={styles.descriptionSection}>
-                                <h2 className={styles.sectionTitle}>About</h2>
-                                <p className={styles.descriptionText}>{game.description}</p>
-                            </div>
-                        )}
-
-                        {/* Requirements Section */}
-                        {(game.minimumreq || game.recommendedreq) && (
-                            <div className={styles.requirementsSection}>
-                                <h2 className={styles.sectionTitle}>⚙️ System Requirements (PC)</h2>
-                                <div className={styles.reqGrid}>
-                                    {game.minimumreq && (
-                                        <div className={styles.reqCard}>
-                                            <h3 className={styles.reqType}>Minimum</h3>
-                                            <div className={styles.reqText}>{game.minimumreq}</div>
-                                        </div>
-                                    )}
-                                    {game.recommendedreq && (
-                                        <div className={styles.reqCard}>
-                                            <h3 className={styles.reqType}>Recommended</h3>
-                                            <div className={styles.reqText}>{game.recommendedreq}</div>
-                                        </div>
-                                    )}
+                        {/* Right: Metadata */}
+                        <div className="space-y-4">
+                            {game.developers?.length > 0 && (
+                                <div className="card-surface p-4">
+                                    <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Developer</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {game.developers.map((dev, i) => (
+                                            <span key={i} className="badge bg-midnight-600 text-text-secondary text-xs">{dev}</span>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {(!game.description && !game.minimumreq && !game.recommendedreq) && (
-                            <div className={styles.noDataPlaceholder}>
-                                <p>Detailed information for this title is currently unavailable.</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Right Column: Specs and Stores */}
-                    <div className={styles.rightCol}>
-
-                        {/* Developers */}
-                        {game.developers?.length > 0 && (
-                            <div className={styles.detailRow}>
-                                <span className={styles.detailLabel}>Developer</span>
-                                <div className={styles.tagsContainer}>
-                                    {game.developers.map((dev, i) => (
-                                        <span key={i} className={styles.tag}>{dev}</span>
-                                    ))}
+                            {game.publishers?.length > 0 && (
+                                <div className="card-surface p-4">
+                                    <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Publisher</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {game.publishers.map((pub, i) => (
+                                            <span key={i} className="badge bg-midnight-600 text-text-secondary text-xs">{pub}</span>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* Publishers */}
-                        {game.publishers?.length > 0 && (
-                            <div className={styles.detailRow}>
-                                <span className={styles.detailLabel}>Publisher</span>
-                                <div className={styles.tagsContainer}>
-                                    {game.publishers.map((pub, i) => (
-                                        <span key={i} className={styles.tag}>{pub}</span>
-                                    ))}
+                            {game.genres?.length > 0 && (
+                                <div className="card-surface p-4">
+                                    <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Genre</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {game.genres.map((genre, i) => (
+                                            <span key={i} className="badge bg-accent/10 text-accent text-xs border border-accent/20">{genre}</span>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* Genres */}
-                        {game.genres?.length > 0 && (
-                            <div className={styles.detailRow}>
-                                <span className={styles.detailLabel}>Genre</span>
-                                <div className={styles.tagsContainer}>
-                                    {game.genres.map((genre, i) => (
-                                        <span key={i} className={styles.tag}>{genre}</span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Stores List */}
-                        {game.stores?.length > 0 && (
-                            <div className={styles.detailRow} style={{ marginTop: '10px' }}>
-                                <span className={styles.detailLabel}>Available On</span>
-                                <div className={styles.storesList}>
-                                    {game.stores.map((storeConfig, idx) => {
-                                        const uiStyle = getStoreStyle(storeConfig.name);
-                                        return (
+                            {game.stores?.length > 0 && (
+                                <div className="card-surface p-4">
+                                    <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">Available On</p>
+                                    <div className="space-y-2">
+                                        {game.stores.map((storeConfig, idx) => (
                                             <a
                                                 key={idx}
                                                 href={storeConfig.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className={`${styles.storeLink} ${styles[uiStyle.className]}`}
+                                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-colors ${STORE_COLORS[storeConfig.name] || 'bg-midnight-600/30 border-midnight-500/30 hover:bg-midnight-600'}`}
                                             >
-                                                <span>{uiStyle.label}</span>
-                                                <span>↗</span>
+                                                <span className="text-text-primary font-medium">{storeConfig.name}</span>
+                                                <span className="text-text-muted">↗</span>
                                             </a>
-                                        );
-                                    })}
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-
+                            )}
+                        </div>
                     </div>
-                </div>
 
-            </div>
+                </div>
+            </main>
+
             <Footer />
         </div>
     );
