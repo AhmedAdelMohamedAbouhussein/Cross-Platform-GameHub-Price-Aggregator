@@ -118,4 +118,11 @@
   .glass {
     @apply bg-midnight-700/80 backdrop-blur-md border border-white/5;
   }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-midnight-500/50 rounded-full hover:bg-midnight-500;
+  }
 }

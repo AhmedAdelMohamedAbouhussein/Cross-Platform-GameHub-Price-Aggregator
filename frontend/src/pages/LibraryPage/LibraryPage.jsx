@@ -1,17 +1,15 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import apiClient from "../../utils/apiClient.js";
-import { FaSyncAlt, FaBars } from "react-icons/fa";
+import { FaSyncAlt, FaBars, FaTrophy, FaClock, FaGamepad, FaSearch, FaFilter, FaSortAmountDown, FaSteam, FaXbox, FaPlaystation } from "react-icons/fa";
+import { SiEpicgames } from "react-icons/si";
 
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import Aside from "../../components/Aside/Aside";
 import Card from "../../components/Card/Card";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
-import SearchBar from "../../components/SearchBar/SearchBar";
-import Dropdown from "../../components/DropDownLists/DropDownLists";
-
 import AuthContext from "../../contexts/AuthContext";
 import Fuse from "fuse.js";
 
@@ -61,8 +59,35 @@ function LibraryPage() {
     window.scrollTo(0, 0);
   }, []);
 
-  const renderCards = () => {
-    if (!ownedGames) return null;
+  // Compute Statistics
+  const stats = useMemo(() => {
+    if (!ownedGames) return { count: 0, hours: "0h", avgProgress: 0 };
+
+    const allGames = Object.values(ownedGames).flatMap(platformGames => Object.values(platformGames));
+    const count = allGames.length;
+
+    let totalSecs = 0;
+    let totalProgress = 0;
+
+    allGames.forEach(g => {
+      totalProgress += (g.progress || 0);
+      if (g.hoursPlayed) {
+        const match = g.hoursPlayed.match(/(\d+)h\s*(\d+)m\s*(\d+)s/);
+        if (match) {
+          const [, h, m, s] = match.map(Number);
+          totalSecs += (h * 3600 + m * 60 + s);
+        }
+      }
+    });
+
+    const hours = Math.floor(totalSecs / 3600);
+    const avgProgress = count > 0 ? Math.round(totalProgress / count) : 0;
+
+    return { count, hours: `${hours}h`, avgProgress };
+  }, [ownedGames]);
+
+  const filteredAndSortedGames = useMemo(() => {
+    if (!ownedGames) return [];
 
     let allGames = Object.entries(ownedGames).flatMap(([platform, games]) =>
       Object.entries(games).map(([gameId, game]) => ({
@@ -73,7 +98,7 @@ function LibraryPage() {
     );
 
     if (filterPlatform !== "all") {
-      allGames = allGames.filter(game => game.platform === filterPlatform);
+      allGames = allGames.filter(game => game.platform.toLowerCase() === filterPlatform.toLowerCase());
     }
 
     if (searchQuery.trim() !== "") {
@@ -85,6 +110,14 @@ function LibraryPage() {
       allGames = results.map(r => r.item);
     }
 
+    const parseTime = (str) => {
+      if (!str) return 0;
+      const match = str.match(/(\d+)h\s*(\d+)m\s*(\d+)s/);
+      if (!match) return 0;
+      const [, h, m, s] = match.map(Number);
+      return h * 3600 + m * 60 + s;
+    };
+
     if (sortBy === "progress") {
       allGames.sort((a, b) => b.progress - a.progress);
     }
@@ -92,16 +125,7 @@ function LibraryPage() {
       allGames.sort((a, b) => a.gameName.localeCompare(b.gameName));
     }
     else if (sortBy === "hoursPlayed") {
-      allGames.sort((a, b) => {
-        const parseTime = (str) => {
-          if (!str) return 0;
-          const match = str.match(/(\d+)h\s*(\d+)m\s*(\d+)s/);
-          if (!match) return 0;
-          const [, h, m, s] = match.map(Number);
-          return h * 3600 + m * 60 + s;
-        };
-        return parseTime(b.hoursPlayed) - parseTime(a.hoursPlayed);
-      });
+      allGames.sort((a, b) => parseTime(b.hoursPlayed) - parseTime(a.hoursPlayed));
     } else if (sortBy === "lastPlayed") {
       allGames.sort((a, b) => {
         const dateA = a.lastPlayed ? new Date(a.lastPlayed) : new Date(0);
@@ -110,105 +134,170 @@ function LibraryPage() {
       });
     }
 
-    if (allGames.length === 0) {
-      return (
-        <div className="col-span-full flex flex-col items-center justify-center py-20 text-text-muted">
-          <span className="text-5xl mb-4">🎮</span>
-          <p className="text-lg">No games found</p>
-          <p className="text-sm mt-1">Try adjusting your filters or sync a platform</p>
-        </div>
-      );
-    }
-
-    return allGames.map(game => (
-      <Card
-        key={`${game.platform}-${game.gameId}`}
-        id={game.gameId}
-        platform={game.platform}
-        image={game.coverImage}
-        title={game.gameName}
-        progress={game.progress}
-        lastPlayed={game.lastPlayed}
-        hoursPlayed={game.hoursPlayed}
-      />
-    ));
-  };
+    return allGames;
+  }, [ownedGames, filterPlatform, searchQuery, sortBy]);
 
   if (isLoading) {
     return <LoadingScreen />;
   }
 
   return (
-    <div className="page-container">
+    <div className="page-container bg-midnight-900 border-none">
       <Header />
-      <div className="flex-1 flex">
-        {/* Desktop sidebar */}
+      <div className="flex-1 flex min-h-0">
         <Aside />
-        {/* Mobile sidebar drawer */}
         <Aside isOpen={mobileAsideOpen} onClose={() => setMobileAsideOpen(false)} />
 
-        <main className="flex-1 min-w-0">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-            {/* Top bar */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setMobileAsideOpen(true)}
-                  className="lg:hidden p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-midnight-600 transition-colors"
-                >
-                  <FaBars size={18} />
-                </button>
-                <h1 className="text-2xl font-bold text-text-primary">My Library</h1>
+        <main className="flex-1 overflow-y-auto custom-scrollbar no-scrollbar">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+
+            {/* 1. Header & Stats Section */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 animate-in fade-in slide-in-from-top-4 duration-700">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 text-accent mb-3">
+                  <button
+                    onClick={() => setMobileAsideOpen(true)}
+                    className="lg:hidden p-2 rounded-xl text-text-muted hover:text-text-primary hover:bg-midnight-600 transition-colors"
+                  >
+                    <FaBars size={18} />
+                  </button>
+                  <div className="p-3 rounded-2xl bg-accent/10 border border-accent/20">
+                    <FaGamepad size={24} />
+                  </div>
+                  <h1 className="text-4xl font-black tracking-tight text-text-primary uppercase slant-2">My Library</h1>
+                </div>
+                <p className="text-text-muted text-sm max-w-lg font-medium">
+                  Your entire gaming legacy, unified across all platforms. View achievements, track progress, and organize your collection.
+                </p>
               </div>
 
-              <button
-                className="btn-secondary inline-flex items-center gap-2 text-sm"
-                onClick={() => refreshLibrary()}
-                disabled={refreshing}
-              >
-                <FaSyncAlt className={refreshing ? "animate-spin" : ""} />
-                {refreshing ? "Refreshing..." : "Refresh Library"}
-              </button>
-            </div>
-
-            {/* Filters */}
-            <div className="card-surface p-4 space-y-4">
-              <SearchBar
-                placeholder="Search for a game..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-
-              <div className="flex flex-wrap gap-4">
-                <Dropdown
-                  label="Sort by"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  options={[
-                    { value: "alphabet", label: "Alphabetical" },
-                    { value: "progress", label: "Progress" },
-                    { value: "hoursPlayed", label: "Hours Played" },
-                    { value: "lastPlayed", label: "Last Played" }
-                  ]}
-                />
-                <Dropdown
-                  label="Platform"
-                  value={filterPlatform}
-                  onChange={(e) => setFilterPlatform(e.target.value)}
-                  options={[
-                    { value: "all", label: "All Platforms" },
-                    { value: "steam", label: "Steam" },
-                    { value: "epic", label: "Epic" },
-                    { value: "xbox", label: "Xbox" },
-                    { value: "PSN", label: "PlayStation" }
-                  ]}
-                />
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-midnight-800/40 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center text-center min-w-[100px] hover:border-accent/30 transition-all group">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-text-muted mb-1 group-hover:text-accent">Games</span>
+                  <span className="text-xl font-black text-text-primary">{stats.count}</span>
+                </div>
+                <div className="bg-midnight-800/40 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center text-center min-w-[100px] hover:border-accent/30 transition-all group">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-text-muted mb-1 group-hover:text-accent">Playtime</span>
+                  <span className="text-xl font-black text-text-primary">{stats.hours}</span>
+                </div>
+                <div className="bg-midnight-800/40 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center text-center min-w-[100px] hover:border-accent/30 transition-all group">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-text-muted mb-1 group-hover:text-accent">Avg %</span>
+                  <span className="text-xl font-black text-text-primary">{stats.avgProgress}%</span>
+                </div>
               </div>
             </div>
 
-            {/* Game Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {renderCards()}
+            {/* 2. Control Bar (Filters & Search) */}
+            <div className="flex flex-col gap-6 bg-midnight-800/30 p-4 rounded-[2.5rem] border border-white/5 animate-in fade-in duration-700 delay-100">
+
+              {/* Platform Selector (Pills) */}
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 px-1 border-b border-white/5 pb-4">
+                {[
+                  { key: "all", label: "All Games", icon: FaGamepad, color: "from-accent to-accent-glow" },
+                  { key: "steam", label: "Steam", icon: FaSteam, color: "from-slate-700 to-slate-900" },
+                  { key: "xbox", label: "Xbox", icon: FaXbox, color: "from-green-600 to-emerald-800" },
+                  { key: "psn", label: "PlayStation", icon: FaPlaystation, color: "from-blue-600 to-blue-800" },
+                  { key: "epic", label: "Epic", icon: SiEpicgames, color: "from-gray-800 to-black" },
+                ].map((platform) => {
+                  const Icon = platform.icon;
+                  const active = filterPlatform === platform.key;
+                  return (
+                    <button
+                      key={platform.key}
+                      onClick={() => setFilterPlatform(platform.key)}
+                      className={`
+                        flex items-center gap-2.5 px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap
+                        ${active
+                          ? `bg-gradient-to-br ${platform.color} text-white shadow-lg shadow-black/20 scale-105`
+                          : 'bg-midnight-800/50 text-text-muted hover:text-text-primary hover:bg-midnight-700'
+                        }
+                      `}
+                    >
+                      <Icon size={14} />
+                      {platform.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-4 items-center">
+                <div className="relative flex-1 w-full">
+                  <FaSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search your library..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-14 bg-midnight-800/80 rounded-[1.6rem] pl-14 pr-6 text-sm font-bold text-text-primary placeholder:text-text-muted border border-transparent focus:border-accent/40 focus:ring-4 focus:ring-accent/10 outline-none transition-all"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                  <div className="relative group flex-1 md:flex-none">
+                    <FaSortAmountDown className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="w-full md:w-auto h-12 pl-10 pr-10 bg-midnight-800/80 rounded-2xl text-[11px] font-black uppercase tracking-widest text-text-secondary border border-transparent hover:border-white/10 outline-none cursor-pointer appearance-none transition-all"
+                    >
+                      <option value="progress">Sort: Progress</option>
+                      <option value="hoursPlayed">Sort: Playtime</option>
+                      <option value="alphabet">Sort: Alphabet</option>
+                      <option value="lastPlayed">Sort: Recent</option>
+                    </select>
+                  </div>
+
+                  <button
+                    onClick={() => refreshLibrary()}
+                    disabled={refreshing}
+                    className="h-12 w-12 flex items-center justify-center rounded-2xl bg-accent text-white shadow-lg shadow-accent/20 hover:bg-accent-hover active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    <FaSyncAlt className={refreshing ? "animate-spin" : ""} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Game Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 sm:gap-8 pb-20">
+              {filteredAndSortedGames.length > 0 ? (
+                filteredAndSortedGames.map((game, index) => (
+                  <div
+                    key={`${game.platform}-${game.gameId}`}
+                    className="animate-in fade-in slide-in-from-bottom-4 duration-700"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <Card
+                      id={game.gameId}
+                      platform={game.platform}
+                      image={game.coverImage}
+                      title={game.gameName}
+                      progress={game.progress}
+                      lastPlayed={game.lastPlayed}
+                      hoursPlayed={game.hoursPlayed}
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-32 flex flex-col items-center justify-center text-center space-y-4 animate-in fade-in zoom-in duration-500">
+                  <div className="w-20 h-20 rounded-3xl bg-midnight-800 border border-white/5 flex items-center justify-center text-4xl shadow-inner">
+                    👾
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-text-primary uppercase">No Games Detected</h3>
+                    <p className="text-sm text-text-muted font-medium max-w-xs mx-auto">
+                      Adjust your filters or sync your accounts to see your collection here.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => { setSearchQuery(""); setFilterPlatform("all"); }}
+                    className="text-xs font-black text-accent uppercase tracking-widest hover:underline pt-4"
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </main>

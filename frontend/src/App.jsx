@@ -22,6 +22,7 @@ const FriendsPage = lazy(() => import('./pages/FriendsPage/FriendsPage'));
 const AddFriendPage = lazy(() => import('./pages/ManageFriendsPage/ManageFriendsPage.jsx'));
 const SettingsPage = lazy(() => import(`./pages/SettingsPage/SettingsPage.jsx`));
 const BrowseGamesPage = lazy(() => import("./pages/BrowsePage/BrowsePage"));
+const ViewProfilePage = lazy(() => import("./pages/FriendsPage/ViewProfilePage"));
 
 function SuspenseFallback() {
     return (
@@ -65,6 +66,7 @@ function App()
 
                 <Route path="/ownedgamedetails" element={user ? <OwnedGamesDetails /> : <Navigate to="/login" replace state={{ from: location }} />}/>
                 <Route path="/friends" element={user ? <FriendsPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
+                <Route path="/friends/viewprofile/:publicID" element={user ? <ViewProfilePage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
                 <Route path="/managefriends" element={user ? <AddFriendPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
                 <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
             </Routes>

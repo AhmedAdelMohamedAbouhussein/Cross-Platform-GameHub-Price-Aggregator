@@ -3,6 +3,7 @@ import { addUser } from '../controllers/users/create/addAndRestoreUsers.js';
 import { getUserById, getUserIdByEmail, loginUser, getUserFriendList, getUserOwnedGames, getUserOwnedGame} from '../controllers/users/record/getUser.js';
 import { updateUser } from '../controllers/users/update/updateUserInfo.js';
 import { softDeletUser } from '../controllers/users/delete/softAndHardDeleteUser.js';
+import { getPublicProfile, toggleLike } from '../controllers/users/record/profileController.js';
 import requireAuth from '../middleware/requireAuth.js';
 
 const router = express.Router();
@@ -426,5 +427,43 @@ router.put('/update/:email', requireAuth, updateUser);
  *         description: User not found
  */
 router.delete('/delete/:email', requireAuth, softDeletUser);
+
+/**
+ * @swagger
+ * /api/users/profile/{publicID}:
+ *   get:
+ *     summary: Get a user's public profile and stats
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: publicID
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Profile data returned
+ *       404:
+ *         description: User not found
+ */
+router.get('/profile/:publicID', requireAuth, getPublicProfile);
+
+/**
+ * @swagger
+ * /api/users/profile/{publicID}/like:
+ *   post:
+ *     summary: Toggle like on a profile
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: publicID
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Like toggled
+ */
+router.post('/profile/:publicID/like', requireAuth, toggleLike);
 
 export default router;

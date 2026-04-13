@@ -14,6 +14,7 @@ import NodeMailer from './routes/nodeMailer.js';
 import Friends from './routes/Friends.js'
 import Settings from './routes/settings.js';
 import Refresh from './routes/refresh.js';
+import Notifications from './routes/notifications.js';
 
 import logger from './middleware/logger.js';
 import errorHandeler from './middleware/error.js';
@@ -43,6 +44,7 @@ app.use('/api/mail', NodeMailer);
 app.use('/api/friends', Friends);
 app.use('/api/setting', Settings);
 app.use('/api/refresh', Refresh);
+app.use('/api/notifications', Notifications);
 
 // ── Error-handling middleware ─────────────────────────────────────────────────
 app.use(notfound);

@@ -1,9 +1,8 @@
 import nodemailer from 'nodemailer';
-
 import OtpSchema from '../../models/Otp.js'
 import userModel from '../../models/User.js';
-
 import config from '../../config/env.js'
+import { generateOtpEmail } from '../../utils/emailTemplates.js';
 
 let transporter = nodemailer.createTransport({
     service: "gmail",
@@ -15,7 +14,7 @@ let transporter = nodemailer.createTransport({
     },
 })
 
-export async function sendOtpToUser ({ userId, email, purpose})
+export async function sendOtpToUser ({ userId, email, purpose, userName })
 {
     try
     {
@@ -23,11 +22,18 @@ export async function sendOtpToUser ({ userId, email, purpose})
 
         const otp = String(Math.floor(100000 + Math.random() * 900000)); // ensures 6 digits
         
+        const subjectMap = {
+            email_verification: "Verify Your Email - GameHub",
+            password_reset: "Reset Your Password - GameHub",
+            restore_account: "Restore Your Account - GameHub",
+            permanently_delete_account: "Authorize Account Deletion - GameHub"
+        };
+
         const mailOptions = {
-            from: config.gmail.gmail,
+            from: `"GameHub Security" <${config.gmail.gmail}>`,
             to: email,
-            subject: "Verify Your Email",
-            html: `<p>Your OTP is: <b>${otp}</b><br/>This OTP will expire in 10 minutes.</p>`
+            subject: subjectMap[purpose] || "Security Verification - GameHub",
+            html: generateOtpEmail(userName, otp, purpose)
         }
 
         await OtpSchema.create({
@@ -148,7 +154,7 @@ export const sendOtp = async (req, res, next) =>
             await checkResendLimit(user, userId, "permanentlyDeleteAccount");
         }
         
-        await sendOtpToUser({ userId, email, purpose});
+        await sendOtpToUser({ userId, email, purpose, userName: user.name });
 
 
         res.json({

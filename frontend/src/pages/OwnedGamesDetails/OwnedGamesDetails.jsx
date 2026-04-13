@@ -96,11 +96,10 @@ function OwnedGamesDetails() {
 
       return (
         <div
-          className={`flex items-start gap-4 p-4 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
-            ach.unlocked
+          className={`flex items-start gap-4 p-4 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${ach.unlocked
               ? 'bg-success/5 border border-success/20'
               : 'bg-danger/5 border border-danger/20'
-          }`}
+            }`}
           key={index}
         >
           <div className="flex-shrink-0">

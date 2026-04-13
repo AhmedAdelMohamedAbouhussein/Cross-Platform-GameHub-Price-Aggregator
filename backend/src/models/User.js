@@ -172,6 +172,7 @@ const UserSchema = new mongoose.Schema({
         },
     },
     wishlist: [{ type: String }],
+    likes: [{ type: String, index: true }], // Stores publicIDs of users who liked this profile
     friends: {
         type: Map,
         of: [

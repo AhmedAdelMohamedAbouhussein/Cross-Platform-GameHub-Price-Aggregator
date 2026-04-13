@@ -329,13 +329,12 @@ function SettingsPage() {
                                         <button
                                             key={item.key}
                                             onClick={() => setSelected(item.key)}
-                                            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none ${
-                                                selected === item.key
+                                            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 lg:flex-none ${selected === item.key
                                                     ? item.key === 'danger'
                                                         ? 'bg-danger/10 text-danger'
                                                         : 'bg-accent/10 text-accent'
                                                     : 'text-text-secondary hover:text-text-primary hover:bg-midnight-600'
-                                            }`}
+                                                }`}
                                         >
                                             <Icon size={16} className="flex-shrink-0" />
                                             <span className="hidden sm:inline">{item.label}</span>

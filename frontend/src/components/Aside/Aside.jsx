@@ -5,7 +5,7 @@ import AuthContext from "../../contexts/AuthContext";
 import apiClient from "../../utils/apiClient.js";
 import {
     FaCaretLeft, FaCaretRight, FaSteam, FaXbox, FaGamepad,
-    FaComments, FaUserFriends, FaCog, FaSignOutAlt, FaChevronDown, FaChevronUp, FaTimes
+    FaComments, FaUserFriends, FaCog, FaSignOutAlt, FaChevronDown, FaChevronUp, FaTimes, FaGlobe, FaTrophy
 } from "react-icons/fa";
 import { SiEpicgames, SiGogdotcom, SiPlaystation } from 'react-icons/si';
 
@@ -34,8 +34,8 @@ function Aside({ isOpen: externalOpen, onClose }) {
 
     const handleLogout = async () => {
         try {
-            const response = await apiClient.post(`/auth/logout`, {});
-            toast.success(response.data.message || "Logged out successfully");
+            await apiClient.post(`/auth/logout`, {});
+            toast.success("Logged out successfully");
             setUser(null);
         } catch (error) {
             toast.error(error.response?.data?.message || "Logout failed");
@@ -43,16 +43,27 @@ function Aside({ isOpen: externalOpen, onClose }) {
     };
 
     const menuItems = [
-        { icon: FaGamepad, label: "View Owned Games", to: "/library" },
-        { icon: FaComments, label: "Chat with Friends", to: "/friends" },
-        { icon: FaUserFriends, label: "Friend List", to: "/friends" },
-        { divider: true },
-        { icon: FaSteam, label: "Link Steam", to: "/library/sync/steam" },
-        { icon: SiEpicgames, label: "Link Epic", to: "/library/sync/epic" },
-        { icon: SiPlaystation, label: "Link PSN", to: "/library/sync/psn" },
-        { icon: FaXbox, label: "Link Xbox", to: "/library/sync/xbox" },
-        { icon: FaGamepad, label: "Link Nintendo", to: "/library/sync/nintendo" },
-        { icon: SiGogdotcom, label: "Link GOG", to: "/library/sync/gog" },
+        {
+            section: "Collections", items: [
+                { icon: FaGamepad, label: "My Library", to: "/library" },
+                //{ icon: FaTrophy, label: "Achievements", to: "/library/achievements" },
+                //{ icon: FaGlobe, label: "Global Stats", to: "/games" },
+            ]
+        },
+        {
+            section: "Community", items: [
+                { icon: FaComments, label: "Friend Activity", to: "/friends" },
+                //{ icon: FaUserFriends, label: "Manage Friends", to: "/friends/manage" },
+            ]
+        },
+        {
+            section: "Platforms", items: [
+                { icon: FaSteam, label: "Sync Steam", to: "/library/sync/steam" },
+                { icon: SiEpicgames, label: "Sync Epic Games", to: "/library/sync/epic" },
+                { icon: SiPlaystation, label: "Sync PlayStation", to: "/library/sync/psn" },
+                { icon: FaXbox, label: "Sync Xbox Live", to: "/library/sync/xbox" },
+            ]
+        }
     ];
 
     const isActive = (path) => location.pathname === path;
@@ -62,7 +73,7 @@ function Aside({ isOpen: externalOpen, onClose }) {
             {/* Mobile overlay backdrop */}
             {externalOpen !== undefined && sidebarOpen && (
                 <div
-                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+                    className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in duration-300"
                     onClick={onClose}
                 />
             )}
@@ -70,112 +81,139 @@ function Aside({ isOpen: externalOpen, onClose }) {
             <aside
                 className={`
                     ${externalOpen !== undefined
-                        ? `fixed top-0 left-0 z-50 h-full ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
+                        ? `fixed top-0 left-0 z-50 h-[100dvh] ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
                         : 'relative hidden lg:block'
                     }
-                    ${sidebarOpen ? 'w-64' : 'w-20'}
-                    bg-midnight-700 border-r border-midnight-500/30
-                    transition-all duration-300 ease-out flex-shrink-0
+                    ${sidebarOpen ? 'w-72' : 'w-20'}
+                    bg-midnight-800/80 backdrop-blur-2xl border-r border-white/5
+                    transition-all duration-500 cubic-bezier(0.23, 1, 0.32, 1) flex-shrink-0
+                    shadow-2xl shadow-black/50
                 `}
                 onClick={handleSidebarClick}
             >
-                <div className="flex flex-col h-full p-4">
-                    {/* Top section */}
-                    <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col h-full">
+
+                    {/* Top profile area (Internal Toggle) */}
+                    <div className="p-6 border-b border-white/5 h-20 flex items-center justify-between overflow-hidden">
                         {sidebarOpen && (
-                            <div className="flex items-center gap-3 min-w-0">
-                                <img
-                                    src={user.profilePicture && user.profilePicture.trim() !== ""
-                                        ? user.profilePicture
-                                        : "https://digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png"}
-                                    alt="Profile"
-                                    className="w-9 h-9 rounded-full object-cover ring-2 ring-accent/30 flex-shrink-0"
-                                />
-                                <span className="text-sm font-semibold text-text-primary truncate">{user.name}</span>
+                            <div className="flex items-center gap-3 min-w-0 animate-in fade-in slide-in-from-left-4 duration-500">
+                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent-glow flex items-center justify-center text-midnight-900 shadow-lg flex-shrink-0 overflow-hidden">
+                                    {user.profilePicture && user.profilePicture.trim() !== ""
+                                        ? <img src={user.profilePicture} alt="Avatar" className="w-full h-full object-cover" />
+                                        : <span className="font-black text-xs uppercase">{user.name?.charAt(0)}</span>
+                                    }
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-sm font-black text-text-primary uppercase tracking-tight truncate">{user.name}</p>
+                                    <p className="text-[10px] font-bold text-accent uppercase tracking-widest">{user.publicID}</p>
+                                </div>
                             </div>
                         )}
                         <button
                             onClick={toggleSidebar}
-                            className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-midnight-600 transition-colors flex-shrink-0"
+                            className={`p-2 rounded-xl transition-all duration-300 ${sidebarOpen ? 'text-text-muted hover:bg-white/5' : 'mx-auto text-accent bg-accent/10'}`}
                         >
                             {externalOpen !== undefined
                                 ? <FaTimes size={16} />
-                                : sidebarOpen ? <FaCaretLeft /> : <FaCaretRight />
+                                : sidebarOpen ? <FaCaretLeft size={18} /> : <FaCaretRight size={18} />
                             }
                         </button>
                     </div>
 
-                    {/* Menu items */}
-                    <nav className="flex-1 space-y-1 overflow-y-auto">
-                        {sidebarOpen && (
-                            <p className="text-[10px] uppercase tracking-widest text-text-muted font-semibold mb-3 px-3">Menu</p>
-                        )}
-                        {menuItems.map((item, i) => {
-                            if (item.divider) {
-                                return <div key={i} className="border-t border-midnight-500/30 my-3" />;
-                            }
-                            const Icon = item.icon;
-                            return (
-                                <Link
-                                    key={i}
-                                    to={item.to}
-                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                                        ${isActive(item.to)
-                                            ? 'bg-accent/10 text-accent'
-                                            : 'text-text-secondary hover:text-text-primary hover:bg-midnight-600'
-                                        }
-                                        ${!sidebarOpen ? 'justify-center' : ''}
-                                    `}
-                                    title={!sidebarOpen ? item.label : undefined}
-                                >
-                                    <Icon className={`flex-shrink-0 ${isActive(item.to) ? 'text-accent' : 'text-accent/60'}`} size={18} />
-                                    {sidebarOpen && <span className="truncate">{item.label}</span>}
-                                </Link>
-                            );
-                        })}
+                    {/* Navigation Menu */}
+                    <nav className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-6 pt-6">
+                        {menuItems.map((group, groupIndex) => (
+                            <div key={groupIndex} className="space-y-1">
+                                {sidebarOpen && (
+                                    <p className="text-[10px] uppercase font-black tracking-[0.2em] text-text-muted mb-4 px-3 flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-accent/40" />
+                                        {group.section}
+                                    </p>
+                                )}
+                                {group.items.map((item, i) => {
+                                    const Icon = item.icon;
+                                    const active = isActive(item.to);
+                                    return (
+                                        <Link
+                                            key={i}
+                                            to={item.to}
+                                            className={`
+                                                group relative flex items-center gap-3.5 px-3 py-3 rounded-xl text-sm font-bold transition-all duration-300
+                                                ${active
+                                                    ? 'bg-accent/10 text-accent translate-x-1 shadow-lg shadow-accent/5'
+                                                    : 'text-text-secondary hover:text-text-primary hover:bg-white/5 hover:translate-x-1'
+                                                }
+                                                ${!sidebarOpen ? 'justify-center px-0' : ''}
+                                            `}
+                                            title={!sidebarOpen ? item.label : undefined}
+                                        >
+                                            {active && sidebarOpen && (
+                                                <div className="absolute left-[-12px] w-1 h-6 bg-accent rounded-r-full shadow-[0_0_12px_rgba(59,130,246,0.5)]" />
+                                            )}
+                                            <Icon className={`flex-shrink-0 transition-colors ${active ? 'text-accent' : 'text-text-muted group-hover:text-accent/80'}`} size={18} />
+                                            {sidebarOpen && <span className="truncate">{item.label}</span>}
+                                        </Link>
+                                    );
+                                })}
+
+                                {/* Interactive Profile Area - Positioned right under Platforms (the last group) */}
+                                {groupIndex === menuItems.length - 1 && (
+                                    <div className="pt-6 border-t border-white/5 mt-6 space-y-4 px-1">
+                                        {sidebarOpen && (
+                                            <p className="text-[10px] uppercase font-black tracking-[0.2em] text-text-muted mb-4 px-3 flex items-center gap-2">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-accent/40" />
+                                                Identity
+                                            </p>
+                                        )}
+                                        <button
+                                            onClick={() => setIsAccountOpen(!isAccountOpen)}
+                                            className={`flex items-center gap-3 w-full p-2.5 rounded-xl transition-all duration-300 ${isAccountOpen ? 'bg-white/5' : 'hover:bg-white/5'} ${!sidebarOpen ? 'justify-center px-0' : ''}`}
+                                        >
+                                            <div className="w-8 h-8 rounded-lg bg-midnight-700 border border-white/5 flex items-center justify-center flex-shrink-0 overflow-hidden shadow-inner">
+                                                {user.profilePicture && user.profilePicture.trim() !== ""
+                                                    ? <img src={user.profilePicture} alt="User" className="w-full h-full object-cover" />
+                                                    : <FaCog className="text-text-muted/40" />
+                                                }
+                                            </div>
+                                            {sidebarOpen && (
+                                                <>
+                                                    <div className="flex-1 min-w-0 text-left">
+                                                        <p className="text-xs font-black text-text-primary uppercase tracking-tight truncate">{user.name}</p>
+                                                        <p className="text-[10px] font-bold text-text-muted truncate">{user.email}</p>
+                                                    </div>
+                                                    <FaChevronUp className={`text-text-muted transition-transform duration-500 ${isAccountOpen ? 'rotate-180' : ''}`} size={10} />
+                                                </>
+                                            )}
+                                        </button>
+
+                                        {isAccountOpen && sidebarOpen && (
+                                            <div className="mt-2 p-1 space-y-1 animate-in slide-in-from-bottom-2 duration-300">
+                                                <Link
+                                                    to="/settings"
+                                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${isActive('/settings') ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
+                                                >
+                                                    <FaCog className={isActive('/settings') ? 'text-accent' : 'text-accent/60'} size={14} />
+                                                    Settings
+                                                </Link>
+                                                <button
+                                                    onClick={handleLogout}
+                                                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-[11px] font-black uppercase tracking-wider text-text-secondary hover:text-red-400 hover:bg-red-500/5 transition-all"
+                                                >
+                                                    <FaSignOutAlt className="text-red-400" size={14} />
+                                                    Logout
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
                     </nav>
 
-                    {/* Account section at bottom */}
-                    {sidebarOpen && (
-                        <div className="border-t border-midnight-500/30 pt-4 mt-4">
-                            <button
-                                onClick={() => setIsAccountOpen(!isAccountOpen)}
-                                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-midnight-600 transition-colors"
-                            >
-                                <img
-                                    src={user.profilePicture && user.profilePicture.trim() !== ""
-                                        ? user.profilePicture
-                                        : "https://digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png"}
-                                    alt="Profile"
-                                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                                />
-                                <div className="flex-1 min-w-0 text-left">
-                                    <p className="text-sm font-medium text-text-primary truncate">{user.name}</p>
-                                    <p className="text-xs text-text-muted truncate">{user.email}</p>
-                                </div>
-                                {isAccountOpen ? <FaChevronUp className="text-text-muted" size={12} /> : <FaChevronDown className="text-text-muted" size={12} />}
-                            </button>
-
-                            {isAccountOpen && (
-                                <div className="mt-2 py-1 space-y-0.5 animate-slide-down">
-                                    <Link
-                                        to="/settings"
-                                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:text-text-primary hover:bg-midnight-600 transition-colors"
-                                    >
-                                        <FaCog className="text-accent" size={14} />
-                                        Settings
-                                    </Link>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors"
-                                    >
-                                        <FaSignOutAlt className="text-danger" size={14} />
-                                        Logout
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                    {/* Global footer inside aside */}
+                    <div className="p-4 border-t border-white/5 flex justify-center opacity-40">
+                        <p className="text-[8px] font-bold text-text-muted uppercase tracking-[0.3em]">GameHub v2.8.4</p>
+                    </div>
                 </div>
             </aside>
         </>

@@ -3,18 +3,20 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "../../utils/apiClient.js";
 
-import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
-import Header from "../../components/Header/Header";
-import Footer from "../../components/Footer/Footer";
+import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
+import Header from "../../components/Header/Header.jsx";
+import Footer from "../../components/Footer/Footer.jsx";
+import { FaCalendarAlt, FaClock, FaStar, FaExternalLinkAlt, FaTag, FaTools, FaBuilding, FaArrowRight, FaGamepad } from "react-icons/fa";
+import { toast } from "sonner";
 
 const STORE_COLORS = {
-    "Steam": "bg-blue-900/30 border-blue-500/30 hover:bg-blue-900/50",
-    "Epic Games": "bg-gray-900/30 border-gray-500/30 hover:bg-gray-900/50",
-    "PlayStation Store": "bg-blue-800/30 border-blue-400/30 hover:bg-blue-800/50",
-    "Microsoft Store": "bg-green-900/30 border-green-500/30 hover:bg-green-900/50",
-    "Xbox Store": "bg-green-900/30 border-green-500/30 hover:bg-green-900/50",
-    "Nintendo Store": "bg-red-900/30 border-red-400/30 hover:bg-red-900/50",
-    "EA App (Origin)": "bg-orange-900/30 border-orange-400/30 hover:bg-orange-900/50",
+    "Steam": "bg-blue-600/20 border-blue-500/30 text-blue-400 hover:bg-blue-600/30",
+    "Epic Games": "bg-gray-600/20 border-gray-500/30 text-gray-300 hover:bg-gray-600/30",
+    "PlayStation Store": "bg-blue-500/20 border-blue-400/30 text-blue-300 hover:bg-blue-500/30",
+    "Microsoft Store": "bg-green-600/20 border-green-500/30 text-green-400 hover:bg-green-600/30",
+    "Xbox Store": "bg-green-600/20 border-green-500/30 text-green-400 hover:bg-green-600/30",
+    "Nintendo Store": "bg-red-600/20 border-red-400/30 text-red-400 hover:bg-red-600/30",
+    "EA App (Origin)": "bg-orange-600/20 border-orange-400/30 text-orange-400 hover:bg-orange-600/30",
 };
 
 function formatDate(dateStr) {
@@ -58,17 +60,22 @@ const GamePage = () => {
 
     if (isError) {
         return (
-            <div className="page-container">
+            <div className="page-container bg-midnight-900 px-0">
                 <Header />
                 <main className="flex-1 flex items-center justify-center px-4">
-                    <div className="card-surface p-8 text-center space-y-4 max-w-md animate-fade-in">
-                        <span className="text-5xl">😕</span>
-                        <h2 className="text-xl font-bold text-text-primary">Something went wrong</h2>
-                        <p className="text-sm text-text-secondary">
-                            {error?.response?.data?.message || error?.response?.data?.error || "Failed to fetch game details"}
-                        </p>
-                        <button className="btn-primary" onClick={() => navigate("/")}>
-                            Back to Home
+                    <div className="bg-midnight-800/40 backdrop-blur-xl border border-white/5 p-8 sm:p-10 rounded-[2.5rem] text-center space-y-6 max-w-md animate-in fade-in zoom-in duration-500">
+                        <span className="text-6xl">😕</span>
+                        <div className="space-y-2">
+                            <h2 className="text-2xl font-black text-text-primary uppercase tracking-tight">Signal Lost</h2>
+                            <p className="text-sm text-text-secondary font-medium">
+                                {error?.response?.data?.message || "We couldn't track down this title. It might be hidden in another sector."}
+                            </p>
+                        </div>
+                        <button
+                            className="px-8 py-3 bg-accent text-white font-black uppercase tracking-widest rounded-2xl hover:bg-accent-hover active:scale-95 transition-all"
+                            onClick={() => navigate("/games")}
+                        >
+                            Return to Base
                         </button>
                     </div>
                 </main>
@@ -80,58 +87,69 @@ const GamePage = () => {
     if (!game) return null;
 
     return (
-        <div className="page-container">
+        <div className="page-container bg-midnight-900 border-none overflow-x-hidden">
             <Header />
 
             <main className="flex-1">
-                {/* Hero Section */}
-                <section className="relative overflow-hidden">
+                {/* 1. Immersive Hero Section */}
+                <section className="relative min-h-[50vh] sm:min-h-[60vh] lg:min-h-[70vh] flex items-end overflow-hidden px-4 sm:px-0">
+                    {/* Dynamic Ambient Backdrop */}
                     <div className="absolute inset-0">
                         {game.image && (
                             <img
-                                className="w-full h-full object-cover opacity-20 blur-xl scale-110"
+                                className="w-full h-full object-cover opacity-20 blur-sm scale-105"
                                 src={game.image}
                                 alt=""
                             />
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-b from-midnight-900/50 via-midnight-800/80 to-midnight-800" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-midnight-900 via-midnight-900/60 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-midnight-900/40 via-transparent to-transparent" />
                     </div>
 
-                    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 lg:py-20">
-                        <div className="flex flex-col lg:flex-row gap-8 items-start">
-                            {game.image && (
-                                <img
-                                    className="w-full max-w-xs sm:max-w-sm lg:max-w-md rounded-xl shadow-2xl shadow-black/40 border border-midnight-500/20 flex-shrink-0"
-                                    src={game.image}
-                                    alt={game.name}
-                                />
-                            )}
-                            <div className="space-y-4 animate-slide-up">
-                                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-text-primary">
-                                    {game.name}
-                                </h1>
-                                <div className="flex flex-wrap gap-2">
-                                    <span className="badge bg-midnight-700 text-text-secondary">
-                                        📅 {formatDate(game.released)}
-                                    </span>
-                                    {game.playtime > 0 && (
-                                        <span className="badge bg-midnight-700 text-text-secondary">
-                                            ⏱️ Avg {game.playtime}h
-                                        </span>
-                                    )}
-                                    {game.metacritic && (
-                                        <span className="badge bg-success/10 text-success border border-success/20">
-                                            ⭐ {game.metacritic}
-                                        </span>
-                                    )}
+                    <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-20">
+                        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-center lg:items-end text-center lg:text-left">
+                            {/* Key Art Card */}
+                            <div className="relative group flex-shrink-0 animate-in fade-in slide-in-from-left-8 duration-1000">
+                                <div className="absolute -inset-2 bg-gradient-to-br from-accent/20 to-blue-500/20 rounded-[2.5rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                                {game.image && (
+                                    <img
+                                        className="relative w-full max-w-[240px] sm:max-w-sm lg:max-w-md rounded-[2rem] shadow-2xl shadow-black/60 border border-white/5 transition-transform duration-700 group-hover:scale-[1.02]"
+                                        src={game.image}
+                                        alt={game.name}
+                                    />
+                                )}
+                            </div>
+
+                            {/* Game Info Overlay */}
+                            <div className="flex-1 space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+                                <div className="space-y-4">
+                                    <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight text-white uppercase leading-tight sm:leading-none slant-1">
+                                        {game.name}
+                                    </h1>
+
+                                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3">
+                                        <div className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-midnight-800/80 backdrop-blur-md border border-white/5 text-[10px] sm:text-[11px] font-black text-white uppercase tracking-widest whitespace-nowrap">
+                                            <FaCalendarAlt className="text-accent" /> {formatDate(game.released)}
+                                        </div>
+                                        {game.playtime > 0 && (
+                                            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-midnight-800/80 backdrop-blur-md border border-white/5 text-[10px] sm:text-[11px] font-black text-white uppercase tracking-widest whitespace-nowrap">
+                                                <FaClock className="text-accent" /> AVG {game.playtime}H
+                                            </div>
+                                        )}
+                                        {game.metacritic && (
+                                            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-success/10 backdrop-blur-md border border-success/20 text-[10px] sm:text-[11px] font-black text-success uppercase tracking-widest whitespace-nowrap">
+                                                <FaStar /> {game.metacritic} METASCORE
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {game.trailer && (
                                     <button
-                                        className="btn-primary inline-flex items-center gap-2"
+                                        className="inline-flex px-8 py-4 sm:px-10 sm:py-5 bg-accent text-white font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs rounded-2xl hover:bg-accent-hover transition-all active:scale-95 shadow-2xl shadow-accent/20 items-center justify-center gap-4 group"
                                         onClick={() => document.getElementById('trailers-section')?.scrollIntoView({ behavior: 'smooth' })}
                                     >
-                                        ▶️ Watch Trailer
+                                        Launch Trailer <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
                                     </button>
                                 )}
                             </div>
@@ -139,55 +157,108 @@ const GamePage = () => {
                     </div>
                 </section>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-12 sm:space-y-16">
 
-                    {/* Trailer Section */}
+                    {/* 2. Metadata Grid (Category & Developers FIRST) */}
+                    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+                        {game.genres?.length > 0 && (
+                            <div className="bg-midnight-800/40 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-white/5 flex flex-col justify-center">
+                                <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                    <FaTag className="text-accent" /> Category
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {game.genres.map((genre, i) => (
+                                        <span key={i} className="px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20 text-accent text-[9px] font-black uppercase tracking-widest">{genre}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {game.developers?.length > 0 && (
+                            <div className="bg-midnight-800/40 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-white/5 flex flex-col justify-center">
+                                <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                    <FaBuilding className="text-accent" /> Developer
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {game.developers.map((dev, i) => (
+                                        <span key={i} className="px-3 py-1.5 rounded-lg bg-midnight-700 border border-white/5 text-text-secondary text-[9px] font-black uppercase tracking-widest">{dev}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {game.publishers?.length > 0 && (
+                            <div className="bg-midnight-800/40 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-white/5 flex flex-col justify-center">
+                                <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                    <FaGamepad className="text-accent" /> Publisher
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {game.publishers.map((pub, i) => (
+                                        <span key={i} className="px-3 py-1.5 rounded-lg bg-midnight-700 border border-white/5 text-text-secondary text-[9px] font-black uppercase tracking-widest">{pub}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </section>
+
+                    {/* 3. Media & Trailer Section */}
                     {game.trailer && (
-                        <section id="trailers-section" className="card-surface p-4 sm:p-6">
-                            <h2 className="section-title mb-4">🎬 Official Trailer</h2>
-                            <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                                <iframe
-                                    className="absolute inset-0 w-full h-full"
-                                    src={`${game.trailer.embedUrl}?rel=0&modestbranding=1`}
-                                    title={`${game.name} Trailer`}
-                                    frameBorder="0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                />
+                        <section id="trailers-section" className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-400">
+                            <div className="flex items-center gap-4 mb-6 sm:mb-8">
+                                <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight slant-1">Cinematic Content</h2>
+                                <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
+                            </div>
+                            <div className="relative group p-1.5 rounded-[2rem] sm:rounded-[2.5rem] bg-midnight-800/40 border border-white/5 overflow-hidden shadow-2xl">
+                                <div className="relative aspect-video rounded-2xl sm:rounded-[2rem] overflow-hidden">
+                                    <iframe
+                                        className="absolute inset-0 w-full h-full"
+                                        src={`${game.trailer.embedUrl}?rel=0&modestbranding=1`}
+                                        title={`${game.name} Trailer`}
+                                        frameBorder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                </div>
                             </div>
                         </section>
                     )}
 
-                    {/* Deals Section */}
+                    {/* 4. Deals Hub Section */}
                     {(game.deals || game.historyLow) && (
-                        <section className="card-surface p-4 sm:p-6 space-y-4">
-                            <h2 className="section-title">💰 Best Deals & Prices</h2>
+                        <section className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
+                            <div className="flex items-center gap-4 mb-8">
+                                <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight slant-1">Best Tracking Prices</h2>
+                                <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
+                            </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                {/* Best Deal */}
-                                <div className="bg-midnight-800 rounded-xl p-5 border border-accent/20 space-y-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                                {/* FEATURED DEAL */}
+                                <div className="group relative bg-midnight-800/40 backdrop-blur-xl rounded-[2.5rem] p-8 sm:p-10 border border-white/5 hover:border-accent/30 transition-all duration-500 overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
+
                                     {game.deals && game.deals.length > 0 ? (
-                                        <>
-                                            <span className="badge bg-accent/10 text-accent border border-accent/20">Best Deal</span>
-                                            <div className="text-3xl font-extrabold text-accent">${game.deals[0].price}</div>
-                                            <p className="text-sm text-text-secondary">
-                                                available at <strong className="text-text-primary">{game.deals[0].store}</strong>
-                                            </p>
+                                        <div className="relative space-y-6 sm:space-y-8">
+                                            <span className="inline-block px-4 py-1.5 rounded-lg bg-accent/10 text-accent text-[10px] font-black uppercase tracking-widest border border-accent/20">
+                                                Active Tracker
+                                            </span>
+
+                                            <div className="space-y-1">
+                                                <div className="text-5xl sm:text-6xl font-black text-accent tracking-tighter">${game.deals[0].price}</div>
+                                                <p className="text-text-muted font-bold uppercase text-[10px] sm:text-xs tracking-widest">
+                                                    On Sale at <span className="text-white">{game.deals[0].store}</span>
+                                                </p>
+                                            </div>
 
                                             {game.historyLow && (
-                                                <div className="space-y-2 pt-2 border-t border-midnight-500/30">
-                                                    <span className="badge bg-success/10 text-success text-xs">
-                                                        📉 All-Time Low: ${game.historyLow.all}
-                                                    </span>
-                                                    <div className="flex flex-wrap gap-3 text-xs text-text-muted">
-                                                        <span>1Y Low: ${game.historyLow.y1}</span>
-                                                        <span>3M Low: ${game.historyLow.m3}</span>
+                                                <div className="grid grid-cols-2 gap-4 py-6 border-y border-white/5">
+                                                    <div className="space-y-1">
+                                                        <span className="text-[9px] font-black text-text-muted uppercase tracking-widest">Historic Low</span>
+                                                        <p className="text-base sm:text-lg font-black text-success">${game.historyLow.all}</p>
                                                     </div>
-                                                    {game.deals[0].storeLow && (
-                                                        <span className="text-xs text-text-muted">
-                                                            🏪 {game.deals[0].store} Low: ${game.deals[0].storeLow}
-                                                        </span>
-                                                    )}
+                                                    <div className="space-y-1">
+                                                        <span className="text-[9px] font-black text-text-muted uppercase tracking-widest">1-Year Low</span>
+                                                        <p className="text-base sm:text-lg font-black text-text-primary">${game.historyLow.y1}</p>
+                                                    </div>
                                                 </div>
                                             )}
 
@@ -195,139 +266,102 @@ const GamePage = () => {
                                                 href={game.deals[0].url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="btn-primary inline-block text-center w-full"
+                                                className="block w-full py-4 sm:py-5 bg-midnight-900 border border-white/5 text-center text-white font-black uppercase tracking-widest text-[10px] sm:text-xs rounded-2xl hover:bg-midnight-800 hover:border-accent/40 transition-all"
                                             >
-                                                Get This Deal ↗
+                                                Secure Deal <FaExternalLinkAlt className="inline ml-3 opacity-40" size={10} />
                                             </a>
-                                        </>
+                                        </div>
                                     ) : (
-                                        <p className="text-text-muted text-sm">No active deals found at the moment.</p>
+                                        <div className="py-12 text-center space-y-4">
+                                            <div className="text-4xl">🏷️</div>
+                                            <p className="text-text-muted font-bold uppercase text-xs tracking-widest">No active deals found.</p>
+                                        </div>
                                     )}
                                 </div>
 
-                                {/* Other stores */}
-                                {/* Other stores */}
+                                {/* OTHER STOREFRONT LINKS */}
                                 {game.deals && game.deals.length > 1 && (
-                                    <div className="bg-midnight-800 rounded-xl p-5 border border-midnight-500/30 space-y-2">
-                                        <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">
-                                            Other Stores
-                                        </p>
+                                    <div className="bg-midnight-800/20 backdrop-blur-md rounded-[2.5rem] p-8 sm:p-10 border border-white/5 space-y-6">
+                                        <h3 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
+                                            <span className="w-2 h-2 rounded-full bg-accent" /> Store Comparison
+                                        </h3>
 
-                                        {game.deals.slice(1).map((deal, idx) => (
-                                            <a
-                                                key={idx}
-                                                href={deal.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center justify-between px-4 py-3 rounded-lg bg-midnight-700 hover:bg-midnight-600 border border-midnight-500/20 transition-colors"
-                                            >
-                                                <div className="space-y-0.5">
-                                                    <span className="text-sm font-medium text-text-primary">
-                                                        {deal.store}
-                                                    </span>
-
-                                                    {deal.storeLow && (
-                                                        <span className="block text-xs text-text-muted">
-                                                            All Time Low: ${deal.storeLow}
+                                        <div className="space-y-3 max-h-[350px] overflow-y-auto no-scrollbar pr-2">
+                                            {game.deals.slice(1).map((deal, idx) => (
+                                                <a
+                                                    key={idx}
+                                                    href={deal.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-midnight-800/50 border border-white/5 hover:border-accent/30 hover:bg-midnight-700/80 transition-all group"
+                                                >
+                                                    <div className="space-y-1">
+                                                        <span className="text-xs sm:text-sm font-black text-white uppercase tracking-tight group-hover:text-accent transition-colors">
+                                                            {deal.store}
                                                         </span>
-                                                    )}
-                                                </div>
+                                                        {deal.storeLow && (
+                                                            <span className="block text-[8px] sm:text-[9px] font-bold text-text-muted uppercase tracking-widest">
+                                                                Low: ${deal.storeLow}
+                                                            </span>
+                                                        )}
+                                                    </div>
 
-                                                <span className="text-sm font-bold text-accent">
-                                                    ${deal.price} ↗
-                                                </span>
-                                            </a>
-                                        ))}
+                                                    <div className="text-base sm:text-lg font-black text-white tracking-tight">
+                                                        ${deal.price}
+                                                    </div>
+                                                </a>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted pt-2 border-t border-midnight-500/30">
-                                <span>Data by <a href="https://isthereanydeal.com" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">IsThereAnyDeal</a></span>
-                                <span>•</span>
-                                <span>Game data by <a href="https://rawg.io" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">RAWG</a></span>
                             </div>
                         </section>
                     )}
 
-                    {/* Main Content: Description + Details */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Left: Description & Requirements */}
-                        <div className="lg:col-span-2 space-y-6">
-                            {game.description && (
-                                <div className="card-surface p-4 sm:p-6">
-                                    <h2 className="section-title mb-4">About</h2>
-                                    <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line">
-                                        {game.description}
-                                    </p>
-                                </div>
-                            )}
+                    {/* 5. Detailed Info & Requirements */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-12 animate-in fade-in delay-600 duration-1000">
+                        {/* LEFT: REQUIREMENTS */}
+                        <div className="lg:col-span-2 space-y-8">
+                            {/* COMMENTED OUT: ABOUT SECTION */}
+                            {/* 
+                            {game.description && ( ... )}
+                            */}
 
                             {(game.minimumreq || game.recommendedreq) && (
-                                <div className="card-surface p-4 sm:p-6">
-                                    <h2 className="section-title mb-4">⚙️ System Requirements (PC)</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-4">
+                                        <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-3">
+                                            <FaTools className="text-accent" /> Tech Specs
+                                        </h2>
+                                        <div className="flex-1 h-px bg-white/5" />
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                                         {game.minimumreq && (
-                                            <div className="bg-midnight-800 rounded-lg p-4 border border-midnight-500/20">
-                                                <h3 className="text-sm font-semibold text-warning mb-2">Minimum</h3>
-                                                <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-line">{game.minimumreq}</p>
+                                            <div className="bg-midnight-800/40 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-white/5">
+                                                <h3 className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                    Min Requirements
+                                                </h3>
+                                                <p className="text-[10px] sm:text-[11px] font-bold text-text-secondary leading-relaxed whitespace-pre-line">{game.minimumreq}</p>
                                             </div>
                                         )}
                                         {game.recommendedreq && (
-                                            <div className="bg-midnight-800 rounded-lg p-4 border border-midnight-500/20">
-                                                <h3 className="text-sm font-semibold text-success mb-2">Recommended</h3>
-                                                <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-line">{game.recommendedreq}</p>
+                                            <div className="bg-midnight-800/40 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-white/5">
+                                                <h3 className="text-[10px] font-black text-success uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                    Optimal Performance
+                                                </h3>
+                                                <p className="text-[10px] sm:text-[11px] font-bold text-text-secondary leading-relaxed whitespace-pre-line">{game.recommendedreq}</p>
                                             </div>
                                         )}
                                     </div>
-                                </div>
-                            )}
-
-                            {(!game.description && !game.minimumreq && !game.recommendedreq) && (
-                                <div className="card-surface p-8 text-center">
-                                    <p className="text-text-muted">Detailed information for this title is currently unavailable.</p>
                                 </div>
                             )}
                         </div>
 
-                        {/* Right: Metadata */}
-                        <div className="space-y-4">
-                            {game.developers?.length > 0 && (
-                                <div className="card-surface p-4">
-                                    <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Developer</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {game.developers.map((dev, i) => (
-                                            <span key={i} className="badge bg-midnight-600 text-text-secondary text-xs">{dev}</span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {game.publishers?.length > 0 && (
-                                <div className="card-surface p-4">
-                                    <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Publisher</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {game.publishers.map((pub, i) => (
-                                            <span key={i} className="badge bg-midnight-600 text-text-secondary text-xs">{pub}</span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {game.genres?.length > 0 && (
-                                <div className="card-surface p-4">
-                                    <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Genre</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {game.genres.map((genre, i) => (
-                                            <span key={i} className="badge bg-accent/10 text-accent text-xs border border-accent/20">{genre}</span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
+                        {/* RIGHT: OFFICIALLY HOSTED STORES */}
+                        <div className="space-y-6">
                             {game.stores?.length > 0 && (
-                                <div className="card-surface p-4">
-                                    <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">Available On</p>
+                                <div className="bg-midnight-800/40 backdrop-blur-md rounded-[2.5rem] p-6 sm:p-8 border border-white/5">
+                                    <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-6">Digital Distributors</h4>
                                     <div className="space-y-2">
                                         {game.stores.map((storeConfig, idx) => (
                                             <a
@@ -335,16 +369,25 @@ const GamePage = () => {
                                                 href={storeConfig.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-colors ${STORE_COLORS[storeConfig.name] || 'bg-midnight-600/30 border-midnight-500/30 hover:bg-midnight-600'}`}
+                                                className={`flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 rounded-2xl border text-[10px] sm:text-[11px] font-black uppercase tracking-widest transition-all ${STORE_COLORS[storeConfig.name] || 'bg-midnight-700/50 border-white/5 hover:bg-midnight-600'}`}
                                             >
-                                                <span className="text-text-primary font-medium">{storeConfig.name}</span>
-                                                <span className="text-text-muted">↗</span>
+                                                <span>{storeConfig.name}</span>
+                                                <FaExternalLinkAlt size={8} />
                                             </a>
                                         ))}
                                     </div>
                                 </div>
                             )}
                         </div>
+                    </div>
+
+                    {/* Attribution */}
+                    <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-[8px] sm:text-[9px] font-black text-text-muted uppercase tracking-[0.3em] pt-8 sm:pt-12 border-t border-white/5 opacity-40 text-center">
+                        <span>Data: IsThereAnyDeal</span>
+                        <div className="hidden sm:block w-1 h-1 rounded-full bg-white/20" />
+                        <span>Visuals: RAWG.IO</span>
+                        <div className="hidden sm:block w-1 h-1 rounded-full bg-white/20" />
+                        <span>GameHub © 2024</span>
                     </div>
 
                 </div>

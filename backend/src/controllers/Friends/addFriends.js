@@ -1,4 +1,5 @@
 import userModel from '../../models/User.js'
+import Notification from '../../models/Notification.js';
 
 export const addFriends = async (req, res, next) => {
   const { publicID } = req.body; // current user
@@ -33,10 +34,21 @@ export const addFriends = async (req, res, next) => {
     );
 
     // Add to friend's friends (only if not already added)
-    await userModel.updateOne(
+    const friendUpdate = await userModel.updateOne(
       { publicID: friendPublicID, "friends.User.user": { $ne: publicID } },
       { $push: { "friends.User": { user: publicID, requestedByMe: false, status: "pending" } } }
     );
+
+    // Create notification for friend (if update succeeded)
+    if (friendUpdate.modifiedCount > 0) {
+      await Notification.create({
+        recipient: friend._id,
+        sender: publicID,
+        type: 'friend_request',
+        message: `${user.name} sent you a friend request.`,
+        link: '/managefriends'
+      });
+    }
 
     res.status(200).json({ message: "Friend request sent!" });
   } catch (err) {
