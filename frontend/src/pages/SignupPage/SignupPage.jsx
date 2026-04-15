@@ -209,10 +209,10 @@ function SignupPage() {
 
             <button
               type="button"
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg border border-midnight-500/30 bg-midnight-600/30 text-text-primary font-medium hover:bg-midnight-600 transition-all duration-200"
+              className="w-full h-[52px] flex items-center justify-center gap-3 text-[18px] p-3 text-white font-bold border-none rounded-xl cursor-pointer transition-all duration-300 hover:bg-[#005ecb] active:scale-[0.98] shadow-lg"
               onClick={() => googleLogin()}
             >
-              <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="w-5 h-5" />
+              <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5 shadow-sm" />
               Sign up with Google
             </button>
 

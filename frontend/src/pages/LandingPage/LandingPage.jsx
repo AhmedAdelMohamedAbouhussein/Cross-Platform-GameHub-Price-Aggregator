@@ -173,7 +173,7 @@ function LandingPage() {
                       "
                     >
                       {/* GAME IMAGE */}
-                      <div className="h-[320px] sm:h-[450px] md:h-[500px] lg:h-[550px] w-full overflow-hidden relative">
+                      <div className="h-[400px] sm:h-[550px] md:h-[550px] lg:h-[550px] w-full overflow-hidden relative">
                         <img
                           src={src}
                           alt={title}
