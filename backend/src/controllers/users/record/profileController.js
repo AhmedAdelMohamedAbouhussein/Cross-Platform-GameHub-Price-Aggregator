@@ -62,20 +62,41 @@ export const getPublicProfile = async (req, res, next) => {
         const canSeeStats = targetUser.profileVisibility === "public" || isFriend || isSelf;
 
         if (canSeeStats) {
-            let allGames = [];
+            const unifiedGames = new Map();
+            
             if (targetUser.ownedGames) {
                 for (const [platform, gamesMap] of targetUser.ownedGames.entries()) {
                     for (const [gameId, game] of gamesMap.entries()) {
-                        profile.totalGames++;
-                        const hours = parseFloat(game.hoursPlayed) || 0;
-                        profile.totalHours += hours;
-                        allGames.push({
-                            ...game,
-                            hoursPlayed: hours
-                        });
+                        const key = game.gameName.toLowerCase().trim();
+                        
+                        // Parse hours from "Xh Ym Zs"
+                        let hoursNum = 0;
+                        if (game.totalHours) {
+                            const match = game.totalHours.match(/(\d+)h/);
+                            if (match) hoursNum = parseInt(match[1]);
+                        }
+
+                        if (unifiedGames.has(key)) {
+                            const existing = unifiedGames.get(key);
+                            existing.hoursPlayed += hoursNum;
+                            existing.progress = Math.max(existing.progress, game.maxProgress || 0);
+                        } else {
+                            unifiedGames.set(key, {
+                                gameName: game.gameName,
+                                coverImage: game.coverImage,
+                                platform: platform, // Primary platform
+                                hoursPlayed: hoursNum,
+                                progress: game.maxProgress || 0
+                            });
+                        }
                     }
                 }
             }
+
+            const allGames = Array.from(unifiedGames.values());
+            profile.totalGames = allGames.length;
+            profile.totalHours = allGames.reduce((acc, g) => acc + g.hoursPlayed, 0);
+
             // Sort top games by playtime
             profile.topGames = allGames
                 .sort((a, b) => b.hoursPlayed - a.hoursPlayed)

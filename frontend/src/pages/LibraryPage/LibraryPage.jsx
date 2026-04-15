@@ -63,21 +63,26 @@ function LibraryPage() {
   const stats = useMemo(() => {
     if (!ownedGames) return { count: 0, hours: "0h", avgProgress: 0 };
 
-    const allGames = Object.values(ownedGames).flatMap(platformGames => Object.values(platformGames));
-    const count = allGames.length;
+    const allGamesOnAllPlatforms = Object.values(ownedGames).flatMap(platformGames => Object.values(platformGames));
+    const count = allGamesOnAllPlatforms.length;
 
     let totalSecs = 0;
     let totalProgress = 0;
 
-    allGames.forEach(g => {
-      totalProgress += (g.progress || 0);
-      if (g.hoursPlayed) {
-        const match = g.hoursPlayed.match(/(\d+)h\s*(\d+)m\s*(\d+)s/);
-        if (match) {
-          const [, h, m, s] = match.map(Number);
-          totalSecs += (h * 3600 + m * 60 + s);
+    allGamesOnAllPlatforms.forEach(g => {
+      // Use maxProgress for average
+      totalProgress += (g.maxProgress || 0);
+      
+      // Calculate total seconds across all owners
+      (g.owners || []).forEach(owner => {
+        if (owner.hoursPlayed) {
+          const match = owner.hoursPlayed.match(/(\d+)h\s*(\d+)m\s*(\d+)s/);
+          if (match) {
+            const [, h, m, s] = match.map(Number);
+            totalSecs += (h * 3600 + m * 60 + s);
+          }
         }
-      }
+      });
     });
 
     const hours = Math.floor(totalSecs / 3600);
@@ -89,16 +94,43 @@ function LibraryPage() {
   const filteredAndSortedGames = useMemo(() => {
     if (!ownedGames) return [];
 
-    let allGames = Object.entries(ownedGames).flatMap(([platform, games]) =>
+    // 1. Flatten into per-platform records
+    let baseGames = Object.entries(ownedGames).flatMap(([platform, games]) =>
       Object.entries(games).map(([gameId, game]) => ({
+        ...game,
         platform,
-        gameId,
-        ...game
+        gameId
       }))
     );
 
+    // 2. Unify cross-platform (e.g. Steam + PSN) if it's the same game
+    // Note: We use gameName for now as a simple key.
+    const unifiedMap = new Map();
+    baseGames.forEach(g => {
+        const key = g.gameName.toLowerCase().trim();
+        if (unifiedMap.has(key)) {
+            const existing = unifiedMap.get(key);
+            // Merge owners and platforms
+            existing.allOwners = [...existing.allOwners, ...g.owners.map(o => ({ ...o, platform: g.platform }))];
+            existing.allPlatforms = Array.from(new Set([...existing.allPlatforms, g.platform]));
+            existing.maxProgress = Math.max(existing.maxProgress, g.maxProgress || 0);
+            // Sum hours (could be refined)
+            existing.totalHoursNum += parseTime(g.totalHours);
+        } else {
+            unifiedMap.set(key, {
+                ...g,
+                allOwners: g.owners.map(o => ({ ...o, platform: g.platform })),
+                allPlatforms: [g.platform],
+                totalHoursNum: parseTime(g.totalHours || "0h 0m 0s")
+            });
+        }
+    });
+
+    let allGames = Array.from(unifiedMap.values());
+
+    // 3. Filter
     if (filterPlatform !== "all") {
-      allGames = allGames.filter(game => game.platform.toLowerCase() === filterPlatform.toLowerCase());
+      allGames = allGames.filter(game => game.allPlatforms.some(p => p.toLowerCase() === filterPlatform.toLowerCase()));
     }
 
     if (searchQuery.trim() !== "") {
@@ -110,26 +142,34 @@ function LibraryPage() {
       allGames = results.map(r => r.item);
     }
 
-    const parseTime = (str) => {
+    function parseTime(str) {
       if (!str) return 0;
       const match = str.match(/(\d+)h\s*(\d+)m\s*(\d+)s/);
       if (!match) return 0;
       const [, h, m, s] = match.map(Number);
       return h * 3600 + m * 60 + s;
-    };
+    }
 
+    // 4. Sort
     if (sortBy === "progress") {
-      allGames.sort((a, b) => b.progress - a.progress);
+      allGames.sort((a, b) => b.maxProgress - a.maxProgress);
     }
     else if (sortBy === "alphabet") {
       allGames.sort((a, b) => a.gameName.localeCompare(b.gameName));
     }
     else if (sortBy === "hoursPlayed") {
-      allGames.sort((a, b) => parseTime(b.hoursPlayed) - parseTime(a.hoursPlayed));
+      allGames.sort((a, b) => b.totalHoursNum - a.totalHoursNum);
     } else if (sortBy === "lastPlayed") {
       allGames.sort((a, b) => {
-        const dateA = a.lastPlayed ? new Date(a.lastPlayed) : new Date(0);
-        const dateB = b.lastPlayed ? new Date(b.lastPlayed) : new Date(0);
+        // Use latest lastPlayed across all owners
+        const dateA = a.allOwners.reduce((max, o) => {
+            const d = o.lastPlayed ? new Date(o.lastPlayed) : new Date(0);
+            return d > max ? d : max;
+        }, new Date(0));
+        const dateB = b.allOwners.reduce((max, o) => {
+            const d = o.lastPlayed ? new Date(o.lastPlayed) : new Date(0);
+            return d > max ? d : max;
+        }, new Date(0));
         return dateB - dateA;
       });
     }
@@ -271,11 +311,12 @@ function LibraryPage() {
                     <Card
                       id={game.gameId}
                       platform={game.platform}
+                      platforms={game.allPlatforms}
+                      owners={game.allOwners}
                       image={game.coverImage}
                       title={game.gameName}
-                      progress={game.progress}
-                      lastPlayed={game.lastPlayed}
-                      hoursPlayed={game.hoursPlayed}
+                      progress={game.maxProgress}
+                      totalHoursNum={game.totalHoursNum}
                     />
                   </div>
                 ))

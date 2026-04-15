@@ -75,11 +75,9 @@ export async function getUserAchievements(steamId, games) {
             try {
                 const params = { key: STEAM_API_KEY, steamid: steamId, appid: game.gameId, l: "en" };
                 const res = await axiosClient.get(url, { params });
-
                 const achievements = res.data?.playerstats?.achievements || [];
 
-                if (!achievements.length) 
-                {
+                if (!achievements.length) {
                     return { ...game, achievements: [], progress: 0 };
                 }
 
@@ -88,6 +86,7 @@ export async function getUserAchievements(steamId, games) {
                     const unlocked = ach.achieved === 1 || ach.unlocktime > 0;
                     if (unlocked) completedCount++;
                     return {
+                        id: ach.apiname,
                         title: ach.name || "unknown",
                         description: ach.description || "No description available",
                         unlocked,

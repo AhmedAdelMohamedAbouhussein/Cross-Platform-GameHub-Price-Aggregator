@@ -9,7 +9,7 @@ function SyncWithXbox() {
     const [mobileAsideOpen, setMobileAsideOpen] = useState(false);
 
     const SyncWithxbox = () => {
-        window.location.href = `${BACKEND_URL}/sync/xbox`;
+        window.location.href = `${BACKEND_URL}/api/sync/xbox`;
     };
 
     return (

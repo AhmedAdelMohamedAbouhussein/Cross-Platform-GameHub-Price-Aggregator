@@ -3,6 +3,7 @@ import { syncWithSteam, steamReturn} from '../controllers/sync/steamSync.js';
 import { syncWithXbox, xboxReturn } from '../controllers/sync/xboxSync.js';
 import { syncWithEpic, epicReturn } from '../controllers/sync/EpicSync.js';
 import { PSNloginWithNpsso } from '../controllers/sync/PSNSync.js'; 
+import { disconnectAccount } from '../controllers/sync/disconnectController.js';
 import requireAuth from '../middleware/requireAuth.js';
 import { syncLimiter } from '../middleware/rateLimiter.js';
 
@@ -117,5 +118,7 @@ router.get("/epic", requireAuth, syncLimiter, syncWithEpic);
 router.get("/epic/return", requireAuth, epicReturn);
 
 router.post("/psn", requireAuth, syncLimiter, PSNloginWithNpsso);
+
+router.delete('/:platform/:accountId', requireAuth, disconnectAccount);
 
 export default router;

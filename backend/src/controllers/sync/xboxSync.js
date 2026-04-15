@@ -5,11 +5,11 @@ import userModel from "../../models/User.js"; //TODO
 
 const APP_FRONTEND_URL = config.frontendUrl;
 
-import { getXboxFriends, getXboxOwnedGames, enrichOwnedGamesWithAchievements} from '../allxboxinfo.js'
+import { getXboxFriends, getXboxOwnedGames, enrichOwnedGamesWithAchievements } from '../allxboxinfo.js'
 
 // Xbox config
-const CLIENT_ID  = config.azure.clientId;
-const REDIRECT_URI  = config.xboxRedirectURL;
+const CLIENT_ID = config.azure.clientId;
+const REDIRECT_URI = config.xboxRedirectURL;
 //"https://mariam-noncongruent-nonbeatifically.ngrok-free.dev/sync/xbox/return"; 
 
 const CLIENT_SECRET = config.azure.clientSecret;
@@ -26,15 +26,13 @@ export function syncWithXbox(req, res) {
 }
 
 
-export async function xboxReturn(req, res) 
-{
-    const userId = req.session.userId; 
+export async function xboxReturn(req, res) {
+    const userId = req.session.userId;
 
     const code = req.query.code;
     if (!code) return res.status(400).send("No code provided");
 
-    try 
-    {
+    try {
         // 1️⃣ Exchange code for Microsoft access + refresh tokens
         const tokenRes = await axios.post(
             "https://login.live.com/oauth20_token.srf",
@@ -90,7 +88,7 @@ export async function xboxReturn(req, res)
 
         // 4️⃣ Get Xbox profile (Gamertag)
         const profileRes = await axios.get(
-            "https://profile.xboxlive.com/users/me/profile/settings?settings=Gamertag",
+            "https://profile.xboxlive.com/users/me/profile/settings?settings=Gamertag,GameDisplayPicRaw,PublicGamerpic",
             {
                 headers: {
                     Authorization: `XBL3.0 x=${userHash};${xstsToken}`,
@@ -100,62 +98,104 @@ export async function xboxReturn(req, res)
         );
 
         const xuid = profileRes.data.profileUsers[0].id;
-        const gamertag = profileRes.data.profileUsers[0].settings[0].value;
 
-                await userModel.updateOne(
-            { _id: userId },
-            {
-                $set: 
-                {
-                    xboxId: xuid,
-                    xboxGamertag: gamertag,
-                    xboxRefreshToken: msRefreshToken,
-                    xboxTokenExpiresAt: xboxTokenExpiresAt
-                }
-            }
-        );
+        const gamertag = profileRes.data.profileUsers[0].settings.find(s => s.id === "Gamertag")?.value;
 
+        const avatar =
+            profileRes.data.profileUsers[0].settings.find(s => s.id === "GameDisplayPicRaw")?.value ||
+            profileRes.data.profileUsers[0].settings.find(s => s.id === "PublicGamerpic")?.value;
+
+
+        // 1. Update Linked Accounts
+        const dbUser = await userModel.findById(userId);
+        if (!dbUser) return res.status(404).json({ error: "User not found" });
+
+        let linkedAccounts = dbUser.linkedAccounts || new Map();
+        let xboxAccounts = linkedAccounts.get("Xbox") || [];
+
+        const existingAccIndex = xboxAccounts.findIndex(acc => acc.accountId === xuid);
+        const accountData = {
+            accountId: xuid,
+            displayName: gamertag,
+            refreshToken: msRefreshToken,
+            expiresAt: xboxTokenExpiresAt,
+            lastSync: new Date(),
+            avatar: avatar
+        };
+
+        if (existingAccIndex > -1) {
+            xboxAccounts[existingAccIndex] = accountData;
+        } else {
+            xboxAccounts.push(accountData);
+        }
+        linkedAccounts.set("Xbox", xboxAccounts);
+        dbUser.linkedAccounts = linkedAccounts;
+
+        // 2. Update Friends
         const friends = await getXboxFriends(xuid, userHash, xstsToken);
-    
-        await userModel.updateOne(
-            { _id: userId },
-            {
-                $set: 
-                {
-                    "friends.Xbox": friends.map(f => ({
-                        externalId: f.externalId,
-                        displayName: f.displayName,
-                        profileUrl: f.profileUrl,
-                        avatar: f.avatar,
-                        friendsSince: f.friendsSince,
-                        status: "accepted",
-                        source: "xbox"
-                    })),
-                }
-            }
-        );
+        if (!dbUser.friends) dbUser.friends = new Map();
 
+        let currentXboxFriends = dbUser.friends.get("Xbox") || [];
+        currentXboxFriends = currentXboxFriends.filter(f => f.linkedAccountId !== xuid);
+
+        const newFriends = friends.map(f => ({
+            ...f,
+            linkedAccountId: xuid,
+            status: "accepted",
+            source: "Xbox"
+        }));
+        dbUser.friends.set("Xbox", [...currentXboxFriends, ...newFriends]);
+
+        // 3. Update Owned Games
         const noAchGames = await getXboxOwnedGames(xuid, userHash, xstsToken);
-    
         const games = await enrichOwnedGamesWithAchievements(xuid, noAchGames, userHash, xstsToken);
 
-        const updateData = {};
-        for (const game of games) 
-        {
-            if (!game || !game.gameId) continue; // skip invalid
-            updateData[`ownedGames.${game.platform}.${game.gameId}`] = game;
+        if (!dbUser.ownedGames) dbUser.ownedGames = new Map();
+        let xboxGamesMap = dbUser.ownedGames.get("Xbox") || new Map();
+
+        for (const game of games) {
+            if (!game || !game.gameId) continue;
+
+            const gameId = String(game.gameId);
+
+            let existingGame = xboxGamesMap.get(gameId);
+            const ownerRecord = {
+                accountId: xuid,
+                accountName: gamertag,
+                hoursPlayed: game.hoursPlayed,
+                lastPlayed: game.lastPlayed,
+                progress: game.progress || 0,
+                achievements: game.achievements || []
+            };
+
+            if (existingGame) {
+                const existingOwnerIndex = existingGame.owners.findIndex(o => o.accountId === xuid);
+                if (existingOwnerIndex > -1) {
+                    existingGame.owners[existingOwnerIndex] = ownerRecord;
+                } else {
+                    existingGame.owners.push(ownerRecord);
+                }
+                existingGame.maxProgress = Math.max(...existingGame.owners.map(o => o.progress || 0));
+            } else {
+                xboxGamesMap.set(gameId, {
+                    gameName: game.gameName,
+                    gameId: gameId,
+                    platform: game.platform,
+                    coverImage: game.coverImage,
+                    owners: [ownerRecord],
+                    maxProgress: ownerRecord.progress,
+                    totalHours: ownerRecord.hoursPlayed
+                });
+            }
         }
-        
-        await userModel.updateOne(
-            { _id: userId },
-            { $set:{...updateData} },
-        );
+        dbUser.ownedGames.set("Xbox", xboxGamesMap);
+
+        await dbUser.save();
 
         res.redirect(`${APP_FRONTEND_URL}/library`)
 
-    } 
-    catch (err) 
-    {
+    }
+    catch (err) {
         console.error("Xbox Auth Error:", err.response?.data || err.message);
         res.status(500).json({
             error: "Xbox authentication failed",

@@ -10,12 +10,12 @@ export const generateOtpEmail = (userName, otp, purpose) => {
         email_verification: {
             title: "Verify Your Email",
             action: "confirm your email address",
-            color: "#3B82F6" // Blue
+            color: "#10B981" // Blue
         },
         password_reset: {
             title: "Password Reset Request",
             action: "reset your account password",
-            color: "#8B5CF6" // Purple
+            color: "#10B981" // Purple
         },
         restore_account: {
             title: "Account Restoration",
@@ -32,7 +32,7 @@ export const generateOtpEmail = (userName, otp, purpose) => {
     const config = purposeMap[purpose] || {
         title: "Security Verification",
         action: "verify your identity",
-        color: "#3B82F6"
+        color: "#10B981"
     };
 
     return `
@@ -51,7 +51,7 @@ export const generateOtpEmail = (userName, otp, purpose) => {
                     <!-- Header -->
                     <tr>
                         <td align="center" style="padding: 40px 40px 20px 40px;">
-                            <h1 style="margin: 0; font-size: 28px; font-weight: 800; background: linear-gradient(to right, #3B82F6, #60A5FA); -webkit-background-clip: text; color: transparent;">GameHub</h1>
+                            <h1 style="margin: 0; font-size: 28px; font-weight: 800; -webkit-background-clip: text; color: transparent;">GameHub</h1>
                         </td>
                     </tr>
 

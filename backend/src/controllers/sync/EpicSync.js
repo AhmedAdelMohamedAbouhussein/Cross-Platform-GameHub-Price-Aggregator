@@ -9,20 +9,19 @@ const FRONTEND_URL = config.frontendUrl;
 
 // Step 1️⃣ - Redirect user to Epic login
 export function syncWithEpic(req, res) {
-    const authUrl = `https://www.epicgames.com/id/authorize?` + 
-        new URLSearchParams({
-            client_id: CLIENT_ID,
-            response_type: "code",
-            redirect_uri: REDIRECT_URI,
-            scope: "basic_profile friends_list games_library",
-        });
+  const authUrl = `https://www.epicgames.com/id/authorize?` +
+    new URLSearchParams({
+      client_id: CLIENT_ID,
+      response_type: "code",
+      redirect_uri: REDIRECT_URI,
+      scope: "basic_profile friends_list games_library",
+    });
 
-    res.redirect(authUrl);
+  res.redirect(authUrl);
 }
 
 // Step 2️⃣ - Handle Epic OAuth callback
-export async function epicReturn(req, res) 
-{
+export async function epicReturn(req, res) {
   const userId = req.session.userId;
   const code = req.query.code;
   if (!code) return res.status(400).json({ error: "Missing authorization code" });
@@ -61,86 +60,87 @@ export async function epicReturn(req, res)
     const epicId = profileRes.data.id;
     const displayName = profileRes.data.displayName;
 
-    // Fetch owned games
-    const gamesRes = await axios.get(
-      `https://api.epicgames.dev/epic/ecom/v2/platform/EPIC/accounts/${epicId}/entitlements`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
+    // ... (fetch games and friends logic exists above) ...
 
-    console.log("Epic Games Response:", gamesRes.data);
+    // 1. Update Linked Accounts
+    const dbUser = await userModel.findById(userId);
+    if (!dbUser) return res.status(404).json({ error: "User not found" });
 
-    const ownedGames = gamesRes.data?.elements?.map((game) => ({
-      gameId: game.catalogItemId,
-      gameName: game.entitlementName,
-      platform: "epic",
-      coverImage: null,
-      achievements: [], // Epic doesn't expose them globally yet
-      progress: 0,
-      hoursPlayed: null,
-      lastPlayed: null,
-    })) || [];
+    let linkedAccounts = dbUser.linkedAccounts || new Map();
+    let epicAccounts = linkedAccounts.get("Epic") || [];
 
-    for (const game of ownedGames) {
-  try {
-    const achievementRes = await axios.get(
-      `https://api.epicgames.dev/epic/achievements/v1/account/${epicId}/title/${game.gameId}/progress`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
+    const existingAccIndex = epicAccounts.findIndex(acc => acc.accountId === epicId);
+    const accountData = {
+      accountId: epicId,
+      displayName: displayName,
+      refreshToken: refreshToken,
+      expiresAt: new Date(Date.now() + (refreshTokenExpiry * 1000)),
+      lastSync: new Date()
+    };
 
-    console.log(`Epic Achievements for ${game.gameName}:`, achievementRes.data);
-
-    game.achievements = achievementRes.data?.items?.map(a => ({
-      id: a.id,
-      name: a.displayName,
-      description: a.description,
-      unlocked: a.unlocked,
-      unlockedAt: a.unlockedTime,
-    })) || [];
-  } catch (err) {
-    // If achievements not available for a game, leave empty
-    game.achievements = [];
-  }
-}
-
-
-    // Fetch friends
-    const friendsRes = await axios.get(
-      `https://api.epicgames.dev/epic/social/v2/friends/${epicId}`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-
-    console.log("Epic Friends Response:", friendsRes.data);
-
-    const friends = friendsRes.data?.map((f) => ({
-      externalId: f.accountId,
-      displayName: f.displayName,
-      profileUrl: `https://store.epicgames.com/u/${f.accountId}`,
-      avatar: null,
-      status: "accepted",
-      source: "Epic",
-    })) || [];
-
-    /*
-    // Save to DB
-    const updateData = {};
-    for (const game of ownedGames) {
-      updateData[`ownedGames.Epic.${game.gameId}`] = game;
+    if (existingAccIndex > -1) {
+      epicAccounts[existingAccIndex] = accountData;
+    } else {
+      epicAccounts.push(accountData);
     }
+    linkedAccounts.set("Epic", epicAccounts);
+    dbUser.linkedAccounts = linkedAccounts;
 
-    await userModel.updateOne(
-      { _id: userId },
-      {
-        $set: {
-          epicId,
-          epicDisplayName: displayName,
-          epicAccessToken: accessToken,
-          epicRefreshToken: refreshToken,
-          ...updateData,
-          "friends.Epic": friends,
-        },
+    // 2. Update Friends
+    if (!dbUser.friends) dbUser.friends = new Map();
+    let currentEpicFriends = dbUser.friends.get("Epic") || [];
+    currentEpicFriends = currentEpicFriends.filter(f => f.linkedAccountId !== epicId);
+
+    const newFriends = friends.map(f => ({
+      ...f,
+      linkedAccountId: epicId,
+      status: "accepted",
+      source: "Epic"
+    }));
+    dbUser.friends.set("Epic", [...currentEpicFriends, ...newFriends]);
+
+    // 3. Update Owned Games
+    if (!dbUser.ownedGames) dbUser.ownedGames = new Map();
+    let epicGamesMap = dbUser.ownedGames.get("Epic") || new Map();
+
+    for (const game of ownedGames) {
+      if (!game || !game.gameId) continue;
+
+      const gameId = String(game.gameId);
+
+      let existingGame = epicGamesMap.get(gameId);
+      const ownerRecord = {
+        accountId: epicId,
+        accountName: displayName,
+        hoursPlayed: game.hoursPlayed,
+        lastPlayed: game.lastPlayed,
+        progress: game.progress || 0,
+        achievements: game.achievements || []
+      };
+
+      if (existingGame) {
+        const existingOwnerIndex = existingGame.owners.findIndex(o => o.accountId === epicId);
+        if (existingOwnerIndex > -1) {
+          existingGame.owners[existingOwnerIndex] = ownerRecord;
+        } else {
+          existingGame.owners.push(ownerRecord);
+        }
+        existingGame.maxProgress = Math.max(...existingGame.owners.map(o => o.progress || 0));
+      } else {
+        epicGamesMap.set(gameId, {
+          gameName: game.gameName,
+          gameId: gameId,
+          platform: "Epic",
+          coverImage: game.coverImage,
+          owners: [ownerRecord],
+          maxProgress: ownerRecord.progress,
+          totalHours: ownerRecord.hoursPlayed
+        });
       }
-    );
-    */
+    }
+    dbUser.ownedGames.set("Epic", epicGamesMap);
+
+    await dbUser.save();
 
     res.redirect(`${FRONTEND_URL}/library`);
   } catch (error) {

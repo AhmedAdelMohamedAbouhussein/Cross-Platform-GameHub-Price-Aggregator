@@ -7,13 +7,13 @@ import { SiEpicgames } from "react-icons/si";
 
 function Card(props) {
     const id = props.id;
-    const platform = props.platform?.trim().toLowerCase() || 'unknown';
+    const platforms = props.platforms || [props.platform];
+    const owners = props.owners || [];
     const title = props.title;
     const image = props.image?.trim() !== "" && props.image?.trim() !== null
         ? props.image : "https://static.vecteezy.com/system/resources/previews/008/255/804/non_2x/page-not-found-error-404-system-updates-uploading-computing-operation-installation-programs-system-maintenance-gross-sprayed-page-not-found-error-404-isolated-on-white-background-vector.jpg";
     const progress = props.progress || 0;
-    const lastPlayed = props.lastPlayed ? new Date(props.lastPlayed).toLocaleDateString() : null;
-    const hoursPlayed = props.hoursPlayed;
+    const totalHoursNum = props.totalHoursNum || 0;
 
     const navigate = useNavigate();
     const cardRef = useRef(null);
@@ -49,13 +49,13 @@ function Card(props) {
         playstation: <FaPlaystation />,
     };
 
-    const platformGlow = {
-        steam: 'group-hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.2)] group-hover:border-blue-500/40',
-        epic: 'group-hover:shadow-[0_0_20px_-5px_rgba(255,255,255,0.05)] group-hover:border-white/20',
-        xbox: 'group-hover:shadow-[0_0_20px_-5px_rgba(34,197,94,0.2)] group-hover:border-green-500/40',
-        psn: 'group-hover:shadow-[0_0_20px_-5px_rgba(37,99,235,0.2)] group-hover:border-blue-600/40',
-        playstation: 'group-hover:shadow-[0_0_20px_-5px_rgba(37,99,235,0.2)] group-hover:border-blue-600/40',
+    const formatHours = (seconds) => {
+        const h = Math.floor(seconds / 3600);
+        return `${h}h`;
     };
+
+    // Use the first platform for the primary click-through (legacy support)
+    const primaryPlatform = platforms[0]?.toLowerCase() || 'unknown';
 
     return (
         <div
@@ -64,10 +64,10 @@ function Card(props) {
                 group relative h-full flex flex-col bg-midnight-700/40 backdrop-blur-sm rounded-2xl border border-midnight-500/20 overflow-hidden cursor-pointer
                 transition-all duration-500 cubic-bezier(0.23, 1, 0.32, 1)
                 hover:-translate-y-2 hover:bg-midnight-700/60
-                ${platformGlow[platform] || 'group-hover:border-accent/30'}
+                group-hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.2)] group-hover:border-accent/30
                 shadow-xl shadow-black/20
             `}
-            onClick={() => navigate(`/ownedgamedetails?platform=${platform}&id=${id}`)}
+            onClick={() => navigate(`/ownedgamedetails?platform=${primaryPlatform}&id=${id}`)}
         >
             {isVisible ? (
                 <>
@@ -83,13 +83,23 @@ function Card(props) {
                         {/* Overlay Gradient */}
                         <div className="absolute inset-0 bg-gradient-to-t from-midnight-900/90 via-midnight-900/20 to-transparent opacity-60 group-hover:opacity-100 transition-opacity" />
 
-                        {/* Top Left Badge (Platform) */}
-                        <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-xl bg-midnight-900/60 backdrop-blur-md border border-white/5 text-white text-[9px] font-black uppercase tracking-widest shadow-lg">
-                            <span className="text-accent">{platformIcon[platform] || <FaGamepad />}</span>
-                            <span>{platform}</span>
+                        {/* Top Left Badge (Platforms) */}
+                        <div className="absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-midnight-900/80 backdrop-blur-md border border-white/10 text-white shadow-lg">
+                            <div className="flex -space-x-1.5">
+                                {platforms.map((p, i) => (
+                                    <span key={i} className="text-accent bg-midnight-900 rounded-full p-0.5 border border-white/5 ring-2 ring-midnight-900/50" title={p}>
+                                        {platformIcon[p.toLowerCase()] || <FaGamepad size={10} />}
+                                    </span>
+                                ))}
+                            </div>
+                            {owners.length > 1 && (
+                                <span className="text-[8px] font-black uppercase tracking-tighter ml-1 text-white/60">
+                                    {owners.length} Accounts
+                                </span>
+                            )}
                         </div>
 
-                        {/* Progress overlay on hover (Glassmorphism) */}
+                        {/* Progress overlay on hover */}
                         <div className="absolute inset-0 flex items-center justify-center bg-midnight-900/30 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500">
                             <div className="scale-75 group-hover:scale-90 transition-transform duration-500">
                                 <ProgressCircle progress={progress} />
@@ -115,19 +125,20 @@ function Card(props) {
 
                                 <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-text-muted">
                                     <span>{progress}% Mastery</span>
-                                    {hoursPlayed && <span className="text-text-secondary">{hoursPlayed}</span>}
+                                    {totalHoursNum > 0 && <span className="text-text-secondary">{formatHours(totalHoursNum)}</span>}
                                 </div>
                             </div>
                         </div>
 
-                        {lastPlayed ? (
-                            <div className="pt-2 border-t border-white/5 flex items-center justify-between">
-                                <span className="text-[9px] text-text-muted font-black uppercase tracking-tighter">Last Boot</span>
-                                <span className="text-[9px] text-text-muted font-medium">{lastPlayed}</span>
-                            </div>
-                        ) : (
-                            <div className="pt-2 border-t border-transparent" />
-                        )}
+                        {/* Unified Ownership Badge */}
+                        <div className="pt-2 border-t border-white/5 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                           {owners.slice(0, 3).map((owner, i) => (
+                               <div key={i} className="flex-shrink-0 w-5 h-5 rounded-md bg-midnight-800 border border-white/5 flex items-center justify-center overflow-hidden" title={owner.accountName}>
+                                   {owner.avatar ? <img src={owner.avatar} className="w-full h-full object-cover" /> : <div className="text-[7px] font-black">{owner.accountName?.charAt(0)}</div>}
+                               </div>
+                           ))}
+                           {owners.length > 3 && <span className="text-[8px] text-text-muted font-black">+{owners.length - 3}</span>}
+                        </div>
                     </div>
                 </>
             ) : (
@@ -144,9 +155,10 @@ Card.propTypes = {
     title: PropTypes.string.isRequired,
     image: PropTypes.string,
     platform: PropTypes.string,
+    platforms: PropTypes.array,
+    owners: PropTypes.array,
     progress: PropTypes.number,
-    lastPlayed: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
-    hoursPlayed: PropTypes.string
+    totalHoursNum: PropTypes.number
 };
 
 export default Card;

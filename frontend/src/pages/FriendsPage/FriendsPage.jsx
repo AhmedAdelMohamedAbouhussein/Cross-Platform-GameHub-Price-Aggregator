@@ -17,7 +17,7 @@ function FriendsPage() {
     const [friends, setFriends] = useState(null);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
-    const [activePlatform, setActivePlatform] = useState("User");
+    const [activePlatform, setActivePlatform] = useState("All");
     const [mobileAsideOpen, setMobileAsideOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -57,6 +57,7 @@ function FriendsPage() {
     }, [user]);
 
     const platforms = [
+        { key: "All", label: "All Friends", icon: FaUserFriends, color: "from-purple-500 to-pink-600" },
         { key: "User", label: "App", icon: FaGamepad, color: "from-blue-500 to-indigo-600" },
         { key: "Steam", label: "Steam", icon: FaSteam, color: "from-slate-700 to-slate-900" },
         { key: "Xbox", label: "Xbox", icon: FaXbox, color: "from-green-600 to-emerald-800" },
@@ -65,9 +66,23 @@ function FriendsPage() {
     ];
 
     const filteredFriends = useMemo(() => {
-        if (!friends || !friends[activePlatform]) return [];
+        if (!friends) return [];
 
-        let list = friends[activePlatform].filter(f => f.status === "accepted" || activePlatform !== "User");
+        let list = [];
+        if (activePlatform === "All") {
+            // Flatten all platforms
+            Object.entries(friends).forEach(([platform, friendList]) => {
+                const processed = friendList
+                    .filter(f => platform !== "User" || f.status === "accepted")
+                    .map(f => ({ ...f, sourcePlatform: platform }));
+                list.push(...processed);
+            });
+        } else {
+            if (!friends[activePlatform]) return [];
+            list = friends[activePlatform]
+                .filter(f => activePlatform !== "User" || f.status === "accepted")
+                .map(f => ({ ...f, sourcePlatform: activePlatform }));
+        }
 
         if (searchQuery.trim() !== "") {
             const query = searchQuery.toLowerCase();
@@ -117,7 +132,7 @@ function FriendsPage() {
                             </div>
 
                             <button
-                                onClick={() => navigate("/friends/manage")}
+                                onClick={() => navigate("/managefriends")}
                                 className="px-6 py-3 bg-midnight-800/80 hover:bg-midnight-700 text-text-primary text-xs font-black uppercase tracking-widest rounded-2xl border border-white/5 transition-all active:scale-95 flex items-center gap-2 group"
                             >
                                 Manage Friends <FaSearch className="group-hover:translate-x-1 transition-transform" />
@@ -165,10 +180,14 @@ function FriendsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-20">
                             {filteredFriends.length > 0 ? (
                                 filteredFriends.map((friend, index) => {
-                                    const name = activePlatform === "User"
+                                    const currentPlatform = friend.sourcePlatform || activePlatform;
+                                    const name = currentPlatform === "User"
                                         ? friend.name || friend.email || "Unknown User"
                                         : friend.displayName || "External Friend";
                                     const avatar = friend.profilePicture || friend.avatar || "https://digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png";
+
+                                    // Find which user account this friend belongs to
+                                    const sourceAccount = currentPlatform === "User" ? null : (user.linkedAccounts?.[currentPlatform]?.find(acc => acc.accountId === friend.linkedAccountId));
 
                                     return (
                                         <div
@@ -188,15 +207,28 @@ function FriendsPage() {
 
                                             {/* Info */}
                                             <div className="flex-1 min-w-0">
-                                                <h3 className="text-sm font-black text-text-primary uppercase tracking-tight truncate group-hover:text-accent transition-colors">
-                                                    {name}
-                                                </h3>
-                                                <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-0.5">
-                                                    {activePlatform === "User" ? `@${friend.publicID}` : `${activePlatform} Network`}
-                                                </p>
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <h3 className="text-sm font-black text-text-primary uppercase tracking-tight truncate group-hover:text-accent transition-colors">
+                                                            {name}
+                                                        </h3>
+                                                        <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-0.5">
+                                                            {currentPlatform === "User" ? `@${friend.publicID}` : `${currentPlatform} Network`}
+                                                        </p>
+                                                    </div>
+                                                    {sourceAccount && (
+                                                        <div className="flex flex-col items-end">
+                                                            <p className="text-[8px] font-black text-white/40 uppercase tracking-tighter mb-1">Via Account</p>
+                                                            <div className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded-lg border border-white/5" title={`Synced from your account: ${sourceAccount.displayName || sourceAccount.accountId}`}>
+                                                                {sourceAccount.avatar && <img src={sourceAccount.avatar} className="w-3 h-3 rounded-full" />}
+                                                                <span className="text-[9px] font-black text-accent uppercase truncate max-w-[60px]">{sourceAccount.displayName || sourceAccount.accountId}</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
 
                                                 <div className="flex items-center gap-3 mt-3">
-                                                    {activePlatform === "User" ? (
+                                                    {currentPlatform === "User" ? (
                                                         <Link
                                                             to={`/friends/viewprofile/${encodeURIComponent(friend.publicID)}`}
                                                             className="px-3 py-1.5 rounded-lg bg-accent/10 text-accent text-[9px] font-black uppercase tracking-widest hover:bg-accent hover:text-white transition-all"

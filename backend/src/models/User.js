@@ -13,20 +13,17 @@ const ENCRYPTION_KEY = Buffer.from(config.security.encryptionKey, 'hex'); // 32 
 const IV_LENGTH = config.security.ivLength;
 const BCRYPT_SALT_ROUNDS = config.security.bcryptSaltRounds
 
-function encrypt(text) 
-{
+function encrypt(text) {
     if (!text) return null;
-    try 
-    {
+    try {
         const iv = crypto.randomBytes(IV_LENGTH);
         const cipher = crypto.createCipheriv(algorithm, ENCRYPTION_KEY, iv);
         let encrypted = cipher.update(text, 'utf8', 'hex');
         encrypted += cipher.final('hex');
         // Combine iv and encrypted text with colon separator
         return iv.toString('hex') + ':' + encrypted;
-    } 
-    catch (error) 
-    {
+    }
+    catch (error) {
         console.error('Encryption error:', error);
         return null;
     }
@@ -34,8 +31,7 @@ function encrypt(text)
 
 function decrypt(data) {
     if (!data) return null;
-    try 
-    {
+    try {
         const parts = data.split(':');
         const iv = Buffer.from(parts.shift(), 'hex');
         const encryptedText = parts.join(':');
@@ -44,14 +40,13 @@ function decrypt(data) {
         decrypted += decipher.final('utf8');
         return decrypted;
     }
-    catch (error) 
-    {
+    catch (error) {
         console.error('Decryption error:', error);
         return null;
     }
 }
 
-const generatePublicID = async function(name) {
+const generatePublicID = async function (name) {
     let isUnique = false;
     let newID;
 
@@ -67,6 +62,23 @@ const generatePublicID = async function(name) {
     return newID;
 };
 
+const linkedAccountSchema = new mongoose.Schema({
+    accountId: { type: String, required: true },
+    displayName: { type: String },
+    avatar: { type: String },
+    refreshToken: {
+        type: String,
+        set: encrypt,
+        get: decrypt,
+        select: false
+    },
+    expiresAt: {
+        type: Date,
+        select: false
+    },
+    lastSync: { type: Date, default: Date.now }
+}, { _id: false });
+
 const UserSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -80,89 +92,63 @@ const UserSchema = new mongoose.Schema({
         unique: true,
         required: true,
     },
-    email: { 
+    email: {
         type: String,
-        index: true, 
-        required: true, 
-        unique: true, 
-        lowercase: true, 
+        index: true,
+        required: true,
+        unique: true,
+        lowercase: true,
         trim: true,
         match: [/^\S+@\S+\.\S+$/, "Invalid email format"]
     },
-    password: { 
-        type: String, 
-        minlength: 8, 
+    password: {
+        type: String,
+        minlength: 8,
         maxlength: 50,
         select: false,
-        validate: 
+        validate:
         {
-            validator: function (v) 
-            {
+            validator: function (v) {
                 return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(v);
             },
             message: "Password must contain at least 1 uppercase, 1 lowercase, and 1 number"
         }
     },
 
-    bio: { 
+    bio: {
         type: String,
-        maxlength: 300,  
+        maxlength: 300,
     },
-    profileVisibility: { 
+    profileVisibility: {
         type: String,
-        enum: ["public", "friends", "private"], default: "public" 
+        enum: ["public", "friends", "private"], default: "public"
     },
-    isDeleted: { 
-        type: Boolean, 
-        default: false 
+    isDeleted: {
+        type: Boolean,
+        default: false
     },
-    isVerified: { 
-        type: Boolean, 
-        default: false 
+    isVerified: {
+        type: Boolean,
+        default: false
     },
     profilePicture: {
         type: String,
     },
-    role: { 
-        type: String, 
-        enum: ['user', 'admin'], 
-        default: 'user' 
-    },
-    steamId: { 
+    role: {
         type: String,
+        enum: ['user', 'admin'],
+        default: 'user'
     },
-    PSNId: {
-        type: String,
+
+    // New Multi-Account Structure
+    linkedAccounts: {
+        type: Map,
+        of: [linkedAccountSchema]
     },
-    xboxId: { 
-        type: String,
-    },
-    xboxGamertag: {
-        type: String,
-    },
-    xboxRefreshToken: { 
-        type: String, 
-        set: encrypt, 
-        get: decrypt,
-        select: false
-    },
-    xboxTokenExpiresAt: { 
-        type: Date, 
-        select: false
-    },
-    PSNRefreshToken: { 
-        type: String, 
-        set: encrypt, 
-        get: decrypt,
-        select: false
-    },
-    PSNTokenExpiresAt: { 
+
+    signupDate: {
         type: Date,
-        select: false 
-    },  
-    signupDate: { 
-        type: Date, 
-        default: Date.now 
+        default: Date.now
     },
     ownedGames: {
         type: Map,
@@ -172,138 +158,97 @@ const UserSchema = new mongoose.Schema({
         },
     },
     wishlist: [{ type: String }],
-    likes: [{ type: String, index: true }], // Stores publicIDs of users who liked this profile
+    likes: [{ type: String, index: true }],
     friends: {
         type: Map,
         of: [
             new mongoose.Schema(
-            {
-                user: { type: String, required: true }, // <-- store publicID, not ObjectId
-                externalId: { type: String }, // platform-specific ID (SteamID, XboxID, etc.)
-                displayName: { type: String }, // optional, cached name
-                profileUrl: { type: String },
-                avatar: { type: String }, // optional, cached avatar
-                friendsSince: { type: Date },
-                status: { type: String, enum: ["pending", "accepted"], default: "pending" }, // track request
-                source: { type: String, enum: ["User", "Steam", "Xbox", "Epic", "PSN", "Nintendo", "GOG"], default: "User" }, // where the friend comes from
-                requestedByMe: { type: Boolean, default: true }, // true if current user sent the request
-            },
-            { _id: false } // prevent subdocument _id
+                {
+                    user: { type: String, required: false },
+                    externalId: { type: String },
+                    linkedAccountId: { type: String }, // The local user's account that linked this friend
+                    displayName: { type: String },
+                    profileUrl: { type: String },
+                    avatar: { type: String },
+                    friendsSince: { type: Date },
+                    status: { type: String, enum: ["pending", "accepted"], default: "pending" },
+                    source: { type: String, enum: ["User", "Steam", "Xbox", "Epic", "PSN", "Nintendo", "GOG"], default: "User" },
+                    requestedByMe: { type: Boolean, default: true },
+                },
+                { _id: false }
             )
         ],
     },
     resendCount: {
-        emailVerification: { 
-            count: { 
-                type: Number, 
-                default: 0,
-                select: false
-            },
-            lastReset: { 
-                type: Date, 
-                default: Date.now,
-                select: false
-            },
+        emailVerification: {
+            count: { type: Number, default: 0, select: false },
+            lastReset: { type: Date, default: Date.now, select: false },
         },
-        passwordReset: { 
-            count: { 
-                type: Number, 
-                default: 0,
-                select: false
-            },
-            lastReset: { 
-                type: Date, 
-                default: Date.now,
-                select: false
-            }
+        passwordReset: {
+            count: { type: Number, default: 0, select: false },
+            lastReset: { type: Date, default: Date.now, select: false }
         },
-        restoreAccount: { 
-            count: { 
-                type: Number, 
-                default: 0,
-                select: false
-            },
-            lastReset: { 
-                type: Date, 
-                default: Date.now,
-                select: false
-            }
+        restoreAccount: {
+            count: { type: Number, default: 0, select: false },
+            lastReset: { type: Date, default: Date.now, select: false }
         },
-        permanentlyDeleteAccount: { 
-            count: { 
-                type: Number, 
-                default: 0,
-                select: false
-            },
-            lastReset: { 
-                type: Date, 
-                default: Date.now,
-                select: false
-            }
+        permanentlyDeleteAccount: {
+            count: { type: Number, default: 0, select: false },
+            lastReset: { type: Date, default: Date.now, select: false }
         }
     }
 },
-{ 
-    timestamps: true, 
-    toJSON: { getters: true }, 
-    toObject: { getters: true } 
-});
+    {
+        timestamps: true,
+        toJSON: { getters: true },
+        toObject: { getters: true }
+    });
 
-UserSchema.set('toJSON', 
-{
-    transform: function(doc, ret, options) //doc → the original Mongoose document
-    { 
-        delete ret.password; //delete ret.field → removes that field before sending it to the client This applies globally whenever .toJSON() is called (e.g., res.json(user))
-        delete ret.xboxRefreshToken;
-        delete ret.xboxTokenExpiresAt;
-        delete ret.PSNRefreshToken;
-        delete ret.PSNTokenExpiresAt
-        delete ret.ownedGames;
-        delete ret.friends;
-        delete ret.wishlist;
-        delete ret.updatedAt;
-        delete ret.signupDate;
-        delete ret.createdAt;
-        delete ret.isDeleted;
-        delete ret.isVerified;
-        delete ret.role;
-        delete ret.__v; //remove version key
-        delete ret.xboxGamertag
-        delete ret._id
-        delete ret.steamId
-        delete ret.xboxId
-        delete ret.PSNId
-        //delete ret._id;
+UserSchema.set('toJSON',
+    {
+        transform: function (doc, ret, options) {
+            delete ret.password;
 
-        if (ret.resendCount) 
-        {
-            if(ret.resendCount.emailVerification)
-            {
-                delete ret.resendCount.emailVerification.count;
-                delete ret.resendCount.emailVerification.lastReset;
+            // Clean up linkedAccounts tokens in the JSON response
+            if (ret.linkedAccounts) {
+                for (const key in ret.linkedAccounts) {
+                    ret.linkedAccounts[key] = ret.linkedAccounts[key].map(acc => {
+                        const cleanAcc = { ...acc };
+                        delete cleanAcc.refreshToken;
+                        delete cleanAcc.expiresAt;
+                        return cleanAcc;
+                    });
+                }
             }
-            if(ret.resendCount.passwordReset)
-            {
-                delete ret.resendCount.passwordReset.count;
-                delete ret.resendCount.passwordReset.lastReset;
+
+            delete ret.ownedGames;
+            delete ret.friends;
+            delete ret.wishlist;
+            delete ret.updatedAt;
+            delete ret.signupDate;
+            delete ret.createdAt;
+            delete ret.isDeleted;
+            delete ret.isVerified;
+            delete ret.role;
+            delete ret.__v;
+            delete ret._id
+
+            if (ret.resendCount) {
+                delete ret.resendCount.emailVerification?.count;
+                delete ret.resendCount.emailVerification?.lastReset;
+                delete ret.resendCount.passwordReset?.count;
+                delete ret.resendCount.passwordReset?.lastReset;
+                delete ret.resendCount.restoreAccount?.count;
+                delete ret.resendCount.restoreAccount?.lastReset;
+                delete ret.resendCount.permanentlyDeleteAccount?.count;
+                delete ret.resendCount.permanentlyDeleteAccount?.lastReset;
             }
-            if(ret.resendCount.restoreAccount)
-            {
-                delete ret.resendCount.restoreAccount.count;
-                delete ret.resendCount.restoreAccount.lastReset;
-            }
-            if(ret.resendCount.permanentlyDeleteAccount)
-            {
-                delete ret.resendCount.permanentlyDeleteAccount.count;
-                delete ret.resendCount.permanentlyDeleteAccount.lastReset;
-            }
+            return ret;
         }
-        return ret; //ret → the plain JavaScript object that will be returned
-    }
-});
+    });
 
 
-UserSchema.pre('validate', async function(next) {
+UserSchema.pre('validate', async function (next) {
     if (!this.publicID) {
         this.publicID = await generatePublicID(this.name);
     }
@@ -344,7 +289,7 @@ UserSchema.methods.comparePassword = async function (candidatePassword) {
 };
 
 
-UserSchema.pre('deleteOne', { document: true, query: false }, async function(next) {
+UserSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
     try {
         const userId = this._id;
 
