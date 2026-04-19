@@ -204,12 +204,55 @@ export const getUserOwnedGame = async (req, res, next) => {
       return res.status(404).json({ message: `No games found for platform ${platform}` });
     }
 
-    const game = platformGames[id];
-    if (!game) {
+    const targetGame = platformGames[id];
+    if (!targetGame) {
       return res.status(404).json({ message: `Game with id ${id} not found on ${platform}` });
     }
 
-    res.status(200).json({ game });
+    // --- NEW: Dynamic Avatar & Platform Aggregation ---
+    const targetName = targetGame.gameName?.toLowerCase().trim();
+    const mergedOwners = [];
+
+    // Fetch linkedAccounts to get fresh avatars without storing them redundant in every game
+    const accountUser = await userModel.findById(userId).select("linkedAccounts");
+    const linkedAccountsObj = {};
+    if (accountUser.linkedAccounts) {
+      for (const [plt, accList] of accountUser.linkedAccounts.entries()) {
+        linkedAccountsObj[plt] = accList;
+      }
+    }
+
+    // Search through all platforms for games with the same name
+    for (const [plt, pltGames] of Object.entries(ownedGamesObj)) {
+      for (const gameRecord of Object.values(pltGames)) {
+        if (gameRecord.gameName?.toLowerCase().trim() === targetName) {
+          const processedOwners = gameRecord.owners.map(owner => {
+            const ownerObj = owner.toObject ? owner.toObject() : owner;
+            
+            // Find matching linked account for this platform/ID to get the avatar
+            const platformAccounts = linkedAccountsObj[plt] || [];
+            const linkedAcc = platformAccounts.find(acc => acc.accountId === ownerObj.accountId);
+            
+            return {
+              ...ownerObj,
+              platform: plt,
+              avatar: linkedAcc?.avatar || null // Pass fresh avatar dynamically
+            };
+          });
+          mergedOwners.push(...processedOwners);
+        }
+      }
+    }
+
+    // Remove duplicates
+    const uniqueOwners = Array.from(new Map(mergedOwners.map(o => [`${o.platform}-${o.accountId}`, o])).values());
+
+    const mergedGame = {
+      ...targetGame.toObject ? targetGame.toObject() : targetGame,
+      owners: uniqueOwners
+    };
+
+    res.status(200).json({ game: mergedGame });
   } catch (err) {
     next(err);
   }

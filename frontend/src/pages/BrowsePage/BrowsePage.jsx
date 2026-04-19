@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../utils/apiClient.js";
 import Header from "../../components/Header/Header.jsx";
@@ -54,8 +54,8 @@ const BrowseGamesPage = () => {
     }, [debouncedSearch]);
 
     const handleGameClick = (game) => {
-        const gameName = game.name || game.id.replace("/games/", "");
-        navigate(`/games/${gameName}`);
+        const id = game.id || game.id.replace("/games/", "");
+        navigate(`/games/${id}`);
     };
 
     return (
@@ -149,7 +149,7 @@ const BrowseGamesPage = () => {
                                                         {game.name}
                                                     </h3>
                                                     <div className="flex items-center justify-between opacity-60">
-                                                        <span className="text-[9px] font-bold text-text-muted uppercase">2024</span>
+                                                        <span className="text-[9px] font-bold text-text-muted uppercase">{game.released}</span>
                                                         <div className="w-1.5 h-1.5 rounded-full bg-accent/40" />
                                                     </div>
                                                 </div>

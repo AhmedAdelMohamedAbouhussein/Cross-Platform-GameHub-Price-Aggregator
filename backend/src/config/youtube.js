@@ -8,7 +8,7 @@ export async function getGameTrailer(gameName) {
             {
                 params: {
                     key: config.google.youtubeApiKey,
-                    q: `${gameName} official trailer`,
+                    q: `${gameName} game official trailer`,
                     part: "snippet",
                     maxResults: 1,
                     type: "video"
@@ -28,7 +28,9 @@ export async function getGameTrailer(gameName) {
             thumbnail: video.snippet.thumbnails?.high?.url
         };
 
-    } catch (err) {
+    } 
+    catch (err) 
+    {
         console.error("YouTube fetch failed:", err.message);
         return null;
     }

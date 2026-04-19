@@ -7,7 +7,6 @@ import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
 import Header from "../../components/Header/Header.jsx";
 import Footer from "../../components/Footer/Footer.jsx";
 import { FaCalendarAlt, FaClock, FaStar, FaExternalLinkAlt, FaTag, FaTools, FaBuilding, FaArrowRight, FaGamepad } from "react-icons/fa";
-import { toast } from "sonner";
 
 const STORE_COLORS = {
     "Steam": "bg-blue-600/20 border-blue-500/30 text-blue-400 hover:bg-blue-600/30",
@@ -30,13 +29,14 @@ function formatDate(dateStr) {
     });
 }
 
-const fetchGame = async (gameName) => {
-    const response = await apiClient.get(`/games/${encodeURIComponent(gameName)}`);
+const fetchGame = async (id) => {
+    console.log(`Fetching data for game: ${id}`);
+    const response = await apiClient.get(`/games/${id}`);
     return response.data;
 };
 
 const GamePage = () => {
-    const { gameName } = useParams();
+    const { id } = useParams();
     const navigate = useNavigate();
 
     const {
@@ -45,16 +45,16 @@ const GamePage = () => {
         isError,
         error
     } = useQuery({
-        queryKey: ["game", gameName],
-        queryFn: () => fetchGame(gameName),
-        enabled: !!gameName,
+        queryKey: ["game", id],
+        queryFn: () => fetchGame(id),
+        enabled: !!id,
         staleTime: 1000 * 60 * 5,
         retry: 2
     });
 
     useEffect(() => {
         window.scrollTo(0, 0);
-    }, [gameName]);
+    }, [id]);
 
     if (isLoading) return <LoadingScreen />;
 

@@ -46,141 +46,133 @@ export const getTopSellers = async (req, res, next) => {
     }
 };
 
-// @desc  Get game details by name
-// @route  GET /games/:gameName
+// @desc  Get game details by ID (RAWG)
+// @route  GET /games/:id
 export const getOneGameDetails = async (req, res, next) => {
-    const gameName = req.params.gameName;
+    const gameId = req.params.id;
 
-    if (!gameName || gameName.trim() === '') {
-        return next(new Error('Game name is required'));
+    if (!gameId || gameId.trim() === '') {
+        return next(new Error('Game ID is required'));
     }
 
+    console.log(`Received request for game details: ${gameId}`);
+
     try {
-        const PREFERRED = ["Steam", "Epic Games", "PlayStation Store", "Microsoft Store", "Xbox Store", "Nintendo Store", "EA App (Origin)"];
-
-        const response = await axios.get(`https://api.rawg.io/api/games?search=${gameName}&key=${RAWG_API_KEY}&search_precise=true`);
-
-        if (response.status === 200 && response.data.count > 0) {
-            // Heuristic: Find a game that has preferred stores (Steam, Epic, etc.) 
-            // and preferably is a 'primary' record (no localized suffixes in slug if obvious)
-            const firstGame = response.data.results.find(game =>
-                game.stores?.some(s => PREFERRED.includes(s.store.name)) &&
-                !game.slug.includes('-jp') && !game.slug.includes('-cn')
-            ) || response.data.results.find(game => game.stores?.some(s => PREFERRED.includes(s.store.name)))
-                || response.data.results[0];
-
-            console.log("Selected game:", firstGame.id);
-            if (!firstGame) {
-                return next(new Error('Game not found'));
+        const { data } = await axios.get(
+            `https://api.rawg.io/api/games/${gameId}`,
+            {
+                params: { key: RAWG_API_KEY }
             }
+        );
 
-            // Fetch the full details for this specific game
-            const detailResponse = await axios.get(`https://api.rawg.io/api/games/${firstGame.id}?key=${RAWG_API_KEY}`);
-            const details = detailResponse.data;
-            console.log(details.platforms);
+        // ✅ Stores
+        const formattedStores =
+            data.stores?.map(s => ({
+                name: s.store.name,
+                url: s.url
+            })) || [];
 
-            // Extract preferred stores with their direct purchase URLs
-            const formattedStores = details.stores
-                ?.filter(s => PREFERRED.includes(s.store.name))
-                .map(s => ({
-                    name: s.store.name,
-                    url: s.url
-                })) || [];
+        // ✅ Platforms
+        const formattedPlatforms =
+            data.platforms?.map(p => p.platform.name) || [];
 
-            const gameProfile = {
-                id: details.id,
-                name: details.name,
-                description: details.description_raw || "No description available.",
-                minimumreq: formatRequirements(details.platforms?.find(p => p.platform.slug === "pc")?.requirements?.minimum),
-                recommendedreq: formatRequirements(details.platforms?.find(p => p.platform.slug === "pc")?.requirements?.recommended),
-                released: details.released,
-                image: details.background_image,
-                metacritic: details.metacritic,
-                playtime: details.playtime,
-                developers: details.developers?.map(d => d.name) || [],
-                publishers: details.publishers?.map(p => p.name) || [],
-                genres: details.genres?.map(g => g.name) || [],
-                stores: formattedStores,
-                historyLow: null,
-                deals: null,
-                trailer: null
-            };
+        const gameProfile = {
+            id: data.id,
+            name: data.name,
+            slug: data.slug,
+            description: data.description_raw || "No description available.",
+            minimumreq: formatRequirements(
+                data.platforms?.find(p => p.platform.slug === "pc")?.requirements?.minimum
+            ),
+            recommendedreq: formatRequirements(
+                data.platforms?.find(p => p.platform.slug === "pc")?.requirements?.recommended
+            ),
+            released: data.released,
+            image: data.background_image,
+            metacritic: data.metacritic,
+            playtime: data.playtime,
+            developers: data.developers?.map(d => d.name) || [],
+            publishers: data.publishers?.map(p => p.name) || [],
+            genres: data.genres?.map(g => g.name) || [],
+            stores: formattedStores,
+            platforms: formattedPlatforms,
+            historyLow: null,
+            deals: null,
+            trailer: null
+        };
 
-            // --- YouTube Integration ---
-            try {
-                const trailer = await getGameTrailer(details.name);
-                gameProfile.trailer = trailer;
-            }
-            catch (err) {
-                console.error("YouTube fetch failed:", err.message);
-            }
+        // 🎬 Trailer
+        try {
+            gameProfile.trailer = await getGameTrailer(`${data.name} official trailer ${data.released.split('-')[0]}`);
+        } catch (err) {
+            console.error("Trailer fetch failed:", err.message);
+        }
 
-            // --- ITAD Integration ---
-            try {
-                const ITAD_API_KEY = config.iTAD.apiKey;
+        // 💰 ITAD Integration
+        try {
+            const ITAD_API_KEY = config.iTAD.apiKey;
 
-                if (!ITAD_API_KEY) {
-                    console.log("No ITAD API key provided");
-                    return;
-                }
-
-                // 1️⃣ SEARCH for game ID
+            if (!ITAD_API_KEY) {
+                console.log("No ITAD API key provided");
+            } else {
                 const searchRes = await axios.get(
                     'https://api.isthereanydeal.com/games/search/v1',
                     {
                         params: {
                             key: ITAD_API_KEY,
-                            title: details.name,
-                            results: 1
+                            title: data.name,
+                            results: 10
                         }
                     }
                 );
 
-                if (!searchRes.data || searchRes.data.length === 0) {
-                    console.log("No game found for:", details.name);
-                    return;
+                if (searchRes.data?.length > 0) {
+                
+                    // 🎯 smarter match
+                    const bestMatch = searchRes.data.find(g =>
+                        g.title.toLowerCase() === data.name.toLowerCase()
+                    ) || searchRes.data[0];
+
+                    const itadGameId = bestMatch.id;
+
+                    const pricesRes = await axios.post(
+                        'https://api.isthereanydeal.com/games/prices/v3',
+                        [itadGameId],
+                        {
+                            params: {
+                                key: ITAD_API_KEY,
+                                country: 'US'
+                            }
+                        }
+                    );
+
+                    const priceData = pricesRes.data[0];
+
+                    gameProfile.historyLow = {
+                        all: priceData.historyLow.all.amount,
+                        y1: priceData.historyLow.y1.amount,
+                        m3: priceData.historyLow.m3.amount,
+                    };
+
+                    gameProfile.deals = priceData.deals.map(deal => ({
+                        store: deal.shop.name,
+                        price: deal.price.amount,
+                        storeLow: deal.storeLow.amount,
+                        url: deal.url
+                    }));
                 }
-
-                const gameId = searchRes.data[0].id;
-
-                // 2️⃣ GET PRICES (POST)
-                const pricesRes = await axios.post(
-                    'https://api.isthereanydeal.com/games/prices/v3',
-                    [gameId], // MUST be array
-                    {
-                        params: {
-                            key: ITAD_API_KEY,
-                            country: 'US',
-                            //deals: true
-                        }
-                    }
-                );
-
-                gameProfile.historyLow = {
-                    all: pricesRes.data[0].historyLow.all.amount,
-                    y1: pricesRes.data[0].historyLow.y1.amount,
-                    m3: pricesRes.data[0].historyLow.m3.amount,
-                };
-
-                gameProfile.deals = pricesRes.data[0].deals.map(deal => ({
-                    store: deal.shop.name,
-                    price: deal.price.amount,
-                    storeLow: deal.storeLow.amount,
-                    url: deal.url
-                }));
-
-            } catch (itadErr) {
-                console.error("ITAD fetch failed:", itadErr.message);
             }
+        } catch (itadErr) {
+            console.error("ITAD fetch failed:", itadErr.message);
+        }
 
-            return res.json(gameProfile);
-        }
-        else {
-            return next(new Error('Game not found'));
-        }
-    }
-    catch (error) {
-        return next(new Error('Failed to fetch game details'));
+        return res.json(gameProfile);
+
+    } catch (error) {
+        console.error('Error fetching game details:', error.message);
+        const err = new Error('Failed to fetch game details from RAWG API');
+        err.status = 500;
+        next(err);
     }
 };
 
@@ -207,7 +199,8 @@ export const searchGames = async (req, res, next) => {
     }
 
     try {
-        const response = await axios.get(`https://api.rawg.io/api/games?search=${encodeURIComponent(query)}&key=${RAWG_API_KEY}&page_size=20`);
+        console.log(`Searching for games with query: ${query}`);
+        const response = await axios.get(`https://api.rawg.io/api/games?search=${query}&key=${RAWG_API_KEY}&page_size=20`);
 
         if (response.status === 200) {
             const results = response.data.results.map(game => ({
@@ -216,7 +209,8 @@ export const searchGames = async (req, res, next) => {
                 image: game.background_image,
                 released: game.released,
                 rating: game.rating,
-                genres: game.genres?.map(g => g.name) || []
+                genres: game.genres?.map(g => g.name) || [],
+                released: game.released.split('-')[0] || 'N/A'
             }));
             res.status(200).json(results);
         } else {
