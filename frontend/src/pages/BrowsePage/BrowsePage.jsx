@@ -35,10 +35,11 @@ const BrowseGamesPage = () => {
 
                 const formattedData = debouncedSearch
                     ? response.data
-                    : response.data.map(([image, link]) => ({
-                        image,
-                        name: decodeURIComponent(link.split("/:").pop().replace(/[:?].*$/, "")),
-                        id: link
+                    : response.data.map((game) => ({
+                        image: game.background_image,
+                        name: game.name,
+                        id: game.id,
+                        released: game.released ? game.released.split('-')[0] : 'N/A'
                     }));
 
                 setGames(formattedData);
@@ -54,7 +55,7 @@ const BrowseGamesPage = () => {
     }, [debouncedSearch]);
 
     const handleGameClick = (game) => {
-        const id = game.id || game.id.replace("/games/", "");
+        const id = game.id;
         navigate(`/games/${id}`);
     };
 

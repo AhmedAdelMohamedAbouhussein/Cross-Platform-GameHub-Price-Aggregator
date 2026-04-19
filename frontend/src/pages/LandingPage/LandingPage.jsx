@@ -134,12 +134,15 @@ function LandingPage() {
                 maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)"
               }}
             >
-              {displayedGames.map(([src, redirect], index) => {
-                const title = formatTitle(redirect);
+              {displayedGames.map((game, index) => {
+                const title = game.name;
+                const src = game.background_image;
+                const gameId = game.id;
+                
                 return (
                   <div
-                    key={index}
-                    onClick={() => navigate(`/games/${redirect}`)}
+                    key={`${gameId}-${index}`}
+                    onClick={() => navigate(`/games/${gameId}`)}
                     className="
                       group relative flex-shrink-0
                       w-[240px] sm:w-[280px] md:w-[320px] lg:w-[360px]

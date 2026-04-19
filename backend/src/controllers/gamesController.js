@@ -98,15 +98,31 @@ export const getOneGameDetails = async (req, res, next) => {
             platforms: formattedPlatforms,
             historyLow: null,
             deals: null,
-            trailer: null
+            youtubeTrailer: null,
+            rawgTrailer: null
         };
 
-        // 🎬 Trailer
+        // 🎬 YouTube Trailer
         try {
             const releaseYear = data.released ? data.released.split('-')[0] : '';
-            gameProfile.trailer = await getGameTrailer(`${data.name} official trailer ${releaseYear}`.trim());
+            gameProfile.youtubeTrailer = await getGameTrailer(`${data.name} official game trailer ${releaseYear}`.trim());
         } catch (err) {
-            console.error("Trailer fetch failed:", err.message);
+            console.error("YouTube trailer fetch failed:", err.message);
+        }
+
+        // 🎬 RAWG Trailer
+        try {
+            const moviesRes = await axios.get(
+                `https://api.rawg.io/api/games/${gameId}/movies`,
+                { params: { key: RAWG_API_KEY } }
+            );
+
+            if (moviesRes.data?.results?.length > 0) {
+                const rawgData = moviesRes.data.results[0].data;
+                gameProfile.rawgTrailer = rawgData.max || rawgData[480] || null;
+            }
+        } catch (err) {
+            console.error("RAWG trailer fetch failed:", err.message);
         }
 
         // 💰 ITAD Integration
@@ -128,39 +144,50 @@ export const getOneGameDetails = async (req, res, next) => {
                 );
 
                 if (searchRes.data?.length > 0) {
-                
-                    // 🎯 smarter match
+
+                    // 🎯 Advanced Normalized Match
+                    const normalizeTitle = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const normalizedRawgName = normalizeTitle(data.name);
+
                     const bestMatch = searchRes.data.find(g =>
-                        g.title.toLowerCase() === data.name.toLowerCase()
-                    ) || searchRes.data[0];
-
-                    const itadGameId = bestMatch.id;
-
-                    const pricesRes = await axios.post(
-                        'https://api.isthereanydeal.com/games/prices/v3',
-                        [itadGameId],
-                        {
-                            params: {
-                                key: ITAD_API_KEY,
-                                country: 'US'
-                            }
-                        }
+                        normalizeTitle(g.title) === normalizedRawgName
                     );
 
-                    const priceData = pricesRes.data[0];
+                    if (bestMatch) {
+                        const itadGameId = bestMatch.id;
 
-                    gameProfile.historyLow = {
-                        all: priceData.historyLow.all.amount,
-                        y1: priceData.historyLow.y1.amount,
-                        m3: priceData.historyLow.m3.amount,
-                    };
+                        const pricesRes = await axios.post(
+                            'https://api.isthereanydeal.com/games/prices/v3',
+                            [itadGameId],
+                            {
+                                params: {
+                                    key: ITAD_API_KEY,
+                                    country: 'US'
+                                }
+                            }
+                        );
 
-                    gameProfile.deals = priceData.deals.map(deal => ({
-                        store: deal.shop.name,
-                        price: deal.price.amount,
-                        storeLow: deal.storeLow.amount,
-                        url: deal.url
-                    }));
+                        if (pricesRes.data?.length > 0) {
+                            const priceData = pricesRes.data[0];
+
+                            if (priceData.historyLow) {
+                                gameProfile.historyLow = {
+                                    all: priceData.historyLow.all?.amount,
+                                    y1: priceData.historyLow.y1?.amount,
+                                    m3: priceData.historyLow.m3?.amount,
+                                };
+                            }
+
+                            if (priceData.deals) {
+                                gameProfile.deals = priceData.deals.map(deal => ({
+                                    store: deal.shop.name,
+                                    price: deal.price.amount,
+                                    storeLow: deal.storeLow?.amount,
+                                    url: deal.url
+                                }));
+                            }
+                        }
+                    }
                 }
             }
         } catch (itadErr) {
@@ -182,7 +209,14 @@ export const getOneGameDetails = async (req, res, next) => {
 // @route  GET /games/landingpage
 export const getLandingPageImages = async (req, res, next) => {
     try {
-        res.status(200).json(gameImages);
+        const response = await axios.get(`https://api.rawg.io/api/games`, {
+            params: {
+                ordering: '-added',
+                page_size: 20,
+                key: RAWG_API_KEY
+            }
+        });
+        res.status(200).json(response.data.results);
     }
     catch (error) {
         const err = new Error('Failed to fetch game images from the server');

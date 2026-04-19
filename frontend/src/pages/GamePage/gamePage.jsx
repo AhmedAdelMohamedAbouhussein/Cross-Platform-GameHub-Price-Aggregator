@@ -144,7 +144,7 @@ const GamePage = () => {
                                     </div>
                                 </div>
 
-                                {game.trailer && (
+                                {(game.youtubeTrailer || game.rawgTrailer) && (
                                     <button
                                         className="inline-flex px-8 py-4 sm:px-10 sm:py-5 bg-accent text-white font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs rounded-2xl hover:bg-accent-hover transition-all active:scale-95 shadow-2xl shadow-accent/20 items-center justify-center gap-4 group"
                                         onClick={() => document.getElementById('trailers-section')?.scrollIntoView({ behavior: 'smooth' })}
@@ -202,23 +202,45 @@ const GamePage = () => {
                     </section>
 
                     {/* 3. Media & Trailer Section */}
-                    {game.trailer && (
+                    {(game.youtubeTrailer || game.rawgTrailer) && (
                         <section id="trailers-section" className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-400">
                             <div className="flex items-center gap-4 mb-6 sm:mb-8">
                                 <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight slant-1">Cinematic Content</h2>
                                 <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
                             </div>
-                            <div className="relative group p-1.5 rounded-[2rem] sm:rounded-[2.5rem] bg-midnight-800/40 border border-white/5 overflow-hidden shadow-2xl">
-                                <div className="relative aspect-video rounded-2xl sm:rounded-[2rem] overflow-hidden">
-                                    <iframe
-                                        className="absolute inset-0 w-full h-full"
-                                        src={`${game.trailer.embedUrl}?rel=0&modestbranding=1`}
-                                        title={`${game.name} Trailer`}
-                                        frameBorder="0"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                    />
-                                </div>
+
+                            <div className={`grid gap-6 ${game.youtubeTrailer && game.rawgTrailer ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+                                {game.youtubeTrailer && (
+                                    <div className="relative group p-1.5 rounded-[2rem] sm:rounded-[2.5rem] bg-midnight-800/40 border border-white/5 overflow-hidden shadow-2xl">
+                                        <div className="relative aspect-video rounded-2xl sm:rounded-[2rem] overflow-hidden">
+                                            <iframe
+                                                className="absolute inset-0 w-full h-full"
+                                                src={`${game.youtubeTrailer.embedUrl}?rel=0&modestbranding=1`}
+                                                title={`${game.name} Official Trailer`}
+                                                frameBorder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {game.rawgTrailer && (
+                                    <div className="relative group p-1.5 rounded-[2rem] sm:rounded-[2.5rem] bg-midnight-800/40 border border-white/5 overflow-hidden shadow-2xl">
+                                        <div className="relative aspect-video rounded-2xl sm:rounded-[2rem] overflow-hidden">
+                                            <video
+                                                className="absolute inset-0 w-full h-full object-cover"
+                                                controls
+                                                autoPlay
+                                                muted
+                                                loop
+                                            >
+                                                <source src={game.rawgTrailer} type="video/mp4" />
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </section>
                     )}
@@ -364,8 +386,8 @@ const GamePage = () => {
                                     <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-6">Playable Platforms</h4>
                                     <div className="flex flex-wrap gap-2">
                                         {game.platforms.map((platform, idx) => (
-                                            <span 
-                                                key={idx} 
+                                            <span
+                                                key={idx}
                                                 className="px-3 md:px-4 py-2 rounded-xl bg-midnight-700/50 border border-white/5 text-text-primary text-[10px] sm:text-[11px] font-black uppercase tracking-widest whitespace-nowrap"
                                             >
                                                 {platform}
