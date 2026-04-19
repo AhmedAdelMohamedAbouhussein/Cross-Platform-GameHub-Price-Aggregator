@@ -145,6 +145,6 @@ router.get('/landingpage', getLandingPageImages);
 router.get('/search', searchGames);
 
 // GET /games/:id
-router.get('/games/:id', getOneGameDetails);
+router.get('/:id', getOneGameDetails);
 
 export default router;

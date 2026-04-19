@@ -357,8 +357,24 @@ const GamePage = () => {
                             )}
                         </div>
 
-                        {/* RIGHT: OFFICIALLY HOSTED STORES */}
+                        {/* RIGHT: OFFICIALLY HOSTED STORES & PLATFORMS */}
                         <div className="space-y-6">
+                            {game.platforms?.length > 0 && (
+                                <div className="bg-midnight-800/40 backdrop-blur-md rounded-[2.5rem] p-6 sm:p-8 border border-white/5">
+                                    <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-6">Playable Platforms</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {game.platforms.map((platform, idx) => (
+                                            <span 
+                                                key={idx} 
+                                                className="px-3 md:px-4 py-2 rounded-xl bg-midnight-700/50 border border-white/5 text-text-primary text-[10px] sm:text-[11px] font-black uppercase tracking-widest whitespace-nowrap"
+                                            >
+                                                {platform}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             {game.stores?.length > 0 && (
                                 <div className="bg-midnight-800/40 backdrop-blur-md rounded-[2.5rem] p-6 sm:p-8 border border-white/5">
                                     <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-6">Digital Distributors</h4>

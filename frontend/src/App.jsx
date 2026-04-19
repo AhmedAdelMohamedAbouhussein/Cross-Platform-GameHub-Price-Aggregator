@@ -38,8 +38,7 @@ function SuspenseFallback() {
     );
 }
 
-function App() 
-{
+function App() {
     const { user } = useContext(AuthContext);
     const location = useLocation(); // 🔑 current location
 
@@ -48,27 +47,27 @@ function App()
             <Routes>
                 {/* Public pages */}
                 <Route path="/" element={<LandingPage />} />
-                <Route path="/games/:gameName" element={<GamePage />} />
+                <Route path="/games/:id" element={<GamePage />} />
                 <Route path="/games" element={<BrowseGamesPage />} />
                 <Route path="/verify" element={<Verify />} />
                 <Route path="/resetpassword" element={<ResetPassword />} />
 
                 {/* Auth pages */}
-                <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" replace />}/>
-                <Route path="/signup" element={!user ? <SignupPage /> : <Navigate to="/" replace />}/>
+                <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" replace />} />
+                <Route path="/signup" element={!user ? <SignupPage /> : <Navigate to="/" replace />} />
 
                 {/* Private pages */}
-                <Route path="/library" element={user ? <LibraryPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
-                <Route path="/library/sync/steam" element={user ? <SyncWithSteam /> : <Navigate to="/login" replace state={{ from: location }} />}/>
-                <Route path="/library/sync/xbox" element={user ? <SyncWithXbox /> : <Navigate to="/login" replace state={{ from: location }} />}/>
-                <Route path="/library/sync/epic" element={user ? <SyncWithEpic /> : <Navigate to="/login" replace state={{ from: location }} />}/>
-                <Route path="/library/sync/psn" element={user ? <SyncWithPSN /> : <Navigate to="/login" replace state={{ from: location }} />}/>
+                <Route path="/library" element={user ? <LibraryPage /> : <Navigate to="/login" replace state={{ from: location }} />} />
+                <Route path="/library/sync/steam" element={user ? <SyncWithSteam /> : <Navigate to="/login" replace state={{ from: location }} />} />
+                <Route path="/library/sync/xbox" element={user ? <SyncWithXbox /> : <Navigate to="/login" replace state={{ from: location }} />} />
+                <Route path="/library/sync/epic" element={user ? <SyncWithEpic /> : <Navigate to="/login" replace state={{ from: location }} />} />
+                <Route path="/library/sync/psn" element={user ? <SyncWithPSN /> : <Navigate to="/login" replace state={{ from: location }} />} />
 
-                <Route path="/ownedgamedetails" element={user ? <OwnedGamesDetails /> : <Navigate to="/login" replace state={{ from: location }} />}/>
-                <Route path="/friends" element={user ? <FriendsPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
-                <Route path="/friends/viewprofile/:publicID" element={user ? <ViewProfilePage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
-                <Route path="/managefriends" element={user ? <AddFriendPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
-                <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/login" replace state={{ from: location }} />}/>
+                <Route path="/ownedgamedetails" element={user ? <OwnedGamesDetails /> : <Navigate to="/login" replace state={{ from: location }} />} />
+                <Route path="/friends" element={user ? <FriendsPage /> : <Navigate to="/login" replace state={{ from: location }} />} />
+                <Route path="/friends/viewprofile/:publicID" element={user ? <ViewProfilePage /> : <Navigate to="/login" replace state={{ from: location }} />} />
+                <Route path="/managefriends" element={user ? <AddFriendPage /> : <Navigate to="/login" replace state={{ from: location }} />} />
+                <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/login" replace state={{ from: location }} />} />
             </Routes>
         </Suspense>
     );

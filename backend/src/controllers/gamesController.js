@@ -103,7 +103,8 @@ export const getOneGameDetails = async (req, res, next) => {
 
         // 🎬 Trailer
         try {
-            gameProfile.trailer = await getGameTrailer(`${data.name} official trailer ${data.released.split('-')[0]}`);
+            const releaseYear = data.released ? data.released.split('-')[0] : '';
+            gameProfile.trailer = await getGameTrailer(`${data.name} official trailer ${releaseYear}`.trim());
         } catch (err) {
             console.error("Trailer fetch failed:", err.message);
         }
@@ -210,7 +211,7 @@ export const searchGames = async (req, res, next) => {
                 released: game.released,
                 rating: game.rating,
                 genres: game.genres?.map(g => g.name) || [],
-                released: game.released.split('-')[0] || 'N/A'
+                released: game.released ? game.released.split('-')[0] : 'N/A'
             }));
             res.status(200).json(results);
         } else {
