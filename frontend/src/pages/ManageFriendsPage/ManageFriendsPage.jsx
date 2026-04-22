@@ -40,16 +40,21 @@ function ManageFriendsPage() {
 
         const allFriends = { ...res.data.friends };
 
-        const userFriends = await Promise.all(
-            (allFriends.User || []).map(async (friend) => {
-                const response = await apiClient.get(
-                    `/users/${encodeURIComponent(friend.user)}`
-                );
-                return { ...friend, ...response.data.user };
-            })
-        );
-
-        allFriends.User = userFriends;
+        const userFriendRecords = allFriends.User || [];
+        if (userFriendRecords.length > 0) {
+            try {
+                const publicIDs = userFriendRecords.map(f => f.user);
+                const response = await apiClient.post(`/users/batch`, { publicIDs });
+                const userProfiles = response.data.users || [];
+                
+                allFriends.User = userFriendRecords.map(friend => {
+                    const profile = userProfiles.find(p => p.publicID === friend.user);
+                    return profile ? { ...friend, ...profile } : friend;
+                });
+            } catch (e) {
+                console.error("Batch fetch failed:", e);
+            }
+        }
         return allFriends;
     };
 

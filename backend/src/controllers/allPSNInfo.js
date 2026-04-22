@@ -11,10 +11,10 @@ import http from "http";
 import https from "https";
 import pLimit from "p-limit";
 
-// Global TCP keep-alive (same as Steam/Xbox)
+// Global TCP keep-alive + 8s socket timeout (same as Steam/Xbox)
 const agent = {
-    http: new http.Agent({ keepAlive: true }),
-    https: new https.Agent({ keepAlive: true })
+    http: new http.Agent({ keepAlive: true, timeout: 8000 }),
+    https: new https.Agent({ keepAlive: true, timeout: 8000 })
 };
 
 // Concurrency limits
@@ -139,7 +139,7 @@ const normalizeTrophy = (trophy) => {
     return {
         unlocked: trophy.earned ?? false,
         dateUnlocked: trophy.earned ? new Date(trophy.earnedDateTime) : null,
-        description: trophy.trophyDetail? trophy.trophyDetail : "",
+        description: trophy.trophyDetail ? trophy.trophyDetail : "",
         type: trophy.trophyType,
         //rarity: rarityMap[trophy.trophyRare ?? 0],
         //earnedRate: Number(trophy.trophyEarnedRate),
@@ -149,8 +149,8 @@ const normalizeTrophy = (trophy) => {
 };
 
 //const rarityMap = {
-    //[TrophyRarity.VeryRare]: "Very Rare",
-    //[TrophyRarity.UltraRare]: "Ultra Rare",
-    //[TrophyRarity.Rare]: "Rare",
-    //[TrophyRarity.Common]: "Common"
+//[TrophyRarity.VeryRare]: "Very Rare",
+//[TrophyRarity.UltraRare]: "Ultra Rare",
+//[TrophyRarity.Rare]: "Rare",
+//[TrophyRarity.Common]: "Common"
 //};

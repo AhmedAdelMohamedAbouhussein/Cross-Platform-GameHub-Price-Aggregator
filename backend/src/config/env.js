@@ -8,15 +8,17 @@ export default
         sessionSecret: process.env.SESSION_SECRET,
         port: process.env.PORT,
         appUrl: process.env.APP_BACKEND_URL,
-        mongoLocal: process.env.LOCAL_MONGO_URL,
+        mongoUri: process.env.MONGO_ATLAS_URL || process.env.LOCAL_MONGO_URL,
         xboxRedirectURL: process.env.APP_BACKEND_URL + process.env.XBOX_REDIRECT_URI,
         RAWG_API_KEY: process.env.RAWG_API_KEY,
+
         mongoAtlas:
         {
             url: process.env.MONGO_ATLAS_URL,
             username: process.env.MONGO_ATLAS_USERNAME,
             password: process.env.MONGO_ATLAS_PASSWORD,
         },
+
         google:
         {
             clientId: process.env.GOOGLE_CLIENT_ID,

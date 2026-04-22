@@ -41,6 +41,7 @@ export async function epicReturn(req, res) {
           password: CLIENT_SECRET,
         },
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        timeout: 10000
       }
     );
 
@@ -53,6 +54,7 @@ export async function epicReturn(req, res) {
     // Fetch user profile
     const profileRes = await axios.get("https://api.epicgames.dev/epic/id/v2/account", {
       headers: { Authorization: `Bearer ${accessToken}` },
+      timeout: 10000
     });
 
     console.log("Epic Profile Response:", profileRes.data);

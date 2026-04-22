@@ -287,3 +287,29 @@ export const getUserFriendList = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc   Get multiple users by publicIDs in a single query (batching)
+// @route  POST /api/users/batch
+export const getBatchUsers = async (req, res, next) => {
+  try {
+    const { publicIDs } = req.body;
+    
+    if (!Array.isArray(publicIDs)) {
+      return res.status(400).json({ message: "publicIDs must be an array" });
+    }
+
+    if (publicIDs.length === 0) {
+      return res.status(200).json({ users: [] });
+    }
+
+    // Single query to get all users
+    const users = await userModel.find({ publicID: { $in: publicIDs } });
+
+    res.status(200).json({ users });
+  } catch (error) {
+    console.error("Batch fetch error:", error);
+    const err = new Error("Wasn't able to fetch batch users");
+    err.status = 500;
+    next(err);
+  }
+};

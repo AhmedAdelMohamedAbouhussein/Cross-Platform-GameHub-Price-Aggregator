@@ -7,8 +7,9 @@ import OtpSchema from './models/Otp.js';
 import ResetPasswordSchema from './models/PasswordResetToken.js'
 
 const PORT = config.port;
-const MONGO_URL = config.mongoLocal;
+const MONGO_URL = config.mongoUri;
 const APP_BACKEND_URL = config.appUrl;
+
 const NODE_ENV = config.nodeEnv;
 
 mongoose.connect(MONGO_URL)

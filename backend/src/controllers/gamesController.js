@@ -2,8 +2,17 @@ import axios from 'axios';
 import gameImages from '../assets/landingPageURLs.js';
 import config from "../config/env.js";
 import { getGameTrailer } from "../config/youtube.js";
+import redisClient from "../config/redis.js";
 
 const RAWG_API_KEY = config.RAWG_API_KEY;
+
+// ── Shared axios client with 8s timeout ──────────────────────────────────────
+const axiosClient = axios.create({ timeout: 8000 });
+
+// ── Cache TTLs (seconds) ──────────────────────────────────────────────────────
+const TTL_GAME_DETAILS = 3600;  // 1 hour
+const TTL_LANDING_PAGE = 36000;   // 10 hour
+const TTL_SEARCH = 300;   // 5 min
 
 const formatRequirements = (req) => {
     if (!req) return null;
@@ -15,12 +24,35 @@ const formatRequirements = (req) => {
         .trim();
 };
 
+// ── Helper: safe Redis GET ────────────────────────────────────────────────────
+async function cacheGet(key) {
+    try {
+        const val = await redisClient.get(key);
+        if (val) {
+            console.log(`[Cache HIT] ${key}`);
+            return JSON.parse(val);
+        }
+    } catch (err) {
+        console.warn(`[Cache] Redis GET error for ${key}:`, err.message);
+    }
+    return null;
+}
+
+// ── Helper: safe Redis SET ────────────────────────────────────────────────────
+async function cacheSet(key, data, ttl) {
+    try {
+        await redisClient.setEx(key, ttl, JSON.stringify(data));
+        console.log(`[Cache SET] ${key} (TTL: ${ttl}s)`);
+    } catch (err) {
+        console.warn(`[Cache] Redis SET error for ${key}:`, err.message);
+    }
+}
+
 // @desc  get topselling games from Steam API
 // @route  Get /games/topselling
-
 export const getTopSellers = async (req, res, next) => {
     try {
-        const response = await axios.get('https://store.steampowered.com/api/featuredcategories');
+        const response = await axiosClient.get('https://store.steampowered.com/api/featuredcategories');
 
         if (response.status === 200) {
 
@@ -57,8 +89,13 @@ export const getOneGameDetails = async (req, res, next) => {
 
     console.log(`Received request for game details: ${gameId}`);
 
+    // ── Cache check ───────────────────────────────────────────────────────────
+    const cacheKey = `game:details:${gameId}`;
+    const cached = await cacheGet(cacheKey);
+    if (cached) return res.json(cached);
+
     try {
-        const { data } = await axios.get(
+        const { data } = await axiosClient.get(
             `https://api.rawg.io/api/games/${gameId}`,
             {
                 params: { key: RAWG_API_KEY }
@@ -112,7 +149,7 @@ export const getOneGameDetails = async (req, res, next) => {
 
         // 🎬 RAWG Trailer
         try {
-            const moviesRes = await axios.get(
+            const moviesRes = await axiosClient.get(
                 `https://api.rawg.io/api/games/${gameId}/movies`,
                 { params: { key: RAWG_API_KEY } }
             );
@@ -125,15 +162,17 @@ export const getOneGameDetails = async (req, res, next) => {
             console.error("RAWG trailer fetch failed:", err.message);
         }
 
-        // 💰 ITAD Integration
+        // 💰 ITAD Integration (Production-Grade Matching)
         try {
             const ITAD_API_KEY = config.iTAD.apiKey;
 
             if (!ITAD_API_KEY) {
                 console.log("No ITAD API key provided");
             } else {
-                const searchRes = await axios.get(
-                    'https://api.isthereanydeal.com/games/search/v1',
+
+                // 🔍 Search ITAD
+                const searchRes = await axiosClient.get(
+                    "https://api.isthereanydeal.com/games/search/v1",
                     {
                         params: {
                             key: ITAD_API_KEY,
@@ -145,24 +184,84 @@ export const getOneGameDetails = async (req, res, next) => {
 
                 if (searchRes.data?.length > 0) {
 
-                    // 🎯 Advanced Normalized Match
-                    const normalizeTitle = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-                    const normalizedRawgName = normalizeTitle(data.name);
+                    // 🧠 Normalize titles (advanced)
+                    const normalize = (str) => {
+                        return str
+                            .toLowerCase()
+                            .replace(/\(.*?\)/g, '') // remove (2023), (Remake)
+                            .replace(/\b(game of the year|goty|edition|complete|bundle|definitive|remastered|redux)\b/g, '')
+                            .replace(/[^a-z0-9]/g, '');
+                    };
 
-                    const bestMatch = searchRes.data.find(g =>
-                        normalizeTitle(g.title) === normalizedRawgName
-                    );
+                    const rawgName = normalize(data.name);
+                    const rawgSlug = normalize(data.slug || "");
 
-                    if (bestMatch) {
-                        const itadGameId = bestMatch.id;
+                    // 🎯 Scoring function (weighted)
+                    const scoreMatch = (a, b) => {
+                        if (!a || !b) return 0;
 
-                        const pricesRes = await axios.post(
-                            'https://api.isthereanydeal.com/games/prices/v3',
-                            [itadGameId],
+                        if (a === b) return 100;
+
+                        if (a.includes(b) || b.includes(a)) return 90;
+
+                        let matches = 0;
+                        for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                            if (a[i] === b[i]) matches++;
+                        }
+
+                        const baseScore = (matches / Math.max(a.length, b.length)) * 100;
+
+                        return baseScore;
+                    };
+
+                    // 🧠 Find BEST match with slug boost
+                    let bestMatch = null;
+                    let bestScore = 0;
+
+                    for (const g of searchRes.data) {
+                        const itadName = normalize(g.title);
+
+                        let score = scoreMatch(itadName, rawgName);
+
+                        // 🚀 BOOST if matches slug
+                        if (rawgSlug && itadName.includes(rawgSlug)) {
+                            score += 10;
+                        }
+
+                        // 🚀 Slight penalty for too long titles (often bundles/DLC)
+                        if (itadName.length > rawgName.length * 1.5) {
+                            score -= 5;
+                        }
+
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMatch = g;
+                        }
+                    }
+
+                    // 🎯 Threshold
+                    const MATCH_THRESHOLD = 65;
+
+                    let selectedGame = null;
+
+                    if (bestMatch && bestScore >= MATCH_THRESHOLD) {
+                        console.log(`Best ITAD match: ${bestMatch.title} (${bestScore})`);
+                        selectedGame = bestMatch;
+                    } else {
+                        console.log(`No strong match for: ${data.name} → ignoring ITAD deals`);
+                        selectedGame = null;
+                    }
+
+                    if (selectedGame) {
+
+                        // 💰 Fetch prices
+                        const pricesRes = await axiosClient.post(
+                            "https://api.isthereanydeal.com/games/prices/v3",
+                            [selectedGame.id],
                             {
                                 params: {
                                     key: ITAD_API_KEY,
-                                    country: 'US'
+                                    country: "US"
                                 }
                             }
                         );
@@ -170,19 +269,21 @@ export const getOneGameDetails = async (req, res, next) => {
                         if (pricesRes.data?.length > 0) {
                             const priceData = pricesRes.data[0];
 
+                            // 📉 History Low
                             if (priceData.historyLow) {
                                 gameProfile.historyLow = {
-                                    all: priceData.historyLow.all?.amount,
-                                    y1: priceData.historyLow.y1?.amount,
-                                    m3: priceData.historyLow.m3?.amount,
+                                    all: priceData.historyLow.all?.amount ?? null,
+                                    y1: priceData.historyLow.y1?.amount ?? null,
+                                    m3: priceData.historyLow.m3?.amount ?? null,
                                 };
                             }
 
-                            if (priceData.deals) {
+                            // 🏷 Deals (with filtering)
+                            if (priceData.deals?.length > 0) {
                                 gameProfile.deals = priceData.deals.map(deal => ({
-                                    store: deal.shop.name,
-                                    price: deal.price.amount,
-                                    storeLow: deal.storeLow?.amount,
+                                    store: deal.shop?.name || "Unknown",
+                                    price: deal.price?.amount ?? null,
+                                    storeLow: deal.storeLow?.amount ?? null,
                                     url: deal.url
                                 }));
                             }
@@ -193,6 +294,9 @@ export const getOneGameDetails = async (req, res, next) => {
         } catch (itadErr) {
             console.error("ITAD fetch failed:", itadErr.message);
         }
+
+        // ── Store full profile in cache ───────────────────────────────────────
+        await cacheSet(cacheKey, gameProfile, TTL_GAME_DETAILS);
 
         return res.json(gameProfile);
 
@@ -208,19 +312,26 @@ export const getOneGameDetails = async (req, res, next) => {
 // @desc  get landing page game images
 // @route  GET /games/landingpage
 export const getLandingPageImages = async (req, res, next) => {
+    // ── Cache check ───────────────────────────────────────────────────────────
+    const cacheKey = 'game:landingpage';
+    const cached = await cacheGet(cacheKey);
+    if (cached) return res.status(200).json(cached);
+
     try {
-        const response = await axios.get(`https://api.rawg.io/api/games`, {
+        const response = await axiosClient.get(`https://api.rawg.io/api/games`, {
             params: {
                 ordering: '-added',
                 page_size: 20,
                 key: RAWG_API_KEY
             }
         });
-        res.status(200).json(response.data.results);
+        const results = response.data.results;
+        await cacheSet(cacheKey, results, TTL_LANDING_PAGE);
+        res.status(200).json(results);
     }
     catch (error) {
         const err = new Error('Failed to fetch game images from the server');
-        next(err); // Pass the error to the error handler
+        next(err);
     }
 }
 
@@ -233,20 +344,25 @@ export const searchGames = async (req, res, next) => {
         return res.status(200).json([]); // Return empty list if no query
     }
 
+    // ── Cache check ───────────────────────────────────────────────────────────
+    const cacheKey = `game:search:${query.trim().toLowerCase()}`;
+    const cached = await cacheGet(cacheKey);
+    if (cached) return res.status(200).json(cached);
+
     try {
         console.log(`Searching for games with query: ${query}`);
-        const response = await axios.get(`https://api.rawg.io/api/games?search=${query}&key=${RAWG_API_KEY}&page_size=20`);
+        const response = await axiosClient.get(`https://api.rawg.io/api/games?search=${query}&key=${RAWG_API_KEY}&page_size=20`);
 
         if (response.status === 200) {
             const results = response.data.results.map(game => ({
                 id: game.id,
                 name: game.name,
                 image: game.background_image,
-                released: game.released,
                 rating: game.rating,
                 genres: game.genres?.map(g => g.name) || [],
                 released: game.released ? game.released.split('-')[0] : 'N/A'
             }));
+            await cacheSet(cacheKey, results, TTL_SEARCH);
             res.status(200).json(results);
         } else {
             next(new Error('Failed to fetch search results from RAWG'));

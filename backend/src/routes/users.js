@@ -1,6 +1,6 @@
 import express from 'express';
 import { addUser } from '../controllers/users/create/addAndRestoreUsers.js';
-import { getUserById, getUserIdByEmail, loginUser, getUserFriendList, getUserOwnedGames, getUserOwnedGame} from '../controllers/users/record/getUser.js';
+import { getUserById, getUserIdByEmail, loginUser, getUserFriendList, getUserOwnedGames, getUserOwnedGame, getBatchUsers } from '../controllers/users/record/getUser.js';
 import { updateUser } from '../controllers/users/update/updateUserInfo.js';
 import { softDeletUser } from '../controllers/users/delete/softAndHardDeleteUser.js';
 import { getPublicProfile, toggleLike } from '../controllers/users/record/profileController.js';
@@ -178,6 +178,45 @@ const router = express.Router();
  *         description: Server error
  */
 router.post('/adduser', addUser);
+
+/**
+ * @swagger
+ * /api/users/batch:
+ *   post:
+ *     summary: Get multiple users in a single query
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - publicIDs
+ *             properties:
+ *               publicIDs:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["User1#123", "User2#456"]
+ *     responses:
+ *       200:
+ *         description: Users found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/UserResponse'
+ *       400:
+ *         description: Invalid input array
+ *       500:
+ *         description: Server error
+ */
+router.post('/batch', getBatchUsers);
 
 /**
  * @swagger

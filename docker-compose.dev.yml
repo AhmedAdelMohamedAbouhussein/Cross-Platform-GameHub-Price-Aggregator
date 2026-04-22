@@ -11,12 +11,10 @@ services:
       - ./backend/.env
     environment:
       - LOCAL_MONGO_URL=mongodb://mongo:27017/gamehub
+      - REDIS_URL=redis://redis:6379
     depends_on:
       - mongo
-    # Optional: volume mount for live reloading 
-    # volumes:
-    #   - ./backend:/app
-    #   - /app/node_modules
+      - redis
 
   frontend:
     build:
@@ -34,5 +32,14 @@ services:
     volumes:
       - mongo_data:/data/db
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
 volumes:
   mongo_data:
+  redis_data:

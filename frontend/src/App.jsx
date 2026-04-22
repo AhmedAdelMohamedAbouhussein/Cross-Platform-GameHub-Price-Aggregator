@@ -8,6 +8,7 @@ import LoginPage from "./pages/LoginPage/LoginPage";
 import SignupPage from "./pages/SignupPage/SignupPage";
 import Verify from './pages/OTPPage/OTPPage';
 import ResetPassword from './pages/ResetPassword/ResetPassword'
+import LoadingScreen from "./components/LoadingScreen/LoadingScreen";
 
 // Private pages (lazy loaded)
 const SyncWithSteam = lazy(() => import("./pages/SyncWithSteam/SyncWithSteam"));
@@ -24,26 +25,12 @@ const SettingsPage = lazy(() => import(`./pages/SettingsPage/SettingsPage.jsx`))
 const BrowseGamesPage = lazy(() => import("./pages/BrowsePage/BrowsePage"));
 const ViewProfilePage = lazy(() => import("./pages/FriendsPage/ViewProfilePage"));
 
-function SuspenseFallback() {
-    return (
-        <div className="min-h-screen bg-midnight-800 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4">
-                <div className="relative w-12 h-12">
-                    <div className="absolute inset-0 rounded-full border-4 border-midnight-600"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-accent animate-spin"></div>
-                </div>
-                <p className="text-text-muted text-sm">Loading...</p>
-            </div>
-        </div>
-    );
-}
-
 function App() {
     const { user } = useContext(AuthContext);
     const location = useLocation(); // 🔑 current location
 
     return (
-        <Suspense fallback={<SuspenseFallback />}>
+        <Suspense fallback={<LoadingScreen />}>
             <Routes>
                 {/* Public pages */}
                 <Route path="/" element={<LandingPage />} />
