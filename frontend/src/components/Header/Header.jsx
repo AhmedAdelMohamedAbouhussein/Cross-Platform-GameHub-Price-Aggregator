@@ -130,6 +130,15 @@ function Header() {
                                         Library
                                     </Link>
                                     <Link
+                                        to="/wishlist"
+                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${isActive('/wishlist')
+                                            ? "bg-accent/10 text-accent font-semibold"
+                                            : "text-text-secondary hover:text-white hover:bg-midnight-600"
+                                            }`}
+                                    >
+                                        Wishlist
+                                    </Link>
+                                    <Link
                                         to="/friends"
                                         className={`px-4 py-2 rounded-lg text-sm font-medium transition ${isActive('/friends')
                                             ? "bg-accent/10 text-accent font-semibold"
@@ -391,6 +400,14 @@ function Header() {
                                 className="px-4 py-3 rounded-xl text-sm text-white/70 hover:text-white hover:bg-white/5"
                             >
                                 My Library
+                            </Link>
+
+                            <Link
+                                to="/wishlist"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="px-4 py-3 rounded-xl text-sm text-white/70 hover:text-white hover:bg-white/5"
+                            >
+                                My Wishlist
                             </Link>
 
                             <Link

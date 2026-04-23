@@ -157,7 +157,18 @@ const UserSchema = new mongoose.Schema({
             of: userGameSchema
         },
     },
-    wishlist: [{ type: String }],
+    wishlist: [{
+        gameId: { type: String, required: true }, // RAWG ID
+        itadId: { type: String }, // ITAD ID for reliable price tracking
+        gameName: { type: String }, // Stored for display and fallback
+        targetStores: [{ type: String }], // Array of store names to track
+        storePrices: [{ // Historical and tracking data per store
+            storeName: { type: String },
+            initialPrice: { type: Number },
+            lastNotifiedPrice: { type: Number }
+        }],
+        addedAt: { type: Date, default: Date.now }
+    }],
     likes: [{ type: String, index: true }],
     friends: {
         type: Map,
@@ -291,12 +302,18 @@ UserSchema.methods.comparePassword = async function (candidatePassword) {
 
 UserSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
     try {
-        const userId = this._id;
+        const doc = await this.model.findOne(this.getFilter());
+        if (!doc) return next();
 
-        // Remove this user from all User-platform friends arrays
-        await this.model('User').updateMany(
-            { [`friends.User.user`]: userId },
-            { $pull: { [`friends.User`]: { user: userId } } }
+        const userPublicID = doc.publicID;
+
+        await this.model.updateMany(
+            {},
+            {
+                $pull: {
+                    "friends.User": { user: userPublicID }
+                }
+            }
         );
 
         next();

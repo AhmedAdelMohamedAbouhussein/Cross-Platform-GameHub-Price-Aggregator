@@ -2,8 +2,9 @@ import express from 'express';
 import { addUser } from '../controllers/users/create/addAndRestoreUsers.js';
 import { getUserById, getUserIdByEmail, loginUser, getUserFriendList, getUserOwnedGames, getUserOwnedGame, getBatchUsers } from '../controllers/users/record/getUser.js';
 import { updateUser } from '../controllers/users/update/updateUserInfo.js';
-import { softDeletUser } from '../controllers/users/delete/softAndHardDeleteUser.js';
+import { softDeletUser, hardDeleteUser } from '../controllers/users/delete/softAndHardDeleteUser.js';
 import { getPublicProfile, toggleLike } from '../controllers/users/record/profileController.js';
+import { toggleWishlist, getWishlist, checkWishlistStatus } from '../controllers/users/record/wishlistController.js';
 import requireAuth from '../middleware/requireAuth.js';
 
 const router = express.Router();
@@ -444,28 +445,27 @@ router.put('/update/:email', requireAuth, updateUser);
 
 /**
  * @swagger
- * /api/users/delete/{email}:
- *   delete:
- *     summary: Soft delete a user
+ * /api/users/delete/soft:
+ *   patch:
+ *     summary: Soft delete a user (Deactivate)
  *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: email
- *         required: true
- *         schema:
- *           type: string
- *         description: Email of the user to delete
  *     responses:
  *       200:
- *         description: User deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/MessageResponse'
- *       404:
- *         description: User not found
+ *         description: Account deactivated successfully
  */
-router.delete('/delete/:email', requireAuth, softDeletUser);
+router.patch('/delete/soft', requireAuth, softDeletUser);
+
+/**
+ * @swagger
+ * /api/users/delete/hard:
+ *   delete:
+ *     summary: Permanently delete a user
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: Account permanently deleted
+ */
+router.delete('/delete/hard', requireAuth, hardDeleteUser);
 
 /**
  * @swagger
@@ -504,5 +504,32 @@ router.get('/profile/:publicID', requireAuth, getPublicProfile);
  *         description: Like toggled
  */
 router.post('/profile/:publicID/like', requireAuth, toggleLike);
+
+/**
+ * @swagger
+ * /api/users/wishlist/view:
+ *   get:
+ *     summary: Get user's wishlist with price tracking
+ *     tags: [Users]
+ */
+router.get('/wishlist/view', requireAuth, getWishlist);
+
+/**
+ * @swagger
+ * /api/users/wishlist/toggle:
+ *   post:
+ *     summary: Toggle add or remove a game from wishlist
+ *     tags: [Users]
+ */
+router.post('/wishlist/toggle', requireAuth, toggleWishlist);
+
+/**
+ * @swagger
+ * /api/users/wishlist/status/{gameId}:
+ *   get:
+ *     summary: Check if a game is in user's wishlist
+ *     tags: [Users]
+ */
+router.get('/wishlist/status/:gameId', requireAuth, checkWishlistStatus);
 
 export default router;

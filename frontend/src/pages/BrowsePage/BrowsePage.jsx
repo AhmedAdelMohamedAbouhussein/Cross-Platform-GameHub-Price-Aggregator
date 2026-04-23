@@ -1,58 +1,47 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import apiClient from "../../utils/apiClient.js";
 import Header from "../../components/Header/Header.jsx";
 import Footer from "../../components/Footer/Footer.jsx";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
 import { FaSearch, FaArrowRight } from "react-icons/fa";
 import { toast } from "sonner";
+import { optimizeImage } from "../../utils/imageUtils.js";
 
 const BrowseGamesPage = () => {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
-    const [games, setGames] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [debouncedSearch, setDebouncedSearch] = useState("");
 
     // Debounce search input
     useEffect(() => {
         const handler = setTimeout(() => {
             setDebouncedSearch(searchTerm);
-        }, 500);
+        }, 1000);
         return () => clearTimeout(handler);
     }, [searchTerm]);
 
-    useEffect(() => {
-        const fetchGames = async () => {
-            setLoading(true);
-            try {
-                // In a real app, we'd filter by genre here. For now, we simulate with the existing search/landing endpoints.
-                const endpoint = debouncedSearch
-                    ? `/games/search?q=${encodeURIComponent(debouncedSearch)}`
-                    : `/games/landingpage`;
+    const { data: games = [], isFetching: loading, isError } = useQuery({
+        queryKey: ["browseGames", debouncedSearch],
+        queryFn: async () => {
+            const endpoint = debouncedSearch
+                ? `/games/search?q=${encodeURIComponent(debouncedSearch)}`
+                : `/games/landingpage`;
 
-                const response = await apiClient.get(endpoint);
+            const response = await apiClient.get(endpoint);
 
-                const formattedData = debouncedSearch
-                    ? response.data
-                    : response.data.map((game) => ({
-                        image: game.background_image,
-                        name: game.name,
-                        id: game.id,
-                        released: game.released ? game.released.split('-')[0] : 'N/A'
-                    }));
-
-                setGames(formattedData);
-            } catch (error) {
-                console.error("Error fetching games:", error.message);
-                toast.error("Connectivity issue occurred");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchGames();
-    }, [debouncedSearch]);
+            return debouncedSearch
+                ? response.data
+                : response.data.map((game) => ({
+                    image: game.background_image,
+                    name: game.name,
+                    id: game.id,
+                    released: game.released ? game.released.split('-')[0] : 'N/A'
+                }));
+        },
+        staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    });
 
     const handleGameClick = (game) => {
         const id = game.id;
@@ -92,10 +81,16 @@ const BrowseGamesPage = () => {
                                             type="text"
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') setDebouncedSearch(searchTerm);
+                                            }}
                                             placeholder="Search games, publishers, or genres..."
                                             className="flex-1 h-14 bg-transparent pl-4 pr-6 text-base font-bold text-white placeholder:text-text-muted outline-none"
                                         />
-                                        <button className="hidden sm:flex items-center gap-2 px-8 h-14 bg-accent text-white font-black uppercase tracking-widest rounded-2xl hover:bg-accent-hover transition-all active:scale-95">
+                                        <button
+                                            onClick={() => setDebouncedSearch(searchTerm)}
+                                            className="hidden sm:flex items-center gap-2 px-8 h-14 bg-accent text-white font-black uppercase tracking-widest rounded-2xl hover:bg-accent-hover transition-all active:scale-95"
+                                        >
                                             Find <FaArrowRight size={12} />
                                         </button>
                                     </div>
@@ -131,7 +126,7 @@ const BrowseGamesPage = () => {
                                                 {/* Portrait Aspect Ratio */}
                                                 <div className="relative aspect-[3/4.2] overflow-hidden">
                                                     <img
-                                                        src={game.image}
+                                                        src={optimizeImage(game.image, 420)}
                                                         alt={game.name}
                                                         className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                                                     />

@@ -6,6 +6,7 @@ import Header from "../../components/Header/Header.jsx";
 import Footer from "../../components/Footer/Footer.jsx";
 import apiClient from "../../utils/apiClient.js";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
+import { optimizeImage } from "../../utils/imageUtils.js";
 
 const fetchTopSellers = async () => {
   const response = await apiClient.get(`/games/landingpage`);
@@ -138,7 +139,7 @@ function LandingPage() {
                 const title = game.name;
                 const src = game.background_image;
                 const gameId = game.id;
-                
+
                 return (
                   <div
                     key={`${gameId}-${index}`}
@@ -178,7 +179,7 @@ function LandingPage() {
                       {/* GAME IMAGE */}
                       <div className="h-[400px] sm:h-[550px] md:h-[550px] lg:h-[550px] w-full overflow-hidden relative">
                         <img
-                          src={src}
+                          src={optimizeImage(src, 640)}
                           alt={title}
                           className="
                             w-full h-full object-cover

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import config from '../../config/env.js'
-import userModel from "../../models/User.js"; //TODO
+import userModel from "../../models/User.js";
 
 
 const APP_FRONTEND_URL = config.frontendUrl;

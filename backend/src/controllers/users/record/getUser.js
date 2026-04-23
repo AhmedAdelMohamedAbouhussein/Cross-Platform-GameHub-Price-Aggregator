@@ -1,5 +1,5 @@
 import userModel from "../../../models/User.js";
-import config from '../../../config/env.js'
+import config from '../../../config/env.js';
 
 const APP_BACKEND_URL = config.appUrl;
 const APP_FRONTEND_URL = config.frontendUrl;
@@ -228,11 +228,11 @@ export const getUserOwnedGame = async (req, res, next) => {
         if (gameRecord.gameName?.toLowerCase().trim() === targetName) {
           const processedOwners = gameRecord.owners.map(owner => {
             const ownerObj = owner.toObject ? owner.toObject() : owner;
-            
+
             // Find matching linked account for this platform/ID to get the avatar
             const platformAccounts = linkedAccountsObj[plt] || [];
             const linkedAcc = platformAccounts.find(acc => acc.accountId === ownerObj.accountId);
-            
+
             return {
               ...ownerObj,
               platform: plt,
@@ -293,7 +293,7 @@ export const getUserFriendList = async (req, res, next) => {
 export const getBatchUsers = async (req, res, next) => {
   try {
     const { publicIDs } = req.body;
-    
+
     if (!Array.isArray(publicIDs)) {
       return res.status(400).json({ message: "publicIDs must be an array" });
     }
@@ -303,7 +303,7 @@ export const getBatchUsers = async (req, res, next) => {
     }
 
     // Single query to get all users
-    const users = await userModel.find({ publicID: { $in: publicIDs } });
+    const users = await userModel.find({ publicID: { $in: publicIDs }, isDeleted: false });
 
     res.status(200).json({ users });
   } catch (error) {

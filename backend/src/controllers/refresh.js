@@ -1,6 +1,7 @@
 import axios from "axios";
 import userModel from "../models/User.js";
-import config from '../config/env.js'
+import config from '../config/env.js';
+
 import { getOwnedGames, getUserAchievements } from "./allSteamInfo.js";
 import { getXboxOwnedGames, enrichOwnedGamesWithAchievements } from "./allxboxinfo.js";
 import { exchangeRefreshTokenForAuthTokens } from "psn-api";

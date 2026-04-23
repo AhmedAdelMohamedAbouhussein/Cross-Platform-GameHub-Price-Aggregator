@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import config from './config/env.js';
 import app from './app.js';
+import { startWishlistCron } from './utils/wishlistCron.js';
 
 import userModel from './models/User.js'
 import OtpSchema from './models/Otp.js';
@@ -28,6 +29,7 @@ mongoose.connect(MONGO_URL)
 
         app.listen(PORT, "0.0.0.0", () => {
             console.log(` Server is running on ${APP_BACKEND_URL}`);
+            startWishlistCron();
         });
     })
     .catch((error) => {

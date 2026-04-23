@@ -63,12 +63,12 @@ export const getPublicProfile = async (req, res, next) => {
 
         if (canSeeStats) {
             const unifiedGames = new Map();
-            
+
             if (targetUser.ownedGames) {
                 for (const [platform, gamesMap] of targetUser.ownedGames.entries()) {
                     for (const [gameId, game] of gamesMap.entries()) {
                         const key = game.gameName.toLowerCase().trim();
-                        
+
                         // Parse hours from "Xh Ym Zs"
                         let hoursNum = 0;
                         if (game.totalHours) {
@@ -117,7 +117,7 @@ export const getPublicProfile = async (req, res, next) => {
 export const toggleLike = async (req, res, next) => {
     try {
         const publicID = decodeURIComponent(req.params.publicID).trim();
-        
+
         let currentUserPublicID = null;
         if (req.session?.userId) {
             const currentUser = await userModel.findById(req.session.userId);

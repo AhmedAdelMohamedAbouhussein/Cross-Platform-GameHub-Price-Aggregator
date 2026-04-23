@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import apiClient from "../../utils/apiClient.js";
+import WishlistButton from "../../components/WishlistButton/WishlistButton.jsx";
 
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
 import Header from "../../components/Header/Header.jsx";
@@ -32,6 +33,7 @@ function formatDate(dateStr) {
 const fetchGame = async (id) => {
     console.log(`Fetching data for game: ${id}`);
     const response = await apiClient.get(`/games/${id}`);
+    console.log(response.data.itadId);
     return response.data;
 };
 
@@ -92,9 +94,9 @@ const GamePage = () => {
 
             <main className="flex-1">
                 {/* 1. Immersive Hero Section */}
-                <section className="relative min-h-[50vh] sm:min-h-[60vh] lg:min-h-[70vh] flex items-end overflow-hidden px-4 sm:px-0">
+                <section className="relative min-h-[50vh] sm:min-h-[60vh] lg:min-h-[70vh] flex items-end px-4 sm:px-0">
                     {/* Dynamic Ambient Backdrop */}
-                    <div className="absolute inset-0">
+                    <div className="absolute inset-0 overflow-hidden">
                         {game.image && (
                             <img
                                 className="w-full h-full object-cover opacity-20 blur-sm scale-105"
@@ -145,12 +147,30 @@ const GamePage = () => {
                                 </div>
 
                                 {(game.youtubeTrailer || game.rawgTrailer) && (
-                                    <button
-                                        className="inline-flex px-8 py-4 sm:px-10 sm:py-5 bg-accent text-white font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs rounded-2xl hover:bg-accent-hover transition-all active:scale-95 shadow-2xl shadow-accent/20 items-center justify-center gap-4 group"
-                                        onClick={() => document.getElementById('trailers-section')?.scrollIntoView({ behavior: 'smooth' })}
-                                    >
-                                        Launch Trailer <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-                                    </button>
+                                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+                                        <button
+                                            className="inline-flex px-8 py-4 sm:px-10 sm:py-5 bg-accent text-white font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs rounded-2xl hover:bg-accent-hover transition-all active:scale-95 shadow-2xl shadow-accent/20 items-center justify-center gap-4 group"
+                                            onClick={() => document.getElementById('trailers-section')?.scrollIntoView({ behavior: 'smooth' })}
+                                        >
+                                            Launch Trailer <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                                        </button>
+                                        <WishlistButton 
+                                            gameId={String(game.id)} 
+                                            gameName={game.name} 
+                                            itadId={game.itadId} 
+                                            initialStores={game.deals?.map(d => d.store)}
+                                        />
+                                    </div>
+                                )}
+                                {!(game.youtubeTrailer || game.rawgTrailer) && (
+                                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+                                        <WishlistButton 
+                                            gameId={String(game.id)} 
+                                            gameName={game.name} 
+                                            itadId={game.itadId} 
+                                            initialStores={game.deals?.map(d => d.store)}
+                                        />
+                                    </div>
                                 )}
                             </div>
                         </div>

@@ -51,27 +51,34 @@ async function cacheSet(key, data, ttl) {
 // @desc  get topselling games from Steam API
 // @route  Get /games/topselling
 export const getTopSellers = async (req, res, next) => {
+    // ── Cache check ───────────────────────────────────────────────────────────
+    const cacheKey = 'game:topsellers';
+    const cached = await cacheGet(cacheKey);
+    if (cached) return res.status(200).json(cached);
+
     try {
         const response = await axiosClient.get('https://store.steampowered.com/api/featuredcategories');
 
         if (response.status === 200) {
-
             if (!response.data || !response.data.top_sellers || !response.data.top_sellers.items) {
                 const err = new Error('Top sellers data not found in response');
                 err.status = 404;
                 return next(err);
             }
 
-            const formattedGames = response.data.top_sellers.items.map((game) => [game.header_image, `/games/${encodeURIComponent(game.name)}`,]);
+            const formattedGames = response.data.top_sellers.items.map((game) => [
+                game.header_image,
+                `/games/${encodeURIComponent(game.name)}`,
+            ]);
+
+            await cacheSet(cacheKey, formattedGames, TTL_LANDING_PAGE);
             res.status(200).json(formattedGames);
-        }
-        else {
+        } else {
             const err = new Error('Failed to fetch top selling games from Steam API');
             err.status = response.status;
             next(err);
         }
-    }
-    catch (error) {
+    } catch (error) {
         const err = new Error('Failed to fetch top selling games from Steam API');
         err.status = 500;
         next(err);
@@ -133,6 +140,7 @@ export const getOneGameDetails = async (req, res, next) => {
             genres: data.genres?.map(g => g.name) || [],
             stores: formattedStores,
             platforms: formattedPlatforms,
+            itadId: null, // Added
             historyLow: null,
             deals: null,
             youtubeTrailer: null,
@@ -253,7 +261,8 @@ export const getOneGameDetails = async (req, res, next) => {
                     }
 
                     if (selectedGame) {
-
+                        gameProfile.itadId = selectedGame.id;
+                        console.log("itad id" + gameProfile.itadId)
                         // 💰 Fetch prices
                         const pricesRes = await axiosClient.post(
                             "https://api.isthereanydeal.com/games/prices/v3",
@@ -308,7 +317,6 @@ export const getOneGameDetails = async (req, res, next) => {
     }
 };
 
-
 // @desc  get landing page game images
 // @route  GET /games/landingpage
 export const getLandingPageImages = async (req, res, next) => {
@@ -335,7 +343,7 @@ export const getLandingPageImages = async (req, res, next) => {
     }
 }
 
-// @desc  Search for games
+// @desc  search games by query (RAWG)
 // @route  GET /games/search
 export const searchGames = async (req, res, next) => {
     const query = req.query.q;
@@ -370,5 +378,63 @@ export const searchGames = async (req, res, next) => {
     } catch (error) {
         console.error('Search error:', error.message);
         next(new Error('Error searching for games'));
+    }
+};
+
+
+//! it itsnt used by default it insteads fetches the data from the gamepage already fetched
+// @desc  Get available stores for a game (ITAD)
+// @route  GET /games/stores/:id
+export const getGameStores = async (req, res) => {
+    const itadId = req.params.itadId;
+    const ITAD_API_KEY = config.iTAD.apiKey;
+
+    if (!itadId) {
+        return res.status(400).json({ message: "ITAD ID is required" });
+    }
+
+    if (!ITAD_API_KEY) {
+        return res.status(200).json({ stores: [] });
+    }
+
+    const cacheKey = `game:stores:${itadId}`;
+    const cached = await cacheGet(cacheKey);
+    if (cached) return res.json(cached);
+
+    try {
+        const pricesRes = await axiosClient.post(
+            "https://api.isthereanydeal.com/games/prices/v3",
+            [itadId],
+            {
+                params: {
+                    key: ITAD_API_KEY,
+                    country: "US"
+                }
+            }
+        );
+
+        if (pricesRes.data?.length > 0) {
+            const deals = pricesRes.data[0].deals || [];
+
+            const stores = [
+                ...new Set(
+                    deals
+                        .map(d => d.shop?.name)
+                        .filter(Boolean)
+                )
+            ].sort();
+
+            const result = { stores };
+
+            await cacheSet(cacheKey, result, TTL_SEARCH);
+
+            return res.status(200).json(result);
+        }
+
+        return res.status(200).json({ stores: [] });
+
+    } catch (error) {
+        console.error("ITAD stores fetch failed:", error.message);
+        return res.status(200).json({ stores: [] });
     }
 };

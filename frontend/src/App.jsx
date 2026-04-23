@@ -24,6 +24,7 @@ const AddFriendPage = lazy(() => import('./pages/ManageFriendsPage/ManageFriends
 const SettingsPage = lazy(() => import(`./pages/SettingsPage/SettingsPage.jsx`));
 const BrowseGamesPage = lazy(() => import("./pages/BrowsePage/BrowsePage"));
 const ViewProfilePage = lazy(() => import("./pages/FriendsPage/ViewProfilePage"));
+const WishlistPage = lazy(() => import("./pages/WishlistPage/WishlistPage"));
 
 function App() {
     const { user } = useContext(AuthContext);
@@ -53,6 +54,7 @@ function App() {
                 <Route path="/ownedgamedetails" element={user ? <OwnedGamesDetails /> : <Navigate to="/login" replace state={{ from: location }} />} />
                 <Route path="/friends" element={user ? <FriendsPage /> : <Navigate to="/login" replace state={{ from: location }} />} />
                 <Route path="/friends/viewprofile/:publicID" element={user ? <ViewProfilePage /> : <Navigate to="/login" replace state={{ from: location }} />} />
+                <Route path="/wishlist" element={user ? <WishlistPage /> : <Navigate to="/login" replace state={{ from: location }} />} />
                 <Route path="/managefriends" element={user ? <AddFriendPage /> : <Navigate to="/login" replace state={{ from: location }} />} />
                 <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/login" replace state={{ from: location }} />} />
             </Routes>

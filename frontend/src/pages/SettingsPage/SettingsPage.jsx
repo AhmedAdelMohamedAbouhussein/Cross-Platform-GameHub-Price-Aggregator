@@ -10,9 +10,9 @@ import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
 import getCroppedImg from "../../utils/cropImage";
 
 import AuthContext from "../../contexts/AuthContext.jsx";
-import { 
-    FaUser, FaShieldAlt, FaLock, FaExclamationTriangle, 
-    FaLink, FaSteam, FaXbox, FaGamepad, FaTrashAlt, FaPlus 
+import {
+    FaUser, FaShieldAlt, FaLock, FaExclamationTriangle,
+    FaLink, FaSteam, FaXbox, FaGamepad, FaTrashAlt, FaPlus
 } from "react-icons/fa";
 import { SiEpicgames, SiPlaystation } from 'react-icons/si';
 
@@ -47,6 +47,31 @@ function SettingsPage() {
     // Connections states
     const [npssoModalOpen, setNpssoModalOpen] = useState(false);
     const [npsso, setNpsso] = useState("");
+
+    // Danger zone states
+    const [dangerModalOpen, setDangerModalOpen] = useState(false);
+
+
+    // Soft delete handler
+    const handleSoftDelete = async () => {
+        try {
+            setLoading(true);
+            const res = await apiClient.patch("/users/delete/soft");
+            if (res.status === 200) {
+                toast.success("Account deleted successfully");
+                setDangerModalOpen(false);
+                setUser(null);
+                localStorage.removeItem("user");
+                navigate("/");
+            }
+        } catch (error) {
+            console.error("Error deleting account:", error);
+            toast.error("Failed to delete account");
+            setDangerModalOpen(false);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const saveAllChanges = async () => {
         setLoading(true);
@@ -120,7 +145,7 @@ function SettingsPage() {
         try {
             await apiClient.delete(`/sync/${platform}/${accountId}`);
             toast.success(`Disconnected ${platform} account successfully`);
-            
+
             // Update local user state
             const updatedLinked = { ...user.linkedAccounts };
             if (updatedLinked[platform]) {
@@ -284,7 +309,7 @@ function SettingsPage() {
                                                     <p className="text-xs text-text-muted">{linked.length} linked</p>
                                                 </div>
                                             </div>
-                                            <button 
+                                            <button
                                                 onClick={() => platform.type === 'modal' ? setNpssoModalOpen(true) : window.location.href = `${apiClient.defaults.baseURL}${platform.route}`}
                                                 className="btn-primary text-xs flex items-center gap-2 px-4"
                                             >
@@ -366,7 +391,7 @@ function SettingsPage() {
                         </div>
                         <div className="border border-danger/30 rounded-2xl p-6 bg-danger/5 space-y-4">
                             <p className="text-sm text-text-secondary">Permanently delete your entire GameHub profile and association with synced accounts?</p>
-                            <button className="btn-danger">Delete Account</button>
+                            <button className="btn-danger" onClick={() => setDangerModalOpen(true)}>Delete Account</button>
                         </div>
                     </div>
                 );
@@ -395,8 +420,8 @@ function SettingsPage() {
                                             onClick={() => setSelected(item.key)}
                                             className={`
                                                 flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap flex-1 lg:flex-none
-                                                ${active 
-                                                    ? item.key === 'danger' ? 'bg-danger/20 text-danger shadow-lg shadow-danger/10' : 'bg-accent/10 text-accent shadow-lg shadow-accent/5' 
+                                                ${active
+                                                    ? item.key === 'danger' ? 'bg-danger/20 text-danger shadow-lg shadow-danger/10' : 'bg-accent/10 text-accent shadow-lg shadow-accent/5'
                                                     : 'text-text-muted hover:text-text-primary hover:bg-white/5'
                                                 }
                                             `}
@@ -427,6 +452,39 @@ function SettingsPage() {
                     </div>
                 </div>
             </main>
+            {dangerModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-midnight-800 border border-danger/30 rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300">
+
+                        <h3 className="text-xl font-bold text-danger mb-2">
+                            Delete Account
+                        </h3>
+
+                        <p className="text-sm text-text-muted mb-6">
+                            This action is permanent and cannot be undone.
+                            All your data, games, and connections will be deleted.
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleSoftDelete}
+                                disabled={loading}
+                                className="btn-danger flex-1 disabled:opacity-50"
+                            >
+                                {loading ? "Deleting..." : "Yes, Delete"}
+                            </button>
+
+                            <button
+                                onClick={() => setDangerModalOpen(false)}
+                                className="btn-secondary flex-1"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <Footer />
         </div>
     );

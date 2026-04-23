@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState, useMemo } from "react";
 import { useNavigate, Link } from 'react-router-dom';
+import { useQuery } from "@tanstack/react-query";
 import apiClient from "../../utils/apiClient.js";
 
 import Header from "../../components/Header/Header";
@@ -14,50 +15,44 @@ import { toast } from "sonner";
 
 function FriendsPage() {
     const { user } = useContext(AuthContext);
-    const [friends, setFriends] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
     const [activePlatform, setActivePlatform] = useState("All");
     const [mobileAsideOpen, setMobileAsideOpen] = useState(false);
-    const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchFriends = async () => {
-            setLoading(true);
-            try {
-                const res = await apiClient.post(`/users/friendlist`, {
-                    publicID: user.publicID,
-                });
+    const { data: friends, isLoading: loading } = useQuery({
+        queryKey: ["friendsList", user?.publicID],
+        queryFn: async () => {
+            const res = await apiClient.post(`/users/friendlist`, {
+                publicID: user.publicID,
+            });
 
-                let allFriends = { ...res.data.friends };
+            let allFriends = { ...res.data.friends };
 
-                // Enrich App Friends with full profiles in one batch query
-                const userFriendRecords = allFriends.User || [];
-                if (userFriendRecords.length > 0) {
-                    try {
-                        const publicIDs = userFriendRecords.map(f => f.user);
-                        const response = await apiClient.post(`/users/batch`, { publicIDs });
-                        const userProfiles = response.data.users || [];
-                        
-                        allFriends.User = userFriendRecords.map(friend => {
-                            const profile = userProfiles.find(p => p.publicID === friend.user);
-                            return profile ? { ...friend, ...profile } : friend;
-                        });
-                    } catch (e) {
-                        console.error("Batch fetch failed:", e);
-                    }
+            // Enrich App Friends with full profiles in one batch query
+            const userFriendRecords = allFriends.User || [];
+            if (userFriendRecords.length > 0) {
+                try {
+                    const publicIDs = userFriendRecords.map(f => f.user);
+                    const response = await apiClient.post(`/users/batch`, { publicIDs });
+                    const userProfiles = response.data.users || [];
+
+                    allFriends.User = userFriendRecords.map(friend => {
+                        const profile = userProfiles.find(p => p.publicID === friend.user);
+
+                        if (!profile) return null;
+
+                        return { ...friend, ...profile };
+                    }).filter(Boolean);
+                } catch (e) {
+                    console.error("Batch fetch failed:", e);
                 }
-                setFriends(allFriends);
-            } catch (err) {
-                console.error("Failed to fetch friends:", err);
-                toast.error("Failed to sync friends list");
-            } finally {
-                setLoading(false);
             }
-        };
-
-        if (user?.publicID) fetchFriends();
-    }, [user]);
+            return allFriends;
+        },
+        enabled: !!user?.publicID,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
 
     const platforms = [
         { key: "All", label: "All Friends", icon: FaUserFriends, color: "from-purple-500 to-pink-600" },

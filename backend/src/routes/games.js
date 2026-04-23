@@ -1,5 +1,5 @@
 import express from 'express';
-import { getTopSellers, getLandingPageImages, getOneGameDetails, searchGames } from '../controllers/gamesController.js';
+import { getTopSellers, getLandingPageImages, getOneGameDetails, searchGames, getGameStores } from '../controllers/gamesController.js';
 
 const router = express.Router();
 
@@ -143,6 +143,9 @@ router.get('/landingpage', getLandingPageImages);
  *         description: Search query
  */
 router.get('/search', searchGames);
+
+// GET /games/stores/:itadId
+router.get('/stores/:itadId', getGameStores);
 
 // GET /games/:id
 router.get('/:id', getOneGameDetails);
