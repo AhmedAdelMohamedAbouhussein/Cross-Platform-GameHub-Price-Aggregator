@@ -14,19 +14,18 @@ let transporter = nodemailer.createTransport({
     },
 })
 
-export async function sendOtpToUser ({ userId, email, purpose, userName })
-{
-    try
-    {
-        await OtpSchema.deleteMany({userId: userId, purpose: purpose});
+export async function sendOtpToUser({ userId, email, purpose, userName }) {
+    try {
+        await OtpSchema.deleteMany({ userId: userId, purpose: purpose });
 
         const otp = String(Math.floor(100000 + Math.random() * 900000)); // ensures 6 digits
-        
+
         const subjectMap = {
             email_verification: "Verify Your Email - GameHub",
             password_reset: "Reset Your Password - GameHub",
             restore_account: "Restore Your Account - GameHub",
-            permanently_delete_account: "Authorize Account Deletion - GameHub"
+            permanently_delete_account: "Authorize Account Deletion - GameHub",
+            deactivate_account: "Authorize Account Deactivation - GameHub"
         };
 
         const mailOptions = {
@@ -38,37 +37,35 @@ export async function sendOtpToUser ({ userId, email, purpose, userName })
 
         await OtpSchema.create({
             userId: userId,
-            otp: otp, 
+            otp: otp,
             purpose: purpose,
         });
-        
+
         await transporter.sendMail(mailOptions);
 
         const now = new Date();
 
-        if(purpose === "email_verification")
-        {
-            await userModel.findByIdAndUpdate(userId, { $inc: { 'resendCount.emailVerification.count': 1 } , $set: {'resendCount.emailVerification.lastReset': now}});
+        if (purpose === "email_verification") {
+            await userModel.findByIdAndUpdate(userId, { $inc: { 'resendCount.emailVerification.count': 1 }, $set: { 'resendCount.emailVerification.lastReset': now } });
         }
-        if(purpose === "password_reset")
-        {
-            await userModel.findByIdAndUpdate(userId, { $inc: { 'resendCount.passwordReset.count': 1 } , $set: {'resendCount.passwordReset.lastReset': now}});
+        if (purpose === "password_reset") {
+            await userModel.findByIdAndUpdate(userId, { $inc: { 'resendCount.passwordReset.count': 1 }, $set: { 'resendCount.passwordReset.lastReset': now } });
         }
-        if(purpose === "restore_account")
-        {
-            await userModel.findByIdAndUpdate(userId, { $inc: { 'resendCount.restoreAccount.count': 1 } , $set: {'resendCount.restoreAccount.lastReset': now}});
+        if (purpose === "restore_account") {
+            await userModel.findByIdAndUpdate(userId, { $inc: { 'resendCount.restoreAccount.count': 1 }, $set: { 'resendCount.restoreAccount.lastReset': now } });
         }
-        if(purpose === "permanently_delete_account")
-        {
-            await userModel.findByIdAndUpdate(userId, { $inc: { 'resendCount.permanentlyDeleteAccount.count': 1 } , $set: {'resendCount.permanentlyDeleteAccount.lastReset': now}});
+        if (purpose === "permanently_delete_account") {
+            await userModel.findByIdAndUpdate(userId, { $inc: { 'resendCount.permanentlyDeleteAccount.count': 1 }, $set: { 'resendCount.permanentlyDeleteAccount.lastReset': now } });
+        }
+        if (purpose === "deactivate_account") {
+            await userModel.findByIdAndUpdate(userId, { $inc: { 'resendCount.deactivateAccount.count': 1 }, $set: { 'resendCount.deactivateAccount.lastReset': now } });
         }
 
     }
-    catch(err)
-    {
+    catch (err) {
         throw err; // let the calling route handler handle it
     }
-} 
+}
 
 async function checkResendLimit(user, userId, purposeKey) {
     const now = new Date();
@@ -93,20 +90,17 @@ async function checkResendLimit(user, userId, purposeKey) {
 
 // @desc  get sent otp to user
 // @route  POST /api/mail/sendotp
-export const sendOtp = async (req, res, next) => 
-{
-    try
-    {
+export const sendOtp = async (req, res, next) => {
+    try {
         const { userId, email, purpose } = req.body;
 
-        if(!email || !userId || !purpose)
-        {
-            const error= new Error("missing body parameters");
+        if (!email || !userId || !purpose) {
+            const error = new Error("missing body parameters");
             error.status = 400;
             return next(error);
         }
-        
-        if (!["email_verification", "password_reset", "restore_account", "permanently_delete_account"].includes(purpose)) {
+
+        if (!["email_verification", "password_reset", "restore_account", "permanently_delete_account", "deactivate_account"].includes(purpose)) {
             const error = new Error("Invalid OTP purpose");
             error.status = 400;
             return next(error);
@@ -114,17 +108,14 @@ export const sendOtp = async (req, res, next) =>
 
         // Fetch user to check resend count
         const user = await userModel.findById(userId);
-        if (!user) 
-        {
+        if (!user) {
             const error = new Error("User not found");
             error.status = 404;
             return next(error);
         }
 
-        if (purpose === "email_verification") 
-        {
-            if (user.isVerified) 
-            {
+        if (purpose === "email_verification") {
+            if (user.isVerified) {
                 const error = new Error("User already verified")
                 error.status = 500;
                 return next(error);
@@ -133,27 +124,32 @@ export const sendOtp = async (req, res, next) =>
             await checkResendLimit(user, userId, "emailVerification");
         }
 
-        if (purpose === "password_reset") 
-        {
+        if (purpose === "password_reset") {
             await checkResendLimit(user, userId, "passwordReset");
         }
-        
-        if (purpose === "restore_account") 
-        {
-            if(user.isDeleted === false)
-            {
+
+        if (purpose === "restore_account") {
+            if (user.isDeleted === false) {
                 const error = new Error("User isnt deleted")
                 error.status = 500;
                 return next(error);
             }
             await checkResendLimit(user, userId, "restoreAccount");
         }
-        
-        if (purpose === "permanently_delete_account") 
-        {
+
+        if (purpose === "permanently_delete_account") {
             await checkResendLimit(user, userId, "permanentlyDeleteAccount");
         }
-        
+
+        if (purpose === "deactivate_account") {
+            if (user.isDeleted === true) {
+                const error = new Error("Account is already deactivated");
+                error.status = 409;
+                return next(error);
+            }
+            await checkResendLimit(user, userId, "deactivateAccount");
+        }
+
         await sendOtpToUser({ userId, email, purpose, userName: user.name });
 
 
@@ -161,8 +157,7 @@ export const sendOtp = async (req, res, next) =>
             message: "verification email sent successfully, OTP will expire in 10 min"
         })
     }
-    catch(err)
-    {
+    catch (err) {
         next(err);
     }
 }

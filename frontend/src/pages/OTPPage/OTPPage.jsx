@@ -14,7 +14,7 @@ function OTPPage() {
 
     const [otp, setOtp] = useState("");
     const [loading, setLoading] = useState(false);
-    const { fetchUser } = useContext(AuthContext);
+    const { fetchUser, setUser } = useContext(AuthContext);
 
     const navigate = useNavigate();
 
@@ -28,6 +28,8 @@ function OTPPage() {
                 return "Restore Account";
             case "permanently_delete_account":
                 return "Delete Account";
+            case "deactivate_account":
+                return "Deactivate Account";
             default:
                 return "OTP Verification";
         }
@@ -43,6 +45,8 @@ function OTPPage() {
                 return "Enter the code to restore your deleted account";
             case "permanently_delete_account":
                 return "Enter the code to permanently delete your account";
+            case "deactivate_account":
+                return "Enter the code to deactivate your account. You can restore it within 30 days by logging back in.";
             default:
                 return "Enter the verification code";
         }
@@ -113,6 +117,13 @@ function OTPPage() {
                 navigate("/login", { replace: true });
             }
             else if (purpose === "permanently_delete_account") {
+                setUser(null);
+                localStorage.removeItem("user");
+                navigate("/", { replace: true });
+            }
+            else if (purpose === "deactivate_account") {
+                setUser(null);
+                localStorage.removeItem("user");
                 navigate("/", { replace: true });
             }
         }

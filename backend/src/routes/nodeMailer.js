@@ -33,7 +33,7 @@ const router = express.Router();
  *                 description: Email of the user
  *               purpose:
  *                 type: string
- *                 enum: [email_verification, password_reset, restore_account, permanently_delete_account]
+ *                 enum: [email_verification, password_reset, restore_account, permanently_delete_account, deactivate_account]
  *                 description: Purpose of the OTP
  *             required:
  *               - userId
@@ -84,7 +84,7 @@ router.post('/sendotp', sendOtp);
  *                 description: OTP code sent to the user
  *               purpose:
  *                 type: string
- *                 enum: [email_verification, password_reset, restore_account, permanently_delete_account]
+ *                 enum: [email_verification, password_reset, restore_account, permanently_delete_account, deactivate_account]
  *                 description: Purpose of the OTP
  *             required:
  *               - userId

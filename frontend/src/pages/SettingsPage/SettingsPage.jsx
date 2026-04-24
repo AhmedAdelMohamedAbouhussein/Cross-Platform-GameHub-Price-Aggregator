@@ -49,27 +49,31 @@ function SettingsPage() {
     const [npsso, setNpsso] = useState("");
 
     // Danger zone states
-    const [dangerModalOpen, setDangerModalOpen] = useState(false);
+    const [isSendingOtp, setIsSendingOtp] = useState(false);
 
-
-    // Soft delete handler
-    const handleSoftDelete = async () => {
+    // Initiates OTP flow for account deletion actions
+    const handleInitiateDelete = async (purpose) => {
+        setIsSendingOtp(true);
         try {
-            setLoading(true);
-            const res = await apiClient.patch("/users/delete/soft");
-            if (res.status === 200) {
-                toast.success("Account deleted successfully");
-                setDangerModalOpen(false);
-                setUser(null);
-                localStorage.removeItem("user");
-                navigate("/");
+            if (purpose === "deactivate_account") {
+                const res = await apiClient.patch("/users/delete/soft", {
+                    email: user.email,
+                    purpose
+                });
+                const userId = res.data.userId;
+                navigate(`/verify?userId=${userId}&email=${encodeURIComponent(user.email)}&purpose=${purpose}`);
+            }
+            else if (purpose === "permanently_delete_account") {
+                const res = await apiClient.delete("/users/delete/hard", {
+                    data: { email: user.email, purpose }
+                });
+                const userId = res.data.userId;
+                navigate(`/verify?userId=${userId}&email=${encodeURIComponent(user.email)}&purpose=${purpose}`);
             }
         } catch (error) {
-            console.error("Error deleting account:", error);
-            toast.error("Failed to delete account");
-            setDangerModalOpen(false);
+            toast.error(error.response?.data?.message || "Failed to send verification code. Please try again.");
         } finally {
-            setLoading(false);
+            setIsSendingOtp(false);
         }
     };
 
@@ -384,14 +388,54 @@ function SettingsPage() {
 
             case "danger":
                 return (
-                    <div className="space-y-8 animate-in fade-in duration-500">
+                    <div className="space-y-6 animate-in fade-in duration-500">
                         <div>
                             <h2 className="text-xl font-bold text-danger mb-1">Danger Zone</h2>
-                            <p className="text-sm text-text-muted">Irreversible actions</p>
+                            <p className="text-sm text-text-muted">These actions affect your account permanently. Both require email verification.</p>
                         </div>
+
+                        {/* Deactivate Account Card */}
+                        <div className="border border-amber-500/30 rounded-2xl p-6 bg-amber-500/5 space-y-4">
+                            <div className="flex items-start gap-4">
+                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <span className="text-lg">🌙</span>
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="font-bold text-amber-400 text-sm">Deactivate Account</h3>
+                                    <p className="text-xs text-text-muted leading-relaxed">
+                                        Your profile will be hidden and you will be logged out. You can restore your account within <span className="text-amber-400 font-bold">30 days</span> by logging back in. After 30 days it is permanently deleted.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                className="w-full py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all active:scale-95 disabled:opacity-50"
+                                onClick={() => handleInitiateDelete("deactivate_account")}
+                                disabled={isSendingOtp}
+                            >
+                                {isSendingOtp ? "Sending Code..." : "Deactivate Account"}
+                            </button>
+                        </div>
+
+                        {/* Permanently Delete Card */}
                         <div className="border border-danger/30 rounded-2xl p-6 bg-danger/5 space-y-4">
-                            <p className="text-sm text-text-secondary">Permanently delete your entire GameHub profile and association with synced accounts?</p>
-                            <button className="btn-danger" onClick={() => setDangerModalOpen(true)}>Delete Account</button>
+                            <div className="flex items-start gap-4">
+                                <div className="w-10 h-10 rounded-xl bg-danger/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <span className="text-lg">💀</span>
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="font-bold text-danger text-sm">Permanently Delete Account</h3>
+                                    <p className="text-xs text-text-muted leading-relaxed">
+                                        All your data, games, friends, and connections will be <span className="text-danger font-bold">immediately and irreversibly destroyed</span>. This cannot be undone.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                className="w-full py-3 rounded-xl bg-danger/10 border border-danger/30 text-danger text-[11px] font-black uppercase tracking-widest hover:bg-danger hover:text-white transition-all active:scale-95 disabled:opacity-50"
+                                onClick={() => handleInitiateDelete("permanently_delete_account")}
+                                disabled={isSendingOtp}
+                            >
+                                {isSendingOtp ? "Sending Code..." : "Permanently Delete Account"}
+                            </button>
                         </div>
                     </div>
                 );
@@ -441,7 +485,7 @@ function SettingsPage() {
                                     {renderContent()}
                                 </div>
 
-                                {selected !== 'connections' && (
+                                {selected !== 'connections' && selected !== 'danger' && (
                                     <div className="flex gap-4 mt-12 pt-8 border-t border-white/5">
                                         <button onClick={saveAllChanges} className="btn-primary px-8">Save Changes</button>
                                         <button onClick={discardChanges} className="btn-secondary px-8">Discard</button>
@@ -452,39 +496,6 @@ function SettingsPage() {
                     </div>
                 </div>
             </main>
-            {dangerModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-midnight-800 border border-danger/30 rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300">
-
-                        <h3 className="text-xl font-bold text-danger mb-2">
-                            Delete Account
-                        </h3>
-
-                        <p className="text-sm text-text-muted mb-6">
-                            This action is permanent and cannot be undone.
-                            All your data, games, and connections will be deleted.
-                        </p>
-
-                        <div className="flex gap-3">
-                            <button
-                                onClick={handleSoftDelete}
-                                disabled={loading}
-                                className="btn-danger flex-1 disabled:opacity-50"
-                            >
-                                {loading ? "Deleting..." : "Yes, Delete"}
-                            </button>
-
-                            <button
-                                onClick={() => setDangerModalOpen(false)}
-                                className="btn-secondary flex-1"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             <Footer />
         </div>
     );

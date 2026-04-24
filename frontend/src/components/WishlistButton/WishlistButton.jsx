@@ -149,7 +149,13 @@ const WishlistButton = ({ gameId, gameName, itadId, variant = "large", initialSt
                         {selectedStores.length === 0 ? "Tracking all available stores." : `Tracking ${selectedStores.length} specific store(s).`}
                     </p>
                     <button
-                        onClick={() => toggleMutation.mutate({ action: "update" })}
+                        onClick={() => {
+                            // When "All Stores" is selected (empty array), send every available store name
+                            const effectiveTargetStores = selectedStores.length === 0
+                                ? (storesData || [])
+                                : selectedStores;
+                            toggleMutation.mutate({ action: "update", targetStores: effectiveTargetStores });
+                        }}
                         disabled={toggleMutation.isPending}
                         className="w-full py-2.5 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-accent-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >

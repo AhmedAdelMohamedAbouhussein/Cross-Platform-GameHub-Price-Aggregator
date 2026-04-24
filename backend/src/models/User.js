@@ -127,6 +127,10 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    deletedAt: {
+        type: Date,
+        default: null
+    },
     isVerified: {
         type: Boolean,
         default: false
@@ -204,6 +208,10 @@ const UserSchema = new mongoose.Schema({
             lastReset: { type: Date, default: Date.now, select: false }
         },
         permanentlyDeleteAccount: {
+            count: { type: Number, default: 0, select: false },
+            lastReset: { type: Date, default: Date.now, select: false }
+        },
+        deactivateAccount: {
             count: { type: Number, default: 0, select: false },
             lastReset: { type: Date, default: Date.now, select: false }
         }
@@ -302,12 +310,10 @@ UserSchema.methods.comparePassword = async function (candidatePassword) {
 
 UserSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
     try {
-        const doc = await this.model.findOne(this.getFilter());
-        if (!doc) return next();
+        // `this` is the document itself in document middleware
+        const userPublicID = this.publicID;
 
-        const userPublicID = doc.publicID;
-
-        await this.model.updateMany(
+        await this.constructor.updateMany(
             {},
             {
                 $pull: {

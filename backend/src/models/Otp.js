@@ -24,7 +24,7 @@ const OtpSchema  = new mongoose.Schema({
     },
     purpose: {
         type: String,
-        enum: ["email_verification", "password_reset", "restore_account", "permanently_delete_account"],
+        enum: ["email_verification", "password_reset", "restore_account", "permanently_delete_account", "deactivate_account"],
         required: true
     },
     attempts: {

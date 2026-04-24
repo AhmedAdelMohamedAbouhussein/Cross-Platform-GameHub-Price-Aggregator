@@ -5,29 +5,24 @@ import { sendOtpToUser } from '../../nodeMailer/sendOtp.js'
 
 // @desc  
 // @route  POST /api/users/adduser
-export const addUser = async (req, res, next) => 
-{
-    try 
-    {
+export const addUser = async (req, res, next) => {
+    try {
         const { email, name, password } = req.body;
 
-        if (!name) 
-        {
+        if (!name) {
             const err = new Error("Name is required");
             err.status = 400;
             return next(err);
         }
         const emailRegex = /^\S+@\S+\.\S+$/;
-        if (!emailRegex.test(email)) 
-        {
+        if (!emailRegex.test(email)) {
             const error = new Error("Invalid email format.");
             error.status = 400;
             return next(error);
         }
 
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-        if (!passwordRegex.test(password)) 
-        {
+        if (!passwordRegex.test(password)) {
             const error = new Error("Password must be at least 8 characters long, contain one uppercase letter, one lowercase letter, and one number.");
             error.status = 400;
             return next(error);
@@ -37,8 +32,7 @@ export const addUser = async (req, res, next) =>
 
         // Check if an active user already exists
         const activeUser = await userModel.findOne({ email, isDeleted: false });
-        if (activeUser) 
-        {
+        if (activeUser) {
             const err = new Error("User with this email already exists");
             err.status = 409;
             return next(err);
@@ -46,8 +40,7 @@ export const addUser = async (req, res, next) =>
 
         // Check if a deleted user exists
         const deletedUser = await userModel.findOne({ email, isDeleted: true });
-        if (deletedUser) 
-        {
+        if (deletedUser) {
             return res.status(409).json({
                 message:
                     "This email is associated with a deleted account. Would you like to restore your old account or permanently delete it?",
@@ -59,13 +52,12 @@ export const addUser = async (req, res, next) =>
         // Otherwise, create new user
         const newUser = await userModel.create(req.body);
 
-        await sendOtpToUser({ userId: newUser._id, email: newUser.email, purpose: "email_verification"});
+        await sendOtpToUser({ userId: newUser._id, email: newUser.email, purpose: "email_verification" });
 
-        res.status(201).json({message: "User signed up successfully, verification OTP sent", userId: newUser._id});
+        res.status(201).json({ message: "User signed up successfully, verification OTP sent", userId: newUser._id });
 
-    } 
-    catch (error)
-    {
+    }
+    catch (error) {
         console.error(error);
         next(error);
     }
