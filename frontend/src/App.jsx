@@ -7,8 +7,10 @@ import LandingPage from "./pages/LandingPage/LandingPage";
 import LoginPage from "./pages/LoginPage/LoginPage";
 import SignupPage from "./pages/SignupPage/SignupPage";
 import Verify from './pages/OTPPage/OTPPage';
-import ResetPassword from './pages/ResetPassword/ResetPassword'
+import ResetPassword from './pages/ResetPassword/ResetPassword';
+import ManagePublicProfile from './pages/ManagePublicProfile/ManagePublicProfile.jsx';
 import LoadingScreen from "./components/LoadingScreen/LoadingScreen";
+import CommunityPage from './pages/CommunityPage/CommunityPage.jsx';
 
 // Private pages (lazy loaded)
 const SyncWithSteam = lazy(() => import("./pages/SyncWithSteam/SyncWithSteam"));
@@ -39,6 +41,8 @@ function App() {
                 <Route path="/games" element={<BrowseGamesPage />} />
                 <Route path="/verify" element={<Verify />} />
                 <Route path="/resetpassword" element={<ResetPassword />} />
+                <Route path="/profile/:publicID" element={<ViewProfilePage />} />
+                <Route path="/community" element={<CommunityPage />} />
 
                 {/* Auth pages */}
                 <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" replace />} />
@@ -53,7 +57,7 @@ function App() {
 
                 <Route path="/ownedgamedetails" element={user ? <OwnedGamesDetails /> : <Navigate to="/login" replace state={{ from: location }} />} />
                 <Route path="/friends" element={user ? <FriendsPage /> : <Navigate to="/login" replace state={{ from: location }} />} />
-                <Route path="/friends/viewprofile/:publicID" element={user ? <ViewProfilePage /> : <Navigate to="/login" replace state={{ from: location }} />} />
+                <Route path="/manage-profile" element={user ? <ManagePublicProfile /> : <Navigate to="/login" replace state={{ from: location }} />} />
                 <Route path="/wishlist" element={user ? <WishlistPage /> : <Navigate to="/login" replace state={{ from: location }} />} />
                 <Route path="/managefriends" element={user ? <AddFriendPage /> : <Navigate to="/login" replace state={{ from: location }} />} />
                 <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/login" replace state={{ from: location }} />} />

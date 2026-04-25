@@ -1,7 +1,7 @@
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import Aside from "../../components/Aside/Aside";
-import { FaSteam, FaExternalLinkAlt, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
+import { FaSteam, FaExternalLinkAlt, FaCheckCircle, FaExclamationTriangle, FaBars } from "react-icons/fa";
 import { useState } from "react";
 
 const STEPS = [
@@ -39,6 +39,15 @@ function SyncWithSteam() {
                 <Aside isOpen={mobileAsideOpen} onClose={() => setMobileAsideOpen(false)} />
                 <main className="flex-1 px-4 py-12">
                     <div className="max-w-2xl mx-auto space-y-6 animate-slide-up">
+
+                        <div className="flex items-center lg:hidden mb-4">
+                            <button
+                                onClick={() => setMobileAsideOpen(true)}
+                                className="p-2 rounded-xl text-text-muted hover:text-text-primary hover:bg-midnight-600 transition-colors"
+                            >
+                                <FaBars size={20} />
+                            </button>
+                        </div>
 
                         {/* Hero card */}
                         <div className="card-surface p-8 text-center space-y-4">

@@ -1,6 +1,8 @@
 import express from "express";
 import upload from "../middleware/multer.js";
 import { profileImage } from "../controllers/settings/profileImage.js";
+import { profileBackground } from "../controllers/settings/profileBackground.js";
+import { updateProfile } from "../controllers/settings/updateProfile.js";
 import requireAuth from '../middleware/requireAuth.js';
 
 const router = express.Router();
@@ -57,5 +59,23 @@ const router = express.Router();
  *         description: Server error during upload
  */
 router.post("/profileimage", requireAuth, upload.single("profileImage"), profileImage);
+
+/**
+ * @swagger
+ * /settings/profileBackground:
+ *   post:
+ *     summary: Upload or update a user's profile background image
+ *     tags: [Settings]
+ */
+router.post("/profileBackground", requireAuth, upload.single("profileBackground"), profileBackground);
+
+/**
+ * @swagger
+ * /settings/updateProfile:
+ *   post:
+ *     summary: Update profile settings (bio, name, visibility, favorite games, etc)
+ *     tags: [Settings]
+ */
+router.post("/updateProfile", requireAuth, updateProfile);
 
 export default router;

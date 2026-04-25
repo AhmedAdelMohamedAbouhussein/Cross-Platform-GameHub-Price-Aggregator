@@ -45,6 +45,15 @@ function SyncWithXbox() {
                 <main className="flex-1 px-4 py-12">
                     <div className="max-w-2xl mx-auto space-y-6 animate-slide-up">
 
+                        <div className="flex items-center lg:hidden mb-4">
+                            <button
+                                onClick={() => setMobileAsideOpen(true)}
+                                className="p-2 rounded-xl text-text-muted hover:text-text-primary hover:bg-midnight-600 transition-colors"
+                            >
+                                <FaBars size={20} />
+                            </button>
+                        </div>
+
                         {/* Hero card */}
                         <div className="card-surface p-8 text-center space-y-4">
                             <div className="w-20 h-20 rounded-2xl bg-green-900/30 border border-green-500/20 flex items-center justify-center mx-auto">

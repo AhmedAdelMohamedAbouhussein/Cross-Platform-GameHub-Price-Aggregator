@@ -7,13 +7,9 @@ import apiClient from "../../utils/apiClient.js";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
-import getCroppedImg from "../../utils/cropImage";
 
 import AuthContext from "../../contexts/AuthContext.jsx";
-import {
-    FaUser, FaShieldAlt, FaLock, FaExclamationTriangle,
-    FaLink, FaSteam, FaXbox, FaGamepad, FaTrashAlt, FaPlus
-} from "react-icons/fa";
+import { FaUser, FaShieldAlt, FaLock, FaExclamationTriangle, FaLink, FaSteam, FaXbox, FaGamepad, FaTrashAlt, FaPlus } from "react-icons/fa";
 import { SiEpicgames, SiPlaystation } from 'react-icons/si';
 
 function SettingsPage() {
@@ -22,27 +18,6 @@ function SettingsPage() {
 
     const [loading, setLoading] = useState(false);
     const [selected, setSelected] = useState("profile");
-
-    // Profile states
-    const [profilePic, setProfilePic] = useState(null);
-    const [username, setUsername] = useState(user.name);
-    const [bio, setBio] = useState(user.bio ? user.bio : "");
-    const [visibility, setVisibility] = useState(user.profileVisibility);
-
-    // Profile Picture states
-    const [profilePicPreview, setProfilePicPreview] = useState(null);
-    const [croppingMode, setCroppingMode] = useState(false);
-
-    const [crop, setCrop] = useState({ x: 0, y: 0 });
-    const [zoom, setZoom] = useState(1);
-    const [croppedArea, setCroppedArea] = useState(null);
-    const [croppedBlob, setCroppedBlob] = useState(null);
-
-    // Change flags
-    const [imagechange, setImagechange] = useState(false);
-    const [namechange, setNamechange] = useState(false);
-    const [biochange, setBiochange] = useState(false);
-    const [profileVisibilitychange, setProfileVisibility] = useState(false);
 
     // Connections states
     const [npssoModalOpen, setNpssoModalOpen] = useState(false);
@@ -77,68 +52,20 @@ function SettingsPage() {
         }
     };
 
-    const saveAllChanges = async () => {
-        setLoading(true);
-        try {
-            if (imagechange && croppedBlob) {
-                const formData = new FormData();
-                formData.append("profileImage", croppedBlob, "profile.jpg");
-                await apiClient.post(`/setting/profileImage`, formData, {
-                    headers: { "Content-Type": "multipart/form-data" }
-                });
-            }
 
-            const payload = {};
-            if (biochange) payload.bio = bio;
-            if (namechange) payload.username = username;
-            if (profileVisibilitychange) payload.visibility = visibility;
 
-            if (Object.keys(payload).length > 0) {
-                await apiClient.post(`/setting/updateProfile`, payload);
-            }
-
-            toast.success("Changes saved successfully!");
-            navigate(0);
-        }
-        catch (error) {
-            console.error("Save failed:", error);
-            toast.error("Failed to save changes. Try again.");
-        }
-        finally {
-            setLoading(false);
-        }
-    };
-
-    const discardChanges = () => {
-        navigate(0);
-    };
-
-    const handleProfilePicChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setProfilePicPreview(URL.createObjectURL(file));
-            setCroppingMode(true);
-        }
-    };
-
-    const onCropComplete = useCallback((_, croppedAreaPixels) => {
-        setCroppedArea(croppedAreaPixels);
-    }, []);
-
-    const handleCropDone = async () => {
+    const handleChangePassword = async () => {
         try {
             setLoading(true);
-            const blob = await getCroppedImg(profilePicPreview, croppedArea);
-            setCroppedBlob(blob);
-            setImagechange(true);
-            setProfilePic(URL.createObjectURL(blob));
-            setCroppingMode(false);
-            setProfilePicPreview(null);
+            const email = user.email;
+            const response = await apiClient.post(`/users/getuseridbyemail`, { email });
+            const userId = response.data.userId;
+            await apiClient.post(`/mail/sendotp`, { userId, email, purpose: "password_reset" });
+            toast.success("Password reset code sent to your email");
+            navigate(`/verify?userId=${userId}&email=${encodeURIComponent(email)}&purpose=password_reset`);
         } catch (error) {
-            console.error("Upload failed:", error);
-            toast.error("Failed to process image");
-        }
-        finally {
+            toast.error(error.response?.data?.message || "Something went wrong");
+        } finally {
             setLoading(false);
         }
     };
@@ -184,7 +111,6 @@ function SettingsPage() {
         { key: "profile", label: "Profile", icon: FaUser },
         { key: "account", label: "Account", icon: FaLock },
         { key: "connections", label: "Connections", icon: FaLink },
-        { key: "privacy", label: "Privacy", icon: FaShieldAlt },
         { key: "danger", label: "Danger Zone", icon: FaExclamationTriangle },
     ];
 
@@ -199,65 +125,18 @@ function SettingsPage() {
                         </div>
 
                         <section className="space-y-4">
-                            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Profile Picture</h3>
-                            <div className="flex flex-col items-center gap-4">
-                                {!croppingMode ? (
-                                    <>
-                                        <img
-                                            src={profilePic || user.profilePicture || "https://digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png"}
-                                            alt="Profile"
-                                            className="w-24 h-24 rounded-full object-cover ring-4 ring-accent/20"
-                                        />
-                                        <div>
-                                            <input type="file" id="profilePicUpload" accept="image/*" onChange={handleProfilePicChange} className="hidden" />
-                                            <label htmlFor="profilePicUpload" className="btn-secondary cursor-pointer text-sm">Upload Image</label>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="w-full space-y-4">
-                                        <div className="relative w-full aspect-square max-w-sm mx-auto rounded-xl overflow-hidden bg-midnight-900 border border-white/10">
-                                            <Cropper
-                                                image={profilePicPreview}
-                                                crop={crop}
-                                                zoom={zoom}
-                                                aspect={1}
-                                                cropShape="round"
-                                                showGrid={false}
-                                                onCropChange={setCrop}
-                                                onZoomChange={setZoom}
-                                                onCropComplete={onCropComplete}
-                                            />
-                                        </div>
-                                        <div className="flex flex-col items-center gap-3">
-                                            <input type="range" min={1} max={3} step={0.1} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="w-full max-w-xs accent-accent" />
-                                            <div className="flex gap-3">
-                                                <button onClick={handleCropDone} className="btn-primary text-sm px-6">Done</button>
-                                                <button onClick={() => setCroppingMode(false)} className="btn-secondary text-sm px-6">Cancel</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+                            <div className="flex items-center justify-between max-w-md bg-midnight-800/50 p-4 rounded-2xl border border-white/5">
+                                <div>
+                                    <h3 className="text-sm font-bold text-white mb-1">Public Profile Customization</h3>
+                                    <p className="text-[10px] text-text-muted">Manage your profile picture, bio, and favorite games.</p>
+                                </div>
+                                <button
+                                    onClick={() => navigate('/manage-profile')}
+                                    className="btn-primary text-xs px-4"
+                                >
+                                    Manage
+                                </button>
                             </div>
-                        </section>
-
-                        <section className="space-y-2">
-                            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Display Name</h3>
-                            <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => { setUsername(e.target.value); setNamechange(true); }}
-                                className="input-field max-w-md"
-                            />
-                        </section>
-
-                        <section className="space-y-2">
-                            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Bio</h3>
-                            <textarea
-                                value={bio}
-                                onChange={(e) => { setBio(e.target.value); setBiochange(true); }}
-                                className="input-field max-w-md min-h-[100px] resize-y"
-                                placeholder="Tell us about yourself..."
-                            />
                         </section>
                     </div>
                 );
@@ -267,16 +146,17 @@ function SettingsPage() {
                     <div className="space-y-8 animate-in fade-in duration-500">
                         <div>
                             <h2 className="text-xl font-bold text-text-primary mb-1">Account Settings</h2>
-                            <p className="text-sm text-text-muted">Manage your email and security</p>
+                            <p className="text-sm text-text-muted">Manage your security credentials</p>
                         </div>
                         <section className="space-y-3">
-                            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Email Address</h3>
-                            <input type="email" value={user.email} disabled className="input-field max-w-md opacity-50 cursor-not-allowed" />
-                            <p className="text-[10px] text-text-muted italic">Email changes are currently restricted.</p>
-                        </section>
-                        <section className="space-y-3">
                             <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Password</h3>
-                            <button className="btn-secondary text-sm">Request Password Reset Email</button>
+                            <button
+                                onClick={handleChangePassword}
+                                className="btn-secondary text-sm"
+                            >
+                                Change Password
+                            </button>
+                            <p className="text-[10px] text-text-muted italic mt-2">This will send a verification code to your registered email address.</p>
                         </section>
                     </div>
                 );
@@ -361,28 +241,6 @@ function SettingsPage() {
                                 </div>
                             </div>
                         )}
-                    </div>
-                );
-
-            case "privacy":
-                return (
-                    <div className="space-y-8 animate-in fade-in duration-500">
-                        <div>
-                            <h2 className="text-xl font-bold text-text-primary mb-1">Privacy</h2>
-                            <p className="text-sm text-text-muted">Control your visibility</p>
-                        </div>
-                        <section className="space-y-3">
-                            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Profile Visibility</h3>
-                            <select
-                                value={visibility}
-                                onChange={(e) => { setVisibility(e.target.value); setProfileVisibility(true); }}
-                                className="select-field max-w-md"
-                            >
-                                <option value="public">Public</option>
-                                <option value="friends">Friends Only</option>
-                                <option value="private">Private</option>
-                            </select>
-                        </section>
                     </div>
                 );
 
@@ -484,13 +342,6 @@ function SettingsPage() {
                                 <div className="flex-1">
                                     {renderContent()}
                                 </div>
-
-                                {selected !== 'connections' && selected !== 'danger' && (
-                                    <div className="flex gap-4 mt-12 pt-8 border-t border-white/5">
-                                        <button onClick={saveAllChanges} className="btn-primary px-8">Save Changes</button>
-                                        <button onClick={discardChanges} className="btn-secondary px-8">Discard</button>
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </div>

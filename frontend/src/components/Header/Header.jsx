@@ -49,6 +49,7 @@ function Header() {
     const navLinks = [
         { to: "/", label: "Home" },
         { to: "/games", label: "Browse" },
+        { to: "/community", label: "Community" },
     ];
 
     const isActive = (path) => location.pathname === path;

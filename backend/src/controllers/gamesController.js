@@ -438,3 +438,84 @@ export const getGameStores = async (req, res) => {
         return res.status(200).json({ stores: [] });
     }
 };
+
+// @desc  Get price history for a game (ITAD)
+// @route  GET /games/pricehistory/:itadId
+export const getPriceHistory = async (req, res, next) => {
+    const { itadId } = req.params;
+    const ITAD_API_KEY = config.iTAD.apiKey;
+
+    if (!itadId) {
+        return res.status(400).json({ message: "ITAD ID is required" });
+    }
+
+    if (!ITAD_API_KEY) {
+        return res.status(200).json({ history: [] });
+    }
+
+    const cacheKey = `game:pricehistory:${itadId}`;
+    const TTL_HISTORY = 21600; // 6 hours
+    //const cached = await cacheGet(cacheKey);
+    //if (cached) return res.json(cached);
+
+    try {
+        const historyRes = await axiosClient.get(
+            "https://api.isthereanydeal.com/games/history/v2",
+            {
+                params: {
+                    key: ITAD_API_KEY,
+                    id: itadId,
+                    country: "US",
+                    since: "2024-01-01T00:00:00Z"
+                }
+            }
+        );
+
+        // ITAD history/v2 returns an array of deal events
+        const raw = historyRes.data || [];
+
+        const allPoints = [];
+        for (const entry of raw) {
+            const shopName = entry.shop?.name || "Unknown";
+            const deal = entry.deal || {};
+            const timestampStr = entry.timestamp;
+
+            if (timestampStr && deal.price?.amount != null) {
+                // ITAD returns ISO string timestamps like "2026-04-24T09:09:16+02:00"
+                const ms = new Date(timestampStr).getTime();
+                allPoints.push({
+                    timestamp: ms, // Store as ms
+                    price: deal.price.amount,
+                    store: shopName,
+                    regular: deal.regular?.amount ?? null
+                });
+            }
+        }
+
+        // Sort by timestamp ascending
+        allPoints.sort((a, b) => a.timestamp - b.timestamp);
+
+        // Build per-store series for charting
+        const seriesMap = {};
+        for (const point of allPoints) {
+            if (!seriesMap[point.store]) seriesMap[point.store] = [];
+            seriesMap[point.store].push({
+                t: point.timestamp, // Already in ms
+                price: point.price,
+                regular: point.regular
+            });
+        }
+
+        const result = {
+            history: allPoints,
+            series: seriesMap
+        };
+
+        await cacheSet(cacheKey, result, TTL_HISTORY);
+        return res.status(200).json(result);
+
+    } catch (error) {
+        console.error("ITAD price history fetch failed:", error.message);
+        return res.status(200).json({ history: [], series: {} });
+    }
+};

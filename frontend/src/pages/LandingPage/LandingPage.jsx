@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { FaSteam, FaPlaystation, FaXbox, FaArrowRight, FaGamepad, FaInfoCircle } from "react-icons/fa";
 import Header from "../../components/Header/Header.jsx";
 import Footer from "../../components/Footer/Footer.jsx";
+import AuthContext from "../../contexts/AuthContext.jsx";
+import { useContext } from "react";
 import apiClient from "../../utils/apiClient.js";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.jsx";
 import { optimizeImage } from "../../utils/imageUtils.js";
@@ -14,6 +16,7 @@ const fetchTopSellers = async () => {
 };
 
 function LandingPage() {
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const scrollRef = useRef(null);
 
@@ -236,17 +239,34 @@ function LandingPage() {
                   Manage your library, discover deep deals, and grow your gaming circle across all platforms in our next-gen social ecosystem.
                 </p>
                 <div className="flex flex-wrap gap-4 pt-4">
+                  {user ? (
+                    <>
+                      <button
+                        onClick={() => navigate("/library")}
+                        className="px-8 py-4 bg-accent text-white font-black uppercase tracking-widest rounded-2xl hover:bg-accent-hover active:scale-95 transition-all shadow-xl shadow-accent/20 flex items-center gap-3 group"
+                      >
+                        My Library <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                      </button>
+                      <button
+                        onClick={() => navigate("/community")}
+                        className="px-8 py-4 bg-indigo-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-400 active:scale-95 transition-all shadow-xl shadow-indigo-500/20"
+                      >
+                        Community Hub
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => navigate("/login")}
+                      className="px-8 py-4 bg-accent text-white font-black uppercase tracking-widest rounded-2xl hover:bg-accent-hover active:scale-95 transition-all shadow-xl shadow-accent/20 flex items-center gap-3 group"
+                    >
+                      Login to GameHub <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  )}
                   <button
                     onClick={() => navigate("/games")}
-                    className="px-8 py-4 bg-accent text-white font-black uppercase tracking-widest rounded-2xl hover:bg-accent-hover active:scale-95 transition-all shadow-xl shadow-accent/20 flex items-center gap-3 group"
-                  >
-                    Browse All Games <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-                  </button>
-                  <button
-                    onClick={() => navigate("/login")}
                     className="px-8 py-4 bg-midnight-700/50 backdrop-blur-md border border-midnight-500/30 text-text-primary font-black uppercase tracking-widest rounded-2xl hover:bg-midnight-600 active:scale-95 transition-all"
                   >
-                    Login
+                    Browse Games
                   </button>
                 </div>
               </div>

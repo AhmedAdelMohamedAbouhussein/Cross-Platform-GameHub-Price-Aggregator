@@ -1,4 +1,4 @@
-import { FaGithub, FaDiscord, FaGamepad } from "react-icons/fa";
+import { FaGithub, FaDiscord, FaGamepad, FaEnvelope } from "react-icons/fa";
 
 function Footer() {
     const currentYear = new Date().getFullYear();
@@ -29,12 +29,15 @@ function Footer() {
                         </a>
                     </div>
 
-                    {/* Socials */}
+                    {/* Socials & Contact */}
                     <div className="flex items-center gap-4">
-                        <a href="#" className="text-text-muted hover:text-white transition-colors">
+                        <a href="mailto:aa5913372@gmail.com" className="text-text-muted hover:text-white transition-colors" title="Contact Me">
+                            <FaEnvelope size={18} />
+                        </a>
+                        <a href="#" className="text-text-muted hover:text-white transition-colors" title="GitHub">
                             <FaGithub size={18} />
                         </a>
-                        <a href="#" className="text-text-muted hover:text-white transition-colors">
+                        <a href="#" className="text-text-muted hover:text-white transition-colors" title="Discord">
                             <FaDiscord size={18} />
                         </a>
                     </div>

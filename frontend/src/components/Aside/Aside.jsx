@@ -44,16 +44,17 @@ function Aside({ isOpen: externalOpen, onClose }) {
 
     const menuItems = [
         {
-            section: "Collections", items: [
+            section: "Library", items: [
                 { icon: FaGamepad, label: "My Library", to: "/library" },
-                //{ icon: FaTrophy, label: "Achievements", to: "/library/achievements" },
-                //{ icon: FaGlobe, label: "Global Stats", to: "/games" },
+                { icon: FaGlobe, label: "View Public Profile", to: user ? `/profile/${encodeURIComponent(user.publicID)}` : "#" },
+                { icon: FaCog, label: "Customize Public Profile", to: "/manage-profile" },
             ]
         },
         {
             section: "Community", items: [
                 { icon: FaComments, label: "Friend Activity", to: "/friends" },
-                //{ icon: FaUserFriends, label: "Manage Friends", to: "/friends/manage" },
+                { icon: FaUserFriends, label: "Manage Friends", to: "/managefriends" },
+                { icon: FaGlobe, label: "Global Community", to: "/community" },
             ]
         },
         {
@@ -157,7 +158,7 @@ function Aside({ isOpen: externalOpen, onClose }) {
                                 })}
 
                                 {/* Interactive Profile Area - Positioned right under Platforms (the last group) */}
-                                {groupIndex === menuItems.length - 1 && (
+                                {groupIndex === menuItems.length - 1 && user && (
                                     <div className="pt-6 border-t border-white/5 mt-6 space-y-4 px-1">
                                         {sidebarOpen && (
                                             <p className="text-[10px] uppercase font-black tracking-[0.2em] text-text-muted mb-4 px-3 flex items-center gap-2">

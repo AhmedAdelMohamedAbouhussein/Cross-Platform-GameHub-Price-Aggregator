@@ -28,12 +28,15 @@ export const getPublicProfile = async (req, res, next) => {
             bio: targetUser.bio,
             profilePicture: targetUser.profilePicture,
             profileVisibility: targetUser.profileVisibility,
+            allowPublicFriendRequests: targetUser.allowPublicFriendRequests !== false, // default true
+            profileBackground: targetUser.profileBackground || null,
             isLiked: targetUser.likes?.includes(currentUserPublicID),
             likesCount: targetUser.likes?.length || 0,
             friendsCount: 0,
             totalGames: 0,
             totalHours: 0,
             topGames: [],
+            favoriteGames: [],
             friendshipStatus: "none" // none, pending, accepted, requested_by_target
         };
 
@@ -67,7 +70,8 @@ export const getPublicProfile = async (req, res, next) => {
             if (targetUser.ownedGames) {
                 for (const [platform, gamesMap] of targetUser.ownedGames.entries()) {
                     for (const [gameId, game] of gamesMap.entries()) {
-                        const key = game.gameName.toLowerCase().trim();
+                        const gameName = game.gameName || game.title || "Unknown Game";
+                        const key = gameName.toLowerCase().trim();
 
                         // Parse hours from "Xh Ym Zs"
                         let hoursNum = 0;
@@ -82,9 +86,9 @@ export const getPublicProfile = async (req, res, next) => {
                             existing.progress = Math.max(existing.progress, game.maxProgress || 0);
                         } else {
                             unifiedGames.set(key, {
-                                gameName: game.gameName,
+                                gameName: gameName,
                                 coverImage: game.coverImage,
-                                platform: platform, // Primary platform
+                                platform: platform,
                                 hoursPlayed: hoursNum,
                                 progress: game.maxProgress || 0
                             });
@@ -97,10 +101,29 @@ export const getPublicProfile = async (req, res, next) => {
             profile.totalGames = allGames.length;
             profile.totalHours = allGames.reduce((acc, g) => acc + g.hoursPlayed, 0);
 
-            // Sort top games by playtime
-            profile.topGames = allGames
+            // Most played games (by hours, top 6)
+            profile.mostPlayedGames = [...allGames]
                 .sort((a, b) => b.hoursPlayed - a.hoursPlayed)
-                .slice(0, 5);
+                .slice(0, 6);
+
+            // 100% completed games — return ALL of them
+            const completedGames = allGames.filter(g => g.progress >= 100);
+            profile.completedGames = completedGames
+                .sort((a, b) => b.hoursPlayed - a.hoursPlayed);
+            profile.completedGamesCount = completedGames.length;
+
+            // Completion rate
+            profile.completionRate = allGames.length > 0
+                ? Math.round((completedGames.length / allGames.length) * 100)
+                : 0;
+
+            // Keep topGames for backwards compat
+            profile.topGames = profile.mostPlayedGames;
+
+            // Populate favoriteGames
+            if (targetUser.favoriteGames && targetUser.favoriteGames.length > 0) {
+                profile.favoriteGames = targetUser.favoriteGames;
+            }
         }
 
         res.status(200).json({ profile });
@@ -150,6 +173,55 @@ export const toggleLike = async (req, res, next) => {
 
         await targetUser.save();
         res.status(200).json({ message, likesCount: targetUser.likes.length });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Get global community users (top accounts)
+ * @route   GET /api/users/community/all
+ * @access  Public
+ */
+export const getCommunityUsers = async (req, res, next) => {
+    try {
+        const { search } = req.query;
+        let query = { profileVisibility: "public", isDeleted: false };
+        
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: "i" } },
+                { publicID: { $regex: search, $options: "i" } }
+            ];
+        }
+
+        // Fetch top users sorted by likes
+        const users = await userModel.find(query)
+            .limit(50)
+            .lean();
+
+        // Sort manually by likes array length descending
+        const sorted = users.sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
+
+        const formatted = sorted.map(u => {
+            let totalGames = 0;
+            if (u.ownedGames) {
+                for (const platform in u.ownedGames) {
+                    totalGames += Object.keys(u.ownedGames[platform]).length;
+                }
+            }
+            return {
+                publicID: u.publicID,
+                name: u.name,
+                profilePicture: u.profilePicture,
+                likesCount: u.likes?.length || 0,
+                bio: u.bio,
+                totalGames,
+                allowPublicFriendRequests: u.allowPublicFriendRequests !== false
+            };
+        });
+
+        res.status(200).json({ users: formatted });
     } catch (error) {
         next(error);
     }

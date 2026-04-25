@@ -121,7 +121,15 @@ const UserSchema = new mongoose.Schema({
     },
     profileVisibility: {
         type: String,
-        enum: ["public", "friends", "private"], default: "public"
+        enum: ["public", "private"], default: "public"
+    },
+    allowPublicFriendRequests: {
+        type: Boolean,
+        default: true
+    },
+    profileBackground: {
+        type: String, // URL to uploaded background image
+        default: null
     },
     isDeleted: {
         type: Boolean,
@@ -161,6 +169,14 @@ const UserSchema = new mongoose.Schema({
             of: userGameSchema
         },
     },
+    favoriteGames: [{
+        platform: { type: String, required: true },
+        gameId: { type: String, required: true },
+        gameName: { type: String },
+        coverImage: { type: String },
+        hoursPlayed: { type: Number, default: 0 },
+        progress: { type: Number, default: 0 }
+    }],
     wishlist: [{
         gameId: { type: String, required: true }, // RAWG ID
         itadId: { type: String }, // ITAD ID for reliable price tracking

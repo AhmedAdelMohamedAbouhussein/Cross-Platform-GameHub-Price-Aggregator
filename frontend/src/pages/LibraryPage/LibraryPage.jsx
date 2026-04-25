@@ -35,7 +35,7 @@ function LibraryPage() {
     isLoading,
     refetch
   } = useQuery({
-    queryKey: ["ownedGames", user?.id],
+    queryKey: ["ownedGames"],
     queryFn: fetchOwnedGames,
     enabled: !!user,
     staleTime: 1000 * 60 * 5
@@ -72,7 +72,7 @@ function LibraryPage() {
     allGamesOnAllPlatforms.forEach(g => {
       // Use maxProgress for average
       totalProgress += (g.maxProgress || 0);
-      
+
       // Calculate total seconds across all owners
       (g.owners || []).forEach(owner => {
         if (owner.hoursPlayed) {
@@ -107,23 +107,23 @@ function LibraryPage() {
     // Note: We use gameName for now as a simple key.
     const unifiedMap = new Map();
     baseGames.forEach(g => {
-        const key = g.gameName.toLowerCase().trim();
-        if (unifiedMap.has(key)) {
-            const existing = unifiedMap.get(key);
-            // Merge owners and platforms
-            existing.allOwners = [...existing.allOwners, ...g.owners.map(o => ({ ...o, platform: g.platform }))];
-            existing.allPlatforms = Array.from(new Set([...existing.allPlatforms, g.platform]));
-            existing.maxProgress = Math.max(existing.maxProgress, g.maxProgress || 0);
-            // Sum hours (could be refined)
-            existing.totalHoursNum += parseTime(g.totalHours);
-        } else {
-            unifiedMap.set(key, {
-                ...g,
-                allOwners: g.owners.map(o => ({ ...o, platform: g.platform })),
-                allPlatforms: [g.platform],
-                totalHoursNum: parseTime(g.totalHours || "0h 0m 0s")
-            });
-        }
+      const key = g.gameName.toLowerCase().trim();
+      if (unifiedMap.has(key)) {
+        const existing = unifiedMap.get(key);
+        // Merge owners and platforms
+        existing.allOwners = [...existing.allOwners, ...g.owners.map(o => ({ ...o, platform: g.platform }))];
+        existing.allPlatforms = Array.from(new Set([...existing.allPlatforms, g.platform]));
+        existing.maxProgress = Math.max(existing.maxProgress, g.maxProgress || 0);
+        // Sum hours (could be refined)
+        existing.totalHoursNum += parseTime(g.totalHours);
+      } else {
+        unifiedMap.set(key, {
+          ...g,
+          allOwners: g.owners.map(o => ({ ...o, platform: g.platform })),
+          allPlatforms: [g.platform],
+          totalHoursNum: parseTime(g.totalHours || "0h 0m 0s")
+        });
+      }
     });
 
     let allGames = Array.from(unifiedMap.values());
@@ -163,12 +163,12 @@ function LibraryPage() {
       allGames.sort((a, b) => {
         // Use latest lastPlayed across all owners
         const dateA = a.allOwners.reduce((max, o) => {
-            const d = o.lastPlayed ? new Date(o.lastPlayed) : new Date(0);
-            return d > max ? d : max;
+          const d = o.lastPlayed ? new Date(o.lastPlayed) : new Date(0);
+          return d > max ? d : max;
         }, new Date(0));
         const dateB = b.allOwners.reduce((max, o) => {
-            const d = o.lastPlayed ? new Date(o.lastPlayed) : new Date(0);
-            return d > max ? d : max;
+          const d = o.lastPlayed ? new Date(o.lastPlayed) : new Date(0);
+          return d > max ? d : max;
         }, new Date(0));
         return dateB - dateA;
       });

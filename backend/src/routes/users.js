@@ -3,7 +3,7 @@ import { addUser } from '../controllers/users/create/addAndRestoreUsers.js';
 import { getUserById, getUserIdByEmail, loginUser, getUserFriendList, getUserOwnedGames, getUserOwnedGame, getBatchUsers } from '../controllers/users/record/getUser.js';
 import { updateUser } from '../controllers/users/update/updateUserInfo.js';
 import { softDeletUser, hardDeleteUser } from '../controllers/users/delete/softAndHardDeleteUser.js';
-import { getPublicProfile, toggleLike } from '../controllers/users/record/profileController.js';
+import { getPublicProfile, toggleLike, getCommunityUsers } from '../controllers/users/record/profileController.js';
 import { toggleWishlist, getWishlist, checkWishlistStatus } from '../controllers/users/record/wishlistController.js';
 import requireAuth from '../middleware/requireAuth.js';
 
@@ -469,6 +469,15 @@ router.delete('/delete/hard', requireAuth, hardDeleteUser);
 
 /**
  * @swagger
+ * /api/users/community/all:
+ *   get:
+ *     summary: Get all public users (community directory)
+ *     tags: [Users]
+ */
+router.get('/community/all', getCommunityUsers);
+
+/**
+ * @swagger
  * /api/users/profile/{publicID}:
  *   get:
  *     summary: Get a user's public profile and stats
@@ -485,7 +494,7 @@ router.delete('/delete/hard', requireAuth, hardDeleteUser);
  *       404:
  *         description: User not found
  */
-router.get('/profile/:publicID', requireAuth, getPublicProfile);
+router.get('/profile/:publicID', getPublicProfile);
 
 /**
  * @swagger
