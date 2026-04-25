@@ -455,8 +455,8 @@ export const getPriceHistory = async (req, res, next) => {
 
     const cacheKey = `game:pricehistory:${itadId}`;
     const TTL_HISTORY = 21600; // 6 hours
-    //const cached = await cacheGet(cacheKey);
-    //if (cached) return res.json(cached);
+    const cached = await cacheGet(cacheKey);
+    if (cached) return res.json(cached);
 
     try {
         const historyRes = await axiosClient.get(

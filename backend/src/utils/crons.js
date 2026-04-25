@@ -4,7 +4,7 @@ import User from '../models/User.js';
 import axios from 'axios';
 import config from '../config/env.js';
 import Notification from '../models/Notification.js';
-import { generatePriceDropEmail, generateAccountPurgedEmail } from './emailTemplates.js';
+import { generatePriceDropEmail, generateAccountPurgedEmail, generateAdminReportEmail } from './emailTemplates.js';
 
 const ITAD_API_KEY = config.iTAD.apiKey;
 
@@ -17,6 +17,52 @@ const transporter = nodemailer.createTransport({
         pass: config.gmail.password,
     },
 });
+
+/**
+ * Runs every day at 08:00 AM
+ * Generates an admin report with platform metrics and emails it to the admin.
+ */
+export const startAdminReportCron = () => {
+    // 0 8 * * * = 8:00 AM every day
+    cron.schedule('0 8 * * *', async () => {
+        console.log('[Cron] Starting Daily Admin Report generation...');
+        try {
+            const totalUsers = await User.countDocuments();
+            const activeUsers = await User.countDocuments({ isDeleted: false });
+            const deletedUsers = await User.countDocuments({ isDeleted: true });
+            const verifiedUsers = await User.countDocuments({ isVerified: true });
+
+            const steamUsers = await User.countDocuments({ 'steam.id': { $exists: true } });
+            const epicUsers = await User.countDocuments({ 'epic.id': { $exists: true } });
+            const psnUsers = await User.countDocuments({ 'psn.id': { $exists: true } });
+            const xboxUsers = await User.countDocuments({ 'xbox.id': { $exists: true } });
+
+            const metrics = {
+                totalUsers,
+                activeUsers,
+                deletedUsers,
+                verifiedUsers,
+                steamUsers,
+                epicUsers,
+                psnUsers,
+                xboxUsers
+            };
+
+            const targetEmail = config.personalEmail;
+
+            await transporter.sendMail({
+                from: `"GameHub Admin" <${config.gmail.gmail}>`,
+                to: targetEmail,
+                subject: "📊 Daily System Report - GameHub",
+                html: generateAdminReportEmail(metrics)
+            });
+
+            console.log(`[Cron] Admin Report sent successfully to ${targetEmail}.`);
+        } catch (error) {
+            console.error('[Cron] Admin Report cron error:', error.message);
+        }
+    });
+};
 
 /**
  * Runs every day at midnight (00:00)

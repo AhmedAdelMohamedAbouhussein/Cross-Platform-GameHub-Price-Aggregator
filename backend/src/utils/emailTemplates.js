@@ -126,3 +126,38 @@ export const generateAccountPurgedEmail = (userName) => {
 
     return shell('#EF4444', body);
 };
+
+// ─── 4. Admin Daily Report Email ─────────────────────────────────────────────
+/**
+ * @param {Object} metrics
+ */
+export const generateAdminReportEmail = (metrics) => {
+    const tableRows = [
+        { label: "Total Registered Users", value: metrics.totalUsers },
+        { label: "Active Users", value: metrics.activeUsers },
+        { label: "Pending Deletions (Soft-deleted)", value: metrics.deletedUsers },
+        { label: "Verified Accounts", value: metrics.verifiedUsers },
+        { label: "Unverified Accounts", value: metrics.totalUsers - metrics.verifiedUsers },
+        { label: "Users with Steam linked", value: metrics.steamUsers },
+        { label: "Users with Epic linked", value: metrics.epicUsers },
+        { label: "Users with PSN linked", value: metrics.psnUsers },
+        { label: "Users with Xbox linked", value: metrics.xboxUsers },
+    ].map(row => `
+        <tr>
+            <td style="padding:10px 12px;font-size:14px;color:#8B949E;border-bottom:1px solid #21262D;">${row.label}</td>
+            <td style="padding:10px 12px;font-size:14px;color:#F0F6FC;font-weight:700;border-bottom:1px solid #21262D;text-align:right;">${row.value}</td>
+        </tr>
+    `).join('');
+
+    const body =
+        `<div style="display:inline-block;background:#3B82F615;border:1px solid #3B82F640;border-radius:8px;padding:4px 12px;margin-bottom:16px;">
+          <span style="font-size:12px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:1px;">📊 Daily System Report</span>
+        </div>` +
+        heading('GameHub Admin Report',
+            `Here is the automated daily summary of your platform's metrics.`) +
+        `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:10px;border:1px solid #30363D;overflow:hidden;margin:20px 0;">
+          <tbody>${tableRows}</tbody>
+        </table>`;
+
+    return shell('#3B82F6', body);
+};

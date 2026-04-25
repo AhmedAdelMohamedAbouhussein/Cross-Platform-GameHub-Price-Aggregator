@@ -11,6 +11,7 @@ export default
         mongoUri: process.env.MONGO_ATLAS_URL || process.env.LOCAL_MONGO_URL,
         xboxRedirectURL: process.env.APP_BACKEND_URL + process.env.XBOX_REDIRECT_URI,
         RAWG_API_KEY: process.env.RAWG_API_KEY,
+        personalEmail: process.env.PERSONAL_EMAIL,
 
         mongoAtlas:
         {
