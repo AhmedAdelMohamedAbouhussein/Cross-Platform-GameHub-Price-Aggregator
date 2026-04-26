@@ -19,6 +19,10 @@ import Notifications from './routes/notifications.js';
 import logger from './middleware/logger.js';
 import errorHandeler from './middleware/error.js';
 import notfound from './middleware/notfound.js';
+import { globalLimiter } from './middleware/rateLimiter.js';
+import helmet from 'helmet';
+
+import { generateToken, csrfSynchronisedProtection } from './middleware/csrf.js';
 
 const app = express();
 
@@ -28,12 +32,26 @@ const app = express();
 await redisClient.connect();
 
 // ── Core middleware ──────────────────────────────────────────────────────────
+// Security headers
+app.use(helmet());
+
+// Global Rate Limiting
+app.use(globalLimiter);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cors(corsOptions));
 app.use(logger);
 app.use(sessionMiddleware);
+
+// CSRF Protection
+// Expose endpoint for frontend to get the token
+app.get('/api/csrf-token', (req, res) => {
+    res.json({ token: generateToken(req) });
+});
+// Apply CSRF protection to all subsequent routes
+app.use(csrfSynchronisedProtection);
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', Auth);

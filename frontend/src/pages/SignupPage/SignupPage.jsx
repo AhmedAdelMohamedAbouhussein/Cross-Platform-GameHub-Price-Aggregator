@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import apiClient from "../../utils/apiClient.js";
 import { Link, useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff, FiRotateCcw, FiTrash } from "react-icons/fi";
+import { FaUserAstronaut } from "react-icons/fa";
 
 import Header from "../../components/Header/Header.jsx";
 import Footer from "../../components/Footer/Footer.jsx";
@@ -111,17 +112,24 @@ function SignupPage() {
   }
 
   return (
-    <div className="page-container">
+    <div className="min-h-screen bg-midnight-900 flex flex-col relative overflow-hidden">
+      {/* Premium ambient glows */}
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-accent/20 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-pink-500/10 blur-[120px] rounded-full pointer-events-none" />
+
       <Header />
-      <main className="flex-1 flex items-center justify-center px-4 py-12 sm:py-16">
+      <main className="flex-1 flex items-center justify-center px-4 py-12 sm:py-16 relative z-10">
         <div className="w-full max-w-md animate-slide-up">
           <form
-            className="card-surface p-6 sm:p-8 space-y-5"
+            className="bg-midnight-800/60 backdrop-blur-xl border border-white/10 shadow-2xl p-8 sm:p-10 rounded-[2.5rem] space-y-6"
             onSubmit={handleSubmit}
           >
-            <div className="text-center mb-2">
-              <h2 className="text-2xl font-bold text-text-primary">Create Account</h2>
-              <p className="text-sm text-text-muted mt-1">Join My GameHub today</p>
+            <div className="text-center mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-midnight-900 border border-white/5 mb-6 shadow-inner transform rotate-6 hover:rotate-0 transition-transform duration-500">
+                <FaUserAstronaut className="text-3xl text-accent" />
+              </div>
+              <h2 className="text-3xl font-black text-text-primary uppercase tracking-tight slant-1">Create Account</h2>
+              <p className="text-sm text-text-muted mt-2 font-medium">Join the ultimate GameHub</p>
             </div>
 
             <input
@@ -194,7 +202,7 @@ function SignupPage() {
               </div>
             )}
 
-            <button type="submit" className="btn-primary w-full text-base py-3">
+            <button type="submit" className="btn-primary w-full text-sm font-black uppercase tracking-widest py-4 rounded-2xl shadow-lg shadow-accent/20 hover:shadow-accent/40 transition-all active:scale-95">
               Create Account
             </button>
 
@@ -209,10 +217,10 @@ function SignupPage() {
 
             <button
               type="button"
-              className="w-full h-[52px] flex items-center justify-center gap-3 text-[18px] p-3 text-white font-bold border-none rounded-xl cursor-pointer transition-all duration-300 hover:bg-[#005ecb] active:scale-[0.98] shadow-lg"
+              className="w-full h-[56px] flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest p-3 bg-white/5 text-white border border-white/10 rounded-2xl cursor-pointer transition-all duration-300 hover:bg-white/10 active:scale-[0.98]"
               onClick={() => googleLogin()}
             >
-              <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5 shadow-sm" />
+              <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5" />
               Sign up with Google
             </button>
 

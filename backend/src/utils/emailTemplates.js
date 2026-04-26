@@ -161,3 +161,42 @@ export const generateAdminReportEmail = (metrics) => {
 
     return shell('#3B82F6', body);
 };
+
+// ─── 5. Token / Session Expired Email ─────────────────────────────────────────
+/**
+ * @param {string} userName
+ * @param {string} platform   - 'PSN' or 'Xbox'
+ * @param {string} resyncUrl  - Full URL to the re-sync page (e.g. https://app.com/library/sync/psn)
+ */
+export const generateTokenExpiredEmail = (userName, platform, resyncUrl) => {
+    const isXbox = platform === 'Xbox';
+    const color  = isXbox ? '#107C10' : '#003791';
+    const icon   = isXbox ? '🎮' : '🎮';
+    const name   = userName || 'Gamer';
+
+    const body =
+        `<div style="text-align:center;margin-bottom:24px;">
+          <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:${color}20;border-radius:14px;font-size:28px;">⚠️</div>
+        </div>` +
+        heading(`Your ${platform} Session Expired`,
+            `Hi ${name}, your ${platform} connection to GameHub needs to be renewed.`) +
+        `<div style="background:${color}10;border:1px solid ${color}30;border-radius:10px;padding:16px 20px;margin:20px 0;">
+          <p style="margin:0;font-size:14px;line-height:22px;color:#F0F6FC;">
+            Your <strong style="color:#F0F6FC;">${platform}</strong> refresh token has expired or been revoked —
+            this usually happens when you <strong>change your ${platform} password</strong>,
+            sign out of all devices, or after an extended period of inactivity.
+          </p>
+        </div>
+        <p style="margin:0 0 20px;font-size:14px;line-height:22px;color:#8B949E;">
+          Your library data is safe. You just need to re-authenticate to continue syncing your games and tracking achievements.
+        </p>
+        <a href="${resyncUrl}" style="display:inline-block;padding:13px 30px;background:${color};color:#fff;font-size:14px;font-weight:700;text-decoration:none;border-radius:10px;letter-spacing:0.5px;">
+          Re-sync ${platform} →
+        </a>
+        <p style="margin:20px 0 0;font-size:12px;color:#484F58;">
+          If you didn't expect this or need help, contact our support team.
+        </p>`;
+
+    return shell(color, body);
+};
+

@@ -68,9 +68,7 @@ function ManageFriendsPage() {
 
     const sendRequestMutation = useMutation({
         mutationFn: (id) =>
-            apiClient.post(`/friends/add/${encodeURIComponent(id)}`, {
-                publicID: user.publicID,
-            }),
+            apiClient.post(`/friends/add/${encodeURIComponent(id)}`),
         onSuccess: (res) => {
             toast.success(res.data.message || "Request sent!");
             setrecieverid(""); // Clear input
@@ -83,9 +81,7 @@ function ManageFriendsPage() {
 
     const acceptMutation = useMutation({
         mutationFn: (id) =>
-            apiClient.post(`/friends/accept/${encodeURIComponent(id)}`, {
-                publicID: user.publicID,
-            }),
+            apiClient.post(`/friends/accept/${encodeURIComponent(id)}`),
         onSuccess: (res) => {
             toast.success(res.data.message || "Request accepted!");
             invalidateFriends();
@@ -97,9 +93,7 @@ function ManageFriendsPage() {
 
     const rejectMutation = useMutation({
         mutationFn: (id) =>
-            apiClient.post(`/friends/reject/${encodeURIComponent(id)}`, {
-                publicID: user.publicID,
-            }),
+            apiClient.post(`/friends/reject/${encodeURIComponent(id)}`),
         onSuccess: (res) => {
             toast.success(res.data.message || "Request rejected!");
             invalidateFriends();
@@ -111,9 +105,7 @@ function ManageFriendsPage() {
 
     const removeMutation = useMutation({
         mutationFn: (id) =>
-            apiClient.post(`/friends/remove/${encodeURIComponent(id)}`, {
-                publicID: user.publicID,
-            }),
+            apiClient.post(`/friends/remove/${encodeURIComponent(id)}`),
         onSuccess: (res) => {
             toast.success(res.data.message || "Friend removed!");
             invalidateFriends();

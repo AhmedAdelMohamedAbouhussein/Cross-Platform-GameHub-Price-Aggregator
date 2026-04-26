@@ -43,9 +43,7 @@ function ViewProfilePage() {
     });
 
     const friendMutation = useMutation({
-        mutationFn: ({ action, id }) => apiClient.post(`/friends/${action}/${encodeURIComponent(id)}`, {
-            publicID: currentUser?.publicID
-        }),
+        mutationFn: ({ action, id }) => apiClient.post(`/friends/${action}/${encodeURIComponent(id)}`),
         onSuccess: (res) => {
             toast.success(res.data.message);
             invalidateProfile();
@@ -76,7 +74,7 @@ function ViewProfilePage() {
         name, bio, profilePicture, likesCount, isLiked,
         friendsCount, totalGames, totalHours, topGames,
         completedGames, favoriteGames,
-        friendshipStatus, profileVisibility, allowPublicFriendRequests, profileBackground
+        friendshipStatus, allowPublicFriendRequests, profileBackground
     } = data;
 
     const handleLike = () => {
@@ -99,11 +97,6 @@ function ViewProfilePage() {
 
     const renderFriendButton = () => {
         if (publicID === currentUser?.publicID) return null;
-
-        // If not logged in or not friends, check if they allow public friend requests
-        if (friendshipStatus !== "accepted" && !allowPublicFriendRequests) {
-            return null; // completely hide the add friend option
-        }
 
         switch (friendshipStatus) {
             case "accepted":
@@ -139,6 +132,13 @@ function ViewProfilePage() {
                     </div>
                 );
             default:
+                if (!allowPublicFriendRequests) {
+                    return (
+                        <span className="text-xs sm:text-sm font-bold text-text-muted bg-midnight-800/80 px-4 py-2.5 rounded-xl border border-white/5 cursor-not-allowed">
+                            Account doesn't allow for public friend requests
+                        </span>
+                    );
+                }
                 return (
                     <button
                         className="btn-primary flex items-center gap-2"

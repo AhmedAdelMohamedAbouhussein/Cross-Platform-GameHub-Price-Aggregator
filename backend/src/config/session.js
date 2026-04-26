@@ -4,11 +4,11 @@ import MongoStore from 'connect-mongo';
 import config from './env.js';
 
 const sessionMiddleware = session({
-  secret: config.sessionSecret || 'test-secret',
+  secret: config.sessionSecret,
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: config.mongoLocal || 'mongodb://localhost/test',
+    mongoUrl: config.mongoUri || 'mongodb://localhost/test',
     collectionName: 'sessions'
   }),
   cookie: {

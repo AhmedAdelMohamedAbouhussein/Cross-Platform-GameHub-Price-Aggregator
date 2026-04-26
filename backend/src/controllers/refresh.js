@@ -6,6 +6,7 @@ import { getOwnedGames, getUserAchievements } from "./allSteamInfo.js";
 import { getXboxOwnedGames, enrichOwnedGamesWithAchievements } from "./allxboxinfo.js";
 import { exchangeRefreshTokenForAuthTokens } from "psn-api";
 import { getAllOwnedGames } from "./allPSNInfo.js"
+import { isOAuthAuthFailure } from "../utils/oauthHelpers.js";
 
 export const refreshOwnedGames = async (req, res, next) => {
     try {
@@ -43,6 +44,20 @@ export const refreshOwnedGames = async (req, res, next) => {
         const xboxAccounts = linkedAccounts.get("Xbox") || [];
         for (let i = 0; i < xboxAccounts.length; i++) {
             const account = xboxAccounts[i];
+
+            // If the cron already flagged this token as invalid, skip the API call
+            // and tell the frontend it needs to re-sync
+            if (account.tokenStatus === 'invalid') {
+                errors.push({
+                    platform: 'Xbox',
+                    account: account.accountId,
+                    requiresReauth: true,
+                    message: 'Your Xbox session has expired. Please re-sync to continue.',
+                    resyncUrl: '/library/sync/xbox'
+                });
+                continue;
+            }
+
             try {
                 // Token refresh logic for Xbox
                 const CLIENT_ID = config.azure.clientId;
@@ -59,6 +74,8 @@ export const refreshOwnedGames = async (req, res, next) => {
 
                 const accessToken = tokenRes.data.access_token;
                 account.refreshToken = tokenRes.data.refresh_token;
+                account.expiresAt = new Date(Date.now() + (90 * 24 * 60 * 60 * 1000) - (24 * 60 * 60 * 1000));
+                account.tokenStatus = 'active';
 
                 const userAuthRes = await axios.post("https://user.auth.xboxlive.com/user/authenticate", {
                     Properties: { AuthMethod: "RPS", SiteName: "user.auth.xboxlive.com", RpsTicket: `d=${accessToken}` },
@@ -82,10 +99,21 @@ export const refreshOwnedGames = async (req, res, next) => {
                 dbUser.ownedGames.set("Xbox", platformGamesMap);
                 hasChanges = true;
 
-
             } catch (error) {
-                console.error(`Xbox refresh error for ${account.accountId}:`, error.message);
-                errors.push({ platform: 'Xbox', account: account.accountId, message: error.message });
+                if (isOAuthAuthFailure(error)) {
+                    account.tokenStatus = 'invalid';
+                    hasChanges = true;
+                    errors.push({
+                        platform: 'Xbox',
+                        account: account.accountId,
+                        requiresReauth: true,
+                        message: 'Your Xbox session has expired. Please re-sync to continue.',
+                        resyncUrl: '/library/sync/xbox'
+                    });
+                } else {
+                    console.error(`Xbox refresh error for ${account.accountId}:`, error.message);
+                    errors.push({ platform: 'Xbox', account: account.accountId, message: error.message });
+                }
             }
         }
 
@@ -93,10 +121,27 @@ export const refreshOwnedGames = async (req, res, next) => {
         const psnAccounts = linkedAccounts.get("PSN") || [];
         for (let i = 0; i < psnAccounts.length; i++) {
             const account = psnAccounts[i];
+
+            // If the cron already flagged this token as invalid, skip the API call
+            if (account.tokenStatus === 'invalid') {
+                errors.push({
+                    platform: 'PSN',
+                    account: account.accountId,
+                    requiresReauth: true,
+                    message: 'Your PlayStation session has expired. Please re-sync to continue.',
+                    resyncUrl: '/library/sync/psn'
+                });
+                continue;
+            }
+
             try {
                 const updatedAuthorization = await exchangeRefreshTokenForAuthTokens(account.refreshToken);
-                account.refreshToken = updatedAuthorization.refreshToken;
-                account.expiresAt = new Date(Date.now() + (updatedAuthorization.refreshTokenExpiresIn * 1000) - (24 * 60 * 60 * 1000));
+                if (updatedAuthorization.refreshToken) {
+                    account.refreshToken = updatedAuthorization.refreshToken;
+                }
+                const expiresInSec = updatedAuthorization.refreshTokenExpiresIn || (55 * 24 * 60 * 60);
+                account.expiresAt = new Date(Date.now() + (expiresInSec * 1000) - (24 * 60 * 60 * 1000));
+                account.tokenStatus = 'active';
 
                 const games = await getAllOwnedGames(updatedAuthorization);
                 let platformGamesMap = dbUser.ownedGames.get("PSN") || new Map();
@@ -104,8 +149,20 @@ export const refreshOwnedGames = async (req, res, next) => {
                 dbUser.ownedGames.set("PSN", platformGamesMap);
                 hasChanges = true;
             } catch (error) {
-                console.error(`PSN refresh error for ${account.accountId}:`, error.message);
-                errors.push({ platform: 'PSN', account: account.accountId, message: error.message });
+                if (isOAuthAuthFailure(error)) {
+                    account.tokenStatus = 'invalid';
+                    hasChanges = true;
+                    errors.push({
+                        platform: 'PSN',
+                        account: account.accountId,
+                        requiresReauth: true,
+                        message: 'Your PlayStation session has expired. Please re-sync to continue.',
+                        resyncUrl: '/library/sync/psn'
+                    });
+                } else {
+                    console.error(`PSN refresh error for ${account.accountId}:`, error.message);
+                    errors.push({ platform: 'PSN', account: account.accountId, message: error.message });
+                }
             }
         }
 

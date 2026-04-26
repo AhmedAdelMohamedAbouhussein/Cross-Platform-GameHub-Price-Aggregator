@@ -50,7 +50,11 @@ export const addUser = async (req, res, next) => {
         }
 
         // Otherwise, create new user
-        const newUser = await userModel.create(req.body);
+        const newUser = await userModel.create({
+            email,
+            name,
+            password,
+        });
 
         await sendOtpToUser({ userId: newUser._id, email: newUser.email, purpose: "email_verification" });
 

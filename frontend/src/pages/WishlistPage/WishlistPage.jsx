@@ -140,10 +140,10 @@ const WishlistPage = () => {
                                                                         </div>
                                                                     </div>
                                                                     {store.url && (
-                                                                        <a 
-                                                                            href={store.url} 
-                                                                            target="_blank" 
-                                                                            rel="noopener noreferrer" 
+                                                                        <a
+                                                                            href={store.url}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
                                                                             className="p-2.5 rounded-xl bg-white/5 text-text-muted hover:text-accent hover:bg-accent/10 transition-all border border-transparent hover:border-accent/20"
                                                                             title={`Secure Deal at ${store.storeName}`}
                                                                         >
@@ -181,9 +181,9 @@ const WishlistPage = () => {
 
                                         <button
                                             onClick={() => navigate(`/games/${game.id}`)}
-                                            className="flex items-center justify-between text-[10px] font-black text-text-muted uppercase tracking-widest hover:text-accent transition-colors group/link"
+                                            className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl bg-midnight-900 border border-white/5 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] hover:text-white hover:bg-midnight-800 hover:border-accent/40 transition-all group/link shadow-inner"
                                         >
-                                            View Intel <FaArrowRight className="group-hover/link:translate-x-1 transition-transform" />
+                                            View game Intel <FaArrowRight className="group-hover/link:translate-x-1 transition-transform text-accent" />
                                         </button>
                                     </div>
                                 </div>

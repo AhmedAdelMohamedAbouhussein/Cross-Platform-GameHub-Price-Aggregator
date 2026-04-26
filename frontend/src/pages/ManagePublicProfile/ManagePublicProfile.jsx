@@ -172,7 +172,7 @@ function ManagePublicProfile() {
             navigate(`/profile/${encodeURIComponent(user.publicID)}`);
         } catch (error) {
             console.error(error);
-            toast.error("Failed to update profile.");
+            toast.error(error.response?.data?.message || "Failed to update profile.");
         } finally {
             setLoading(false);
         }

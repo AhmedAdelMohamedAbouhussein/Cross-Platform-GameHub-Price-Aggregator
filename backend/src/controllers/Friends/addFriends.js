@@ -2,15 +2,12 @@ import userModel from '../../models/User.js'
 import Notification from '../../models/Notification.js';
 
 export const addFriends = async (req, res, next) => {
-  const { publicID } = req.body; // current user
   const friendPublicID = decodeURIComponent(req.params.friendId); // param now refers to friend's publicID
 
-  console.log("Add friend request from", publicID, "to", friendPublicID);
-  
   try {
     // Check that both users exist
     const [user, friend] = await Promise.all([
-      userModel.findOne({ publicID }),
+      userModel.findById(req.session.userId),
       userModel.findOne({ publicID: friendPublicID }),
     ]);
 
@@ -19,6 +16,10 @@ export const addFriends = async (req, res, next) => {
       error.status = 404;
       return next(error);
     }
+
+    const publicID = user.publicID;
+
+    console.log("Add friend request from", publicID, "to", friendPublicID);
 
     // Prevent adding yourself
     if (publicID === friendPublicID) {

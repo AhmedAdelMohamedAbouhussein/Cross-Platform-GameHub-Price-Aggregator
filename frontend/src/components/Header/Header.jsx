@@ -27,7 +27,7 @@ function Header() {
             return res.data;
         },
         enabled: !!user,
-        refetchInterval: 60000,
+        refetchInterval: 600000, // 10 minutes
     });
 
     const markReadMutation = useMutation({

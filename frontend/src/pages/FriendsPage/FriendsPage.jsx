@@ -262,22 +262,33 @@ function FriendsPage() {
                                     );
                                 })
                             ) : (
-                                <div className="col-span-full py-32 flex flex-col items-center justify-center text-center space-y-4 animate-in fade-in zoom-in duration-500">
-                                    <div className="w-20 h-20 rounded-3xl bg-midnight-800 border border-white/5 flex items-center justify-center text-4xl shadow-inner">
-                                        🤝
+                                <div className="col-span-full py-24 flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in zoom-in duration-500">
+                                    <div className="relative">
+                                       <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full" />
+                                       <div className="relative w-28 h-28 rounded-3xl bg-midnight-800/80 backdrop-blur-xl border border-white/10 flex items-center justify-center text-5xl shadow-2xl">
+                                           🤝
+                                       </div>
                                     </div>
-                                    <div>
-                                        <h3 className="text-xl font-black text-text-primary uppercase">No Friends Found</h3>
-                                        <p className="text-sm text-text-muted font-medium max-w-xs mx-auto">
-                                            Try syncronizing your accounts or inviting your friends to build your circle.
+                                    <div className="space-y-2">
+                                        <h3 className="text-2xl font-black text-text-primary uppercase tracking-tight">No Friends Found</h3>
+                                        <p className="text-base text-text-muted font-medium max-w-sm mx-auto">
+                                            Your circle is empty. Sync your accounts or invite friends to start building your network.
                                         </p>
                                     </div>
-                                    <button
-                                        onClick={() => { setSearchQuery(""); setActivePlatform("User"); }}
-                                        className="text-xs font-black text-accent uppercase tracking-widest hover:underline pt-4"
-                                    >
-                                        Clear All Filters
-                                    </button>
+                                    <div className="flex items-center gap-4 pt-4">
+                                        <button
+                                            onClick={() => { setSearchQuery(""); setActivePlatform("All"); }}
+                                            className="px-6 py-3 rounded-2xl bg-midnight-800 hover:bg-midnight-700 text-xs font-black text-white uppercase tracking-widest transition-all border border-white/5 hover:border-white/10"
+                                        >
+                                            Clear Filters
+                                        </button>
+                                        <Link
+                                            to="/community"
+                                            className="px-6 py-3 rounded-2xl bg-accent hover:bg-accent-hover text-xs font-black text-white uppercase tracking-widest shadow-lg shadow-accent/20 transition-all flex items-center justify-center"
+                                        >
+                                            Find Users
+                                        </Link>
+                                    </div>
                                 </div>
                             )}
                         </div>

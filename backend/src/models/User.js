@@ -2,11 +2,18 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { nanoid } from "nanoid";
-
+import { v2 as cloudinary } from 'cloudinary';
 
 import config from '../config/env.js';
 
 import userGameSchema from './UserGames.js'
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: config.cloudinary.cloudName,
+    api_key: config.cloudinary.apiKey,
+    api_secret: config.cloudinary.apiSecret,
+});
 
 const algorithm = config.security.algorithm;
 const ENCRYPTION_KEY = Buffer.from(config.security.encryptionKey, 'hex'); // 32 bytes key
@@ -76,7 +83,13 @@ const linkedAccountSchema = new mongoose.Schema({
         type: Date,
         select: false
     },
-    lastSync: { type: Date, default: Date.now }
+    lastSync: { type: Date, default: Date.now },
+    // 'invalid' means the token failed auth and the user must re-sync
+    tokenStatus: {
+        type: String,
+        enum: ['active', 'invalid'],
+        default: 'active'
+    }
 }, { _id: false });
 
 const UserSchema = new mongoose.Schema({
@@ -328,6 +341,25 @@ UserSchema.pre('deleteOne', { document: true, query: false }, async function (ne
     try {
         // `this` is the document itself in document middleware
         const userPublicID = this.publicID;
+
+        // Delete assets from Cloudinary
+        if (this.profilePicture) {
+            try {
+                const publicId = this.profilePicture.split("/").pop().split(".")[0];
+                await cloudinary.uploader.destroy(`profile_pics/${publicId}`);
+            } catch (err) {
+                console.error("Failed to delete profile picture from Cloudinary during account deletion:", err);
+            }
+        }
+
+        if (this.profileBackground) {
+            try {
+                const publicId = this.profileBackground.split("/").pop().split(".")[0];
+                await cloudinary.uploader.destroy(`profile_backgrounds/${publicId}`);
+            } catch (err) {
+                console.error("Failed to delete profile background from Cloudinary during account deletion:", err);
+            }
+        }
 
         await this.constructor.updateMany(
             {},

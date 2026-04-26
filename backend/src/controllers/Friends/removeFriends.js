@@ -1,13 +1,12 @@
 import userModel from '../../models/User.js'
 
 export const removeFriends = async (req, res, next) => {
-  const { publicID } = req.body; // current user
   const friendPublicID = decodeURIComponent(req.params.friendId); // param now refers to friend's publicID
 
   try {
     // Ensure both users exist
     const [user, friend] = await Promise.all([
-      userModel.findOne({ publicID }),
+      userModel.findById(req.session.userId),
       userModel.findOne({ publicID: friendPublicID }),
     ]);
 
@@ -16,6 +15,8 @@ export const removeFriends = async (req, res, next) => {
       error.status = 404;
       return next(error);
     }
+
+    const publicID = user.publicID;
 
     // Remove friend from current user
     const userUpdate = await userModel.updateOne(

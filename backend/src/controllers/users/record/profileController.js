@@ -189,6 +189,9 @@ export const getCommunityUsers = async (req, res, next) => {
         let query = { profileVisibility: "public", isDeleted: false };
         
         if (search) {
+            if (typeof search !== 'string') {
+                return res.status(400).json({ message: "Search parameter must be a string" });
+            }
             query.$or = [
                 { name: { $regex: search, $options: "i" } },
                 { publicID: { $regex: search, $options: "i" } }

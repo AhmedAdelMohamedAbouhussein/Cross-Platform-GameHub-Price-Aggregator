@@ -1,8 +1,9 @@
 import { useContext, useEffect, useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import apiClient from "../../utils/apiClient.js";
-import { FaSyncAlt, FaBars, FaTrophy, FaClock, FaGamepad, FaSearch, FaFilter, FaSortAmountDown, FaSteam, FaXbox, FaPlaystation } from "react-icons/fa";
+import { FaSyncAlt, FaBars, FaTrophy, FaClock, FaGamepad, FaSearch, FaFilter, FaSortAmountDown, FaSteam, FaXbox, FaPlaystation, FaExclamationTriangle, FaTimes } from "react-icons/fa";
 import { SiEpicgames } from "react-icons/si";
 
 import Header from "../../components/Header/Header";
@@ -19,12 +20,14 @@ const fetchOwnedGames = async () => {
 };
 
 const refreshOwnedGames = async () => {
-  await apiClient.post(`/refresh/refreshOwnedGames`, {});
+  const res = await apiClient.post(`/refresh/refreshOwnedGames`, {});
+  return res.data;
 };
 
 function LibraryPage() {
   const { user } = useContext(AuthContext);
   const [mobileAsideOpen, setMobileAsideOpen] = useState(false);
+  const [reauthErrors, setReauthErrors] = useState([]); // platforms needing re-sync
 
   const [sortBy, setSortBy] = useState("progress");
   const [filterPlatform, setFilterPlatform] = useState("all");
@@ -46,8 +49,15 @@ function LibraryPage() {
     isPending: refreshing
   } = useMutation({
     mutationFn: refreshOwnedGames,
-    onSuccess: () => {
-      toast.success("Library refreshed successfully!");
+    onSuccess: (data) => {
+      // Surface any requiresReauth errors as persistent banners
+      const authErrors = (data?.errors || []).filter(e => e.requiresReauth);
+      if (authErrors.length > 0) {
+        setReauthErrors(authErrors);
+        toast.warning(`${authErrors.map(e => e.platform).join(' & ')} session${authErrors.length > 1 ? 's' : ''} expired — re-sync required.`);
+      } else {
+        toast.success("Library refreshed successfully!");
+      }
       refetch();
     },
     onError: () => {
@@ -228,6 +238,45 @@ function LibraryPage() {
               </div>
             </div>
 
+            {/* Re-auth Alert Banners */}
+            {reauthErrors.length > 0 && (
+              <div className="space-y-3 animate-in fade-in slide-in-from-top-4 duration-500">
+                {reauthErrors.map((err) => {
+                  const isPSN = err.platform === 'PSN';
+                  return (
+                    <div
+                      key={err.platform}
+                      className={`flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border ${
+                        isPSN
+                          ? 'bg-blue-900/20 border-blue-500/30 text-blue-300'
+                          : 'bg-green-900/20 border-green-500/30 text-green-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <FaExclamationTriangle className="shrink-0" size={16} />
+                        <span className="text-sm font-bold">
+                          Your {err.platform === 'PSN' ? 'PlayStation' : 'Xbox'} session has expired.
+                        </span>
+                        <Link
+                          to={err.resyncUrl}
+                          className={`text-sm font-black uppercase tracking-widest underline underline-offset-4 hover:opacity-80 transition-opacity`}
+                        >
+                          Re-sync {err.platform} →
+                        </Link>
+                      </div>
+                      <button
+                        onClick={() => setReauthErrors(prev => prev.filter(e => e.platform !== err.platform))}
+                        className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+                        aria-label="Dismiss"
+                      >
+                        <FaTimes size={14} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {/* 2. Control Bar (Filters & Search) */}
             <div className="flex flex-col gap-6 bg-midnight-800/30 p-4 rounded-[2.5rem] border border-white/5 animate-in fade-in duration-700 delay-100">
 
@@ -321,22 +370,27 @@ function LibraryPage() {
                   </div>
                 ))
               ) : (
-                <div className="col-span-full py-32 flex flex-col items-center justify-center text-center space-y-4 animate-in fade-in zoom-in duration-500">
-                  <div className="w-20 h-20 rounded-3xl bg-midnight-800 border border-white/5 flex items-center justify-center text-4xl shadow-inner">
-                    👾
+                <div className="col-span-full py-24 flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in zoom-in duration-500">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full" />
+                    <div className="relative w-28 h-28 rounded-3xl bg-midnight-800/80 backdrop-blur-xl border border-white/10 flex items-center justify-center text-5xl shadow-2xl">
+                      👾
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-black text-text-primary uppercase">No Games Detected</h3>
-                    <p className="text-sm text-text-muted font-medium max-w-xs mx-auto">
-                      Adjust your filters or sync your accounts to see your collection here.
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-black text-text-primary uppercase tracking-tight">Library Empty</h3>
+                    <p className="text-base text-text-muted font-medium max-w-sm mx-auto">
+                      Your collection is waiting to be built. Sync your accounts or adjust your filters to see games here.
                     </p>
                   </div>
-                  <button
-                    onClick={() => { setSearchQuery(""); setFilterPlatform("all"); }}
-                    className="text-xs font-black text-accent uppercase tracking-widest hover:underline pt-4"
-                  >
-                    Clear All Filters
-                  </button>
+                  <div className="flex items-center gap-4 pt-4">
+                    <button
+                      onClick={() => { setSearchQuery(""); setFilterPlatform("all"); }}
+                      className="px-6 py-3 rounded-2xl bg-midnight-800 hover:bg-midnight-700 text-xs font-black text-white uppercase tracking-widest transition-all border border-white/5 hover:border-white/10"
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

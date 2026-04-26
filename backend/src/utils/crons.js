@@ -4,7 +4,9 @@ import User from '../models/User.js';
 import axios from 'axios';
 import config from '../config/env.js';
 import Notification from '../models/Notification.js';
-import { generatePriceDropEmail, generateAccountPurgedEmail, generateAdminReportEmail } from './emailTemplates.js';
+import { generatePriceDropEmail, generateAccountPurgedEmail, generateAdminReportEmail, generateTokenExpiredEmail } from './emailTemplates.js';
+import { exchangeRefreshTokenForAuthTokens } from 'psn-api';
+import { isOAuthAuthFailure, needsRenewal } from './oauthHelpers.js';
 
 const ITAD_API_KEY = config.iTAD.apiKey;
 
@@ -218,6 +220,191 @@ export const startPurgeCron = () => {
             console.log('[Cron] 30-day purge completed.');
         } catch (error) {
             console.error('[Cron] Purge cron error:', error.message);
+        }
+    });
+};
+
+// ── Helper: small delay to be polite to OAuth servers ─────────────────────────
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Runs every day at 03:00 AM.
+ * Silently rotates PSN and Xbox refresh tokens before they expire.
+ * PSN tokens last ~60 days — we renew when within 20 days of expiry.
+ * Xbox tokens last ~90 days — we renew when within 25 days of expiry.
+ * On auth failure (invalid_grant / changed password), marks the account
+ * tokenStatus: 'invalid', creates an in-app notification, and emails the user.
+ * Sequential processing with 150ms gaps between OAuth calls avoids rate limits.
+ */
+export const startTokenRefreshCron = () => {
+    // 0 3 * * * = 3:00 AM every day
+    cron.schedule('0 3 * * *', async () => {
+        console.log('[Cron:TokenRefresh] Starting proactive token rotation...');
+
+        const APP_URL = config.appFrontendUrl || 'http://localhost:5173';
+        const CLIENT_ID = config.azure.clientId;
+        const CLIENT_SECRET = config.azure.clientSecret;
+        const REDIRECT_URI = config.xboxRedirectURL;
+
+        try {
+            // Find all non-deleted users that have PSN or Xbox linked accounts
+            const users = await User.find({
+                isDeleted: false,
+                $or: [
+                    { 'linkedAccounts.PSN': { $exists: true } },
+                    { 'linkedAccounts.Xbox': { $exists: true } }
+                ]
+            }).select('+linkedAccounts');
+
+            console.log(`[Cron:TokenRefresh] Found ${users.length} user(s) with PSN/Xbox accounts.`);
+
+            for (const user of users) {
+                const linkedAccounts = user.linkedAccounts || new Map();
+                let userModified = false;
+
+                // ── PSN ──────────────────────────────────────────────────────
+                const psnAccounts = linkedAccounts.get('PSN') || [];
+                for (let i = 0; i < psnAccounts.length; i++) {
+                    const account = psnAccounts[i];
+                    if (!account.refreshToken) continue;
+
+                    // PSN ~60 day lifetime — renew when within 20 days
+                    if (!needsRenewal(account.expiresAt, 20)) {
+                        console.log(`[Cron:TokenRefresh] PSN ${account.accountId} — token OK, skipping.`);
+                        continue;
+                    }
+
+                    console.log(`[Cron:TokenRefresh] Renewing PSN token for ${account.accountId}...`);
+                    try {
+                        const updatedAuth = await exchangeRefreshTokenForAuthTokens(account.refreshToken);
+
+                        // psn-api sometimes omits a new refreshToken — keep old one if so
+                        if (updatedAuth.refreshToken) {
+                            account.refreshToken = updatedAuth.refreshToken;
+                        }
+
+                        // Use refreshTokenExpiresIn if available, otherwise default to 55 days
+                        const expiresInSec = updatedAuth.refreshTokenExpiresIn || (55 * 24 * 60 * 60);
+                        account.expiresAt = new Date(Date.now() + (expiresInSec * 1000) - (24 * 60 * 60 * 1000));
+                        account.tokenStatus = 'active';
+                        account.lastSync = new Date();
+                        userModified = true;
+                        console.log(`[Cron:TokenRefresh] PSN ${account.accountId} — renewed. Expires: ${account.expiresAt}`);
+                    } catch (err) {
+                        if (isOAuthAuthFailure(err)) {
+                            console.warn(`[Cron:TokenRefresh] PSN ${account.accountId} — auth failure, marking invalid.`);
+                            account.tokenStatus = 'invalid';
+                            userModified = true;
+
+                            try {
+                                await Notification.create({
+                                    recipient: user._id,
+                                    sender: 'system',
+                                    type: 'token_expired',
+                                    message: 'Your PlayStation session has expired. Re-sync to keep your library up to date.',
+                                    link: '/library/sync/psn'
+                                });
+                            } catch (notifErr) {
+                                console.error(`[Cron:TokenRefresh] PSN notification failed for ${user.publicID}:`, notifErr.message);
+                            }
+
+                            try {
+                                await transporter.sendMail({
+                                    from: `"GameHub" <${config.gmail.gmail}>`,
+                                    to: user.email,
+                                    subject: '⚠️ Your PlayStation session has expired — Re-sync required',
+                                    html: generateTokenExpiredEmail(user.name, 'PSN', `${APP_URL}/library/sync/psn`)
+                                });
+                            } catch (mailErr) {
+                                console.error(`[Cron:TokenRefresh] PSN expiry email failed for ${user.email}:`, mailErr.message);
+                            }
+                        } else {
+                            // Transient error (network, timeout) — don't invalidate the token
+                            console.error(`[Cron:TokenRefresh] PSN ${account.accountId} — transient error:`, err.message);
+                        }
+                    }
+
+                    await sleep(150); // Be polite to Sony's OAuth servers
+                }
+
+                // ── Xbox ─────────────────────────────────────────────────────
+                const xboxAccounts = linkedAccounts.get('Xbox') || [];
+                for (let i = 0; i < xboxAccounts.length; i++) {
+                    const account = xboxAccounts[i];
+                    if (!account.refreshToken) continue;
+
+                    // Xbox ~90 day lifetime — renew when within 25 days
+                    if (!needsRenewal(account.expiresAt, 25)) {
+                        console.log(`[Cron:TokenRefresh] Xbox ${account.accountId} — token OK, skipping.`);
+                        continue;
+                    }
+
+                    console.log(`[Cron:TokenRefresh] Renewing Xbox token for ${account.accountId}...`);
+                    try {
+                        const tokenRes = await axios.post(
+                            'https://login.live.com/oauth20_token.srf',
+                            new URLSearchParams({
+                                client_id: CLIENT_ID,
+                                client_secret: CLIENT_SECRET,
+                                grant_type: 'refresh_token',
+                                refresh_token: account.refreshToken,
+                                redirect_uri: REDIRECT_URI,
+                            }),
+                            { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+                        );
+
+                        account.refreshToken = tokenRes.data.refresh_token;
+                        // Microsoft's refresh_token lasts 90 days on server apps
+                        account.expiresAt = new Date(Date.now() + (90 * 24 * 60 * 60 * 1000) - (24 * 60 * 60 * 1000));
+                        account.tokenStatus = 'active';
+                        account.lastSync = new Date();
+                        userModified = true;
+                        console.log(`[Cron:TokenRefresh] Xbox ${account.accountId} — token renewed.`);
+                    } catch (err) {
+                        if (isOAuthAuthFailure(err)) {
+                            console.warn(`[Cron:TokenRefresh] Xbox ${account.accountId} — auth failure, marking invalid.`);
+                            account.tokenStatus = 'invalid';
+                            userModified = true;
+
+                            try {
+                                await Notification.create({
+                                    recipient: user._id,
+                                    sender: 'system',
+                                    type: 'token_expired',
+                                    message: 'Your Xbox session has expired. Re-sync to keep your library up to date.',
+                                    link: '/library/sync/xbox'
+                                });
+                            } catch (notifErr) {
+                                console.error(`[Cron:TokenRefresh] Xbox notification failed for ${user.publicID}:`, notifErr.message);
+                            }
+
+                            try {
+                                await transporter.sendMail({
+                                    from: `"GameHub" <${config.gmail.gmail}>`,
+                                    to: user.email,
+                                    subject: '⚠️ Your Xbox session has expired — Re-sync required',
+                                    html: generateTokenExpiredEmail(user.name, 'Xbox', `${APP_URL}/library/sync/xbox`)
+                                });
+                            } catch (mailErr) {
+                                console.error(`[Cron:TokenRefresh] Xbox expiry email failed for ${user.email}:`, mailErr.message);
+                            }
+                        } else {
+                            console.error(`[Cron:TokenRefresh] Xbox ${account.accountId} — transient error:`, err.message);
+                        }
+                    }
+
+                    await sleep(150); // Be polite to Microsoft's OAuth servers
+                }
+
+                if (userModified) {
+                    user.markModified('linkedAccounts');
+                    await user.save();
+                }
+            }
+
+            console.log('[Cron:TokenRefresh] Token rotation complete.');
+        } catch (error) {
+            console.error('[Cron:TokenRefresh] Fatal cron error:', error.message);
         }
     });
 };

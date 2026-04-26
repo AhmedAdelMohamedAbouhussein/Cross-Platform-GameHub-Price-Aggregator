@@ -62,9 +62,9 @@ function Card(props) {
             ref={cardRef}
             className={`
                 group relative h-full flex flex-col bg-midnight-700/40 backdrop-blur-sm rounded-2xl border border-midnight-500/20 overflow-hidden cursor-pointer
-                transition-all duration-500 cubic-bezier(0.23, 1, 0.32, 1)
+                transition-all duration-500 ease-out
                 hover:-translate-y-2 hover:bg-midnight-700/60
-                group-hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.2)] group-hover:border-accent/30
+                hover:shadow-[0_10px_30px_-10px_rgba(59,130,246,0.3)] hover:border-accent/50
                 shadow-xl shadow-black/20
             `}
             onClick={() => navigate(`/ownedgamedetails?platform=${primaryPlatform}&id=${id}`)}

@@ -150,7 +150,7 @@ export const sendOtp = async (req, res, next) => {
             await checkResendLimit(user, userId, "deactivateAccount");
         }
 
-        await sendOtpToUser({ userId, email, purpose, userName: user.name });
+        await sendOtpToUser({ userId, email: user.email, purpose, userName: user.name });
 
 
         res.json({

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import config from './config/env.js';
 import app from './app.js';
-import { startWishlistCron, startPurgeCron, startAdminReportCron } from './utils/crons.js';
+import { startWishlistCron, startPurgeCron, startAdminReportCron, startTokenRefreshCron } from './utils/crons.js';
 
 import userModel from './models/User.js'
 import OtpSchema from './models/Otp.js';
@@ -32,6 +32,7 @@ mongoose.connect(MONGO_URL)
             startWishlistCron();
             startPurgeCron();
             startAdminReportCron();
+            startTokenRefreshCron();
         });
     })
     .catch((error) => {

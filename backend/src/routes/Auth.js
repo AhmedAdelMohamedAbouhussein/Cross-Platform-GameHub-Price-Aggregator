@@ -5,6 +5,8 @@ import { authUser } from '../controllers/Auth/authUser.js'
 import { logoutUser } from '../controllers/Auth/logoutUser.js'
 import { resetPassword } from '../controllers/Auth/resetPassword.js'
 
+import { authLimiter } from '../middleware/rateLimiter.js';
+
 const router = express.Router();
 
 // ── Validation middleware ─────────────────────────────────────────────────────
@@ -97,7 +99,7 @@ const resetPasswordValidation = [
  *         description: Email associated with deleted account
  */
 
-router.post('/google/login', loginValidation, validate, googleLogin);
+router.post('/google/login', authLimiter, loginValidation, validate, googleLogin);
 
 /**
  * @swagger
@@ -125,7 +127,7 @@ router.post('/google/login', loginValidation, validate, googleLogin);
  *       409:
  *         description: Email already exists or deleted
  */
-router.post('/google/signup', signupValidation, validate, googleSignup);
+router.post('/google/signup', authLimiter, signupValidation, validate, googleSignup);
 
 /**
  * @swagger

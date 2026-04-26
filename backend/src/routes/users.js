@@ -1,11 +1,11 @@
 import express from 'express';
 import { addUser } from '../controllers/users/create/addAndRestoreUsers.js';
 import { getUserById, getUserIdByEmail, loginUser, getUserFriendList, getUserOwnedGames, getUserOwnedGame, getBatchUsers } from '../controllers/users/record/getUser.js';
-import { updateUser } from '../controllers/users/update/updateUserInfo.js';
 import { softDeletUser, hardDeleteUser } from '../controllers/users/delete/softAndHardDeleteUser.js';
 import { getPublicProfile, toggleLike, getCommunityUsers } from '../controllers/users/record/profileController.js';
 import { toggleWishlist, getWishlist, checkWishlistStatus } from '../controllers/users/record/wishlistController.js';
 import requireAuth from '../middleware/requireAuth.js';
+import { authLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
@@ -178,7 +178,7 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.post('/adduser', addUser);
+router.post('/adduser', authLimiter, addUser);
 
 /**
  * @swagger
@@ -302,7 +302,7 @@ router.post('/getuseridbyemail', getUserIdByEmail);
  *       404:
  *         description: Invalid email
  */
-router.post('/login', loginUser);
+router.post('/login', authLimiter, loginUser);
 
 /**
  * @swagger
@@ -408,40 +408,6 @@ router.post('/ownedgames/:platform/:id', requireAuth, getUserOwnedGame);
  */
 router.post('/friendlist', requireAuth, getUserFriendList);
 
-
-/**
- * @swagger
- * /api/users/update/{email}:
- *   put:
- *     summary: Update user info
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: email
- *         required: true
- *         schema:
- *           type: string
- *         description: Email of the user to update
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UserRequest'
- *     responses:
- *       200:
- *         description: User updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/UserResponse'
- *       404:
- *         description: User not found
- *       409:
- *         description: Email already exists or belongs to deleted account
- */
-
-router.put('/update/:email', requireAuth, updateUser);
 
 /**
  * @swagger

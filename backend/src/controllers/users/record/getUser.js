@@ -18,7 +18,7 @@ export const getUserById = async (req, res, next) => {
       return next(err);
     }
 
-    const user = await userModel.findOne({ publicID });
+    const user = await userModel.findOne({ publicID }).select('-email -linkedAccounts');
 
     if (!user) {
       const err = new Error("User not found");
@@ -44,8 +44,8 @@ export const getUserById = async (req, res, next) => {
 export const getUserIdByEmail = async (req, res, next) => {
   try {
     const email = req.body.email;
-    if (!email) {
-      const err = new Error("User Email is required");
+    if (!email || typeof email !== 'string') {
+      const err = new Error("User Email is required and must be a string");
       err.status = 400;
       return next(err);
     }
@@ -265,7 +265,11 @@ export const getUserOwnedGame = async (req, res, next) => {
 // @route  POST /api/users/friendlist
 export const getUserFriendList = async (req, res, next) => {
   try {
-    const { publicID } = req.body; // now using publicID
+    const { publicID } = req.body;
+
+    if (!publicID || typeof publicID !== 'string') {
+      return res.status(400).json({ message: "publicID is required and must be a string" });
+    }
 
     // Find user by publicID
     const user = await userModel.findOne({ publicID }).select("friends");
@@ -302,8 +306,12 @@ export const getBatchUsers = async (req, res, next) => {
       return res.status(200).json({ users: [] });
     }
 
+    if (!publicIDs.every(id => typeof id === 'string')) {
+      return res.status(400).json({ message: "All publicIDs must be strings" });
+    }
+
     // Single query to get all users
-    const users = await userModel.find({ publicID: { $in: publicIDs }, isDeleted: false });
+    const users = await userModel.find({ publicID: { $in: publicIDs }, isDeleted: false }).select('-email -linkedAccounts');
 
     res.status(200).json({ users });
   } catch (error) {

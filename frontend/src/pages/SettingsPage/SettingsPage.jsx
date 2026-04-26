@@ -1,7 +1,6 @@
 import { useState, useCallback, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import Cropper from "react-easy-crop";
 import apiClient from "../../utils/apiClient.js";
 
 import Header from "../../components/Header/Header";
@@ -9,7 +8,7 @@ import Footer from "../../components/Footer/Footer";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
 
 import AuthContext from "../../contexts/AuthContext.jsx";
-import { FaUser, FaShieldAlt, FaLock, FaExclamationTriangle, FaLink, FaSteam, FaXbox, FaGamepad, FaTrashAlt, FaPlus } from "react-icons/fa";
+import { FaUser, FaLock, FaExclamationTriangle, FaLink, FaSteam, FaXbox, FaGamepad, FaTrashAlt, FaPlus } from "react-icons/fa";
 import { SiEpicgames, SiPlaystation } from 'react-icons/si';
 
 function SettingsPage() {
@@ -20,8 +19,7 @@ function SettingsPage() {
     const [selected, setSelected] = useState("profile");
 
     // Connections states
-    const [npssoModalOpen, setNpssoModalOpen] = useState(false);
-    const [npsso, setNpsso] = useState("");
+    // Connections states
 
     // Danger zone states
     const [isSendingOtp, setIsSendingOtp] = useState(false);
@@ -31,17 +29,12 @@ function SettingsPage() {
         setIsSendingOtp(true);
         try {
             if (purpose === "deactivate_account") {
-                const res = await apiClient.patch("/users/delete/soft", {
-                    email: user.email,
-                    purpose
-                });
+                const res = await apiClient.patch("/users/delete/soft");
                 const userId = res.data.userId;
                 navigate(`/verify?userId=${userId}&email=${encodeURIComponent(user.email)}&purpose=${purpose}`);
             }
             else if (purpose === "permanently_delete_account") {
-                const res = await apiClient.delete("/users/delete/hard", {
-                    data: { email: user.email, purpose }
-                });
+                const res = await apiClient.delete("/users/delete/hard");
                 const userId = res.data.userId;
                 navigate(`/verify?userId=${userId}&email=${encodeURIComponent(user.email)}&purpose=${purpose}`);
             }
@@ -91,21 +84,6 @@ function SettingsPage() {
         }
     };
 
-    const handlePSNSync = async () => {
-        if (!npsso) return toast.error("Please enter your NPSSO");
-        setLoading(true);
-        try {
-            await apiClient.post("/sync/psn", { npsso });
-            toast.success("PSN account synced successfully!");
-            setNpssoModalOpen(false);
-            setNpsso("");
-            navigate(0);
-        } catch (error) {
-            toast.error(error.response?.data?.error || "PSN sync failed");
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const menuItems = [
         { key: "profile", label: "Profile", icon: FaUser },
@@ -163,10 +141,10 @@ function SettingsPage() {
 
             case "connections":
                 const platforms = [
-                    { id: "Steam", name: "Steam", icon: FaSteam, color: "text-[#1b2838]", route: "/api/sync/steam" },
-                    { id: "PSN", name: "PlayStation", icon: SiPlaystation, color: "text-[#003087]", type: "modal" },
-                    { id: "Xbox", name: "Xbox Live", icon: FaXbox, color: "text-[#107c10]", route: "/api/sync/xbox" },
-                    { id: "Epic", name: "Epic Games", icon: SiEpicgames, color: "text-white", route: "/api/sync/epic" },
+                    { id: "Steam", name: "Steam", icon: FaSteam, color: "text-[#1b2838]", route: "/library/sync/steam" },
+                    { id: "PSN", name: "PlayStation", icon: SiPlaystation, color: "text-[#003087]", route: "/library/sync/psn" },
+                    { id: "Xbox", name: "Xbox Live", icon: FaXbox, color: "text-[#107c10]", route: "/library/sync/xbox" },
+                    { id: "Epic", name: "Epic Games", icon: SiEpicgames, color: "text-white", route: "/library/sync/epic" },
                 ];
 
                 return (
@@ -194,7 +172,7 @@ function SettingsPage() {
                                                 </div>
                                             </div>
                                             <button
-                                                onClick={() => platform.type === 'modal' ? setNpssoModalOpen(true) : window.location.href = `${apiClient.defaults.baseURL}${platform.route}`}
+                                                onClick={() => navigate(platform.route)}
                                                 className="btn-primary text-xs flex items-center gap-2 px-4"
                                             >
                                                 <FaPlus size={10} /> Link New
@@ -228,19 +206,7 @@ function SettingsPage() {
                             })}
                         </div>
 
-                        {npssoModalOpen && (
-                            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-                                <div className="bg-midnight-800 border border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300">
-                                    <h3 className="text-xl font-bold text-text-primary mb-2">Sync PlayStation</h3>
-                                    <p className="text-sm text-text-muted mb-6">Enter your 64-character NPSSO code.</p>
-                                    <input type="text" placeholder="NPSSO code..." className="input-field mb-6" value={npsso} onChange={(e) => setNpsso(e.target.value)} />
-                                    <div className="flex gap-3">
-                                        <button onClick={handlePSNSync} className="btn-primary flex-1">Sync</button>
-                                        <button onClick={() => setNpssoModalOpen(false)} className="btn-secondary flex-1">Cancel</button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+
                     </div>
                 );
 
