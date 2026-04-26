@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import userModel from "../../models/User.js";
 import config from "../../config/env.js";
+import sharp from "sharp";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -33,7 +34,7 @@ export async function profileImage(req, res, next) {
                 const publicId = user.profilePicture
                     .split("/")
                     .pop()
-                    .split(".")[0]; // assumes URL ends with "something.jpg"
+                    .split(".")[0]; 
 
                 await cloudinary.uploader.destroy(`profile_pics/${publicId}`);
             } catch (err) {
@@ -41,15 +42,26 @@ export async function profileImage(req, res, next) {
             }
         }
 
-        // Cloudinary upload
+        // 1. Process image locally using sharp (Resize + Compress + WebP)
+        // This reduces the upload size significantly BEFORE it hits Cloudinary
+        const processedBuffer = await sharp(req.file.buffer)
+            .resize(300, 300, {
+                fit: 'cover',
+                position: 'centre'
+            })
+            .webp({ quality: 80 }) // WebP is ~30% smaller than JPG
+            .toBuffer();
+
+        // 2. Cloudinary upload
         const streamUpload = (fileBuffer) => {
             return new Promise((resolve, reject) => {
                 const stream = cloudinary.uploader.upload_stream(
                     {
                         folder: "profile_pics",
-                        format: "jpg",
+                        format: "webp",
                         transformation: [
-                            { width: 300, height: 300, crop: "thumb", gravity: "face" },
+                            // Use auto quality and format for delivery optimization
+                            { quality: "auto:eco", fetch_format: "auto" },
                         ],
                     },
                     (error, result) => {
@@ -61,7 +73,7 @@ export async function profileImage(req, res, next) {
             });
         };
 
-        const result = await streamUpload(req.file.buffer);
+        const result = await streamUpload(processedBuffer);
 
         const updatedUser = await userModel.findByIdAndUpdate(
             userId,

@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import userModel from "../../models/User.js";
 import config from "../../config/env.js";
+import sharp from "sharp";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -40,16 +41,27 @@ export async function profileBackground(req, res, next) {
             }
         }
 
-        // Cloudinary upload
+        // 1. Process background locally using sharp (Resize max 1920 + Compress + WebP)
+        // Limits background resolution to 1080p max width while maintaining aspect ratio
+        const processedBuffer = await sharp(req.file.buffer)
+            .resize({
+                width: 1920,
+                withoutEnlargement: true, // Don't upscale small images
+                fit: 'inside'
+            })
+            .webp({ quality: 80 })
+            .toBuffer();
+
+        // 2. Cloudinary upload
         const streamUpload = (fileBuffer) => {
             return new Promise((resolve, reject) => {
                 const stream = cloudinary.uploader.upload_stream(
                     {
                         folder: "profile_backgrounds",
-                        format: "jpg",
+                        format: "webp",
                         transformation: [
-                            // 1920x1080 standard background resolution
-                            { width: 1920, height: 1080, crop: "limit", quality: "auto:eco" },
+                            // Ensure auto quality for delivery
+                            { quality: "auto:eco", fetch_format: "auto" },
                         ],
                     },
                     (error, result) => {
@@ -61,7 +73,7 @@ export async function profileBackground(req, res, next) {
             });
         };
 
-        const result = await streamUpload(req.file.buffer);
+        const result = await streamUpload(processedBuffer);
 
         const updatedUser = await userModel.findByIdAndUpdate(
             userId,
