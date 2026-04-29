@@ -68,24 +68,21 @@ It provides a seamless user experience for searching, filtering, and tracking ga
 > **Note:** Screenshots are for demonstration only. Project is private.
 
 ### Landing Page
-![Landing Page](screenshots/landigpage1.png)
-![Landing Page](screenshots/landigpage2.png)
+![Landing Page](https://res.cloudinary.com/dvbmaonhc/image/upload/v1777400760/screenshots/landigpage1.webp)
+![Landing Page](https://res.cloudinary.com/dvbmaonhc/image/upload/v1777400761/screenshots/landigpage2.webp)
 
 ### Login & Signup
-![Login](screenshots/login.png)
-![Signup](screenshots/signup.png)
+![Login](https://res.cloudinary.com/dvbmaonhc/image/upload/v1777400762/screenshots/login.webp)
+![Signup](https://res.cloudinary.com/dvbmaonhc/image/upload/v1777400765/screenshots/signup.webp)
 
 ### Owned Games Page
-![Library](screenshots/game.png)
+![Library](https://res.cloudinary.com/dvbmaonhc/image/upload/v1777400758/screenshots/game.webp)
 
 ### Achievment Page
-![Achievment Page](screenshots/Achievment.png)
+![Achievment Page](https://res.cloudinary.com/dvbmaonhc/image/upload/v1777400756/screenshots/Achievment.webp)
 
 ### Settings Page
-![Friends Page](screenshots/settings.png)
-
-
-
+![Friends Page](https://res.cloudinary.com/dvbmaonhc/image/upload/v1777400763/screenshots/settings.webp)
 
 ---
 
@@ -95,7 +92,7 @@ All API endpoints are documented with Swagger.
 Access the full documentation (private use only):  
 `/swagger` or hosted Swagger UI in the deployed environment.
 
-![swagger](screenshots/swagger.png)
+![swagger](https://res.cloudinary.com/dvbmaonhc/image/upload/v1777400766/screenshots/swagger.webp)
 
 
 > ⚠️ **Reminder:** This project is private. All code, APIs, and deployment scripts are proprietary and intended for personal documentation and portfolio demonstration only.

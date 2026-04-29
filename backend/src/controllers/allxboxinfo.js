@@ -4,6 +4,7 @@ import http from "http";
 import https from "https";
 
 import config from "../config/env.js";
+import { uploadImageFromUrl } from "../utils/imageUpload.js";
 
 const RAWG_API_KEY = config.RAWG_API_KEY;
 
@@ -52,7 +53,7 @@ export async function getXboxProfile(xuid, userHash, xstsToken) {
 /**
  * Fetch friends list (fresh every time, no cache)
  */
-export async function getXboxFriends(xuid, userHash, xstsToken) {
+export async function getXboxFriends(xuid, userHash, xstsToken, existingFriends = []) {
     try {
         const res = await axiosClient.get(
             `https://social.xboxlive.com/users/xuid(${xuid})/people?view=All`,
@@ -79,10 +80,27 @@ export async function getXboxFriends(xuid, userHash, xstsToken) {
                 friendsLimit(async () => {
                     const profile = await getXboxProfile(friend.externalId, userHash, xstsToken);
                     if (!profile) return null;
+
+                    const freshAvatarUrl = profile.avatar;
+                    
+                    // Find existing friend data
+                    const existingFriend = existingFriends.find(f => f.externalId === friend.externalId);
+                    let avatarUrl = existingFriend?.avatar;
+                    let originalAvatarUrl = existingFriend?.originalAvatarUrl;
+
+                    if (freshAvatarUrl && freshAvatarUrl !== originalAvatarUrl) {
+                        const result = await uploadImageFromUrl(freshAvatarUrl, "avatars", `xbox_friend_${friend.externalId}`);
+                        if (result) {
+                            avatarUrl = result.secure_url;
+                            originalAvatarUrl = freshAvatarUrl;
+                        }
+                    }
+
                     return {
                         ...friend,
                         displayName: profile.gamertag,
-                        avatar: profile.avatar,
+                        avatar: avatarUrl,
+                        originalAvatarUrl: originalAvatarUrl
                     };
                 })
             )

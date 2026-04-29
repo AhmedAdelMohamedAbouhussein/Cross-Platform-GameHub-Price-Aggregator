@@ -10,10 +10,10 @@ import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
 
-import bronzeIcon from "../../assets/bronze.png";
-import silverIcon from "../../assets/silver.png";
-import goldIcon from "../../assets/gold.png";
-import platinumIcon from "../../assets/plat.png";
+const bronzeIcon = "https://res.cloudinary.com/dvbmaonhc/image/upload/v1777400806/site_assets/bronze.webp";
+const silverIcon = "https://res.cloudinary.com/dvbmaonhc/image/upload/v1777400819/site_assets/silver.webp";
+const goldIcon = "https://res.cloudinary.com/dvbmaonhc/image/upload/v1777400810/site_assets/gold.webp";
+const platinumIcon = "https://res.cloudinary.com/dvbmaonhc/image/upload/v1777400814/site_assets/plat.webp";
 
 function getAchievementIcon(ach) {
   const iconSize = 45;

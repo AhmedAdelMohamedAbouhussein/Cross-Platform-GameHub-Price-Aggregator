@@ -1,14 +1,5 @@
-import { v2 as cloudinary } from "cloudinary";
 import userModel from "../../models/User.js";
-import config from "../../config/env.js";
-import sharp from "sharp";
-
-// Configure Cloudinary
-cloudinary.config({
-    cloud_name: config.cloudinary.cloudName,
-    api_key: config.cloudinary.apiKey,
-    api_secret: config.cloudinary.apiSecret,
-});
+import { processAndUploadImage, deleteImageByUrl } from "../../utils/imageUpload.js";
 
 export async function profileBackground(req, res, next) {
     try {
@@ -28,52 +19,15 @@ export async function profileBackground(req, res, next) {
 
         // Delete old background if exists
         if (user.profileBackground) {
-            try {
-                // Extract public_id from URL
-                const publicId = user.profileBackground
-                    .split("/")
-                    .pop()
-                    .split(".")[0]; 
-
-                await cloudinary.uploader.destroy(`profile_backgrounds/${publicId}`);
-            } catch (err) {
-                console.error("Failed to delete old background from Cloudinary:", err);
-            }
+            await deleteImageByUrl(user.profileBackground, "profile_backgrounds");
         }
 
-        // 1. Process background locally using sharp (Resize max 1920 + Compress + WebP)
-        // Limits background resolution to 1080p max width while maintaining aspect ratio
-        const processedBuffer = await sharp(req.file.buffer)
-            .resize({
-                width: 1920,
-                withoutEnlargement: true, // Don't upscale small images
-                fit: 'inside'
-            })
-            .webp({ quality: 80 })
-            .toBuffer();
-
-        // 2. Cloudinary upload
-        const streamUpload = (fileBuffer) => {
-            return new Promise((resolve, reject) => {
-                const stream = cloudinary.uploader.upload_stream(
-                    {
-                        folder: "profile_backgrounds",
-                        format: "webp",
-                        transformation: [
-                            // Ensure auto quality for delivery
-                            { quality: "auto:eco", fetch_format: "auto" },
-                        ],
-                    },
-                    (error, result) => {
-                        if (result) resolve(result);
-                        else reject(error);
-                    }
-                );
-                stream.end(fileBuffer);
-            });
-        };
-
-        const result = await streamUpload(processedBuffer);
+        // Process and upload new background
+        const result = await processAndUploadImage(req.file.buffer, "profile_backgrounds", {
+            width: 1920,
+            withoutEnlargement: true,
+            fit: 'inside'
+        });
 
         const updatedUser = await userModel.findByIdAndUpdate(
             userId,
@@ -86,7 +40,7 @@ export async function profileBackground(req, res, next) {
             profileBackground: updatedUser.profileBackground,
         });
     } catch (err) {
-        console.error("Cloudinary upload error:", err);
+        console.error("Profile background upload error:", err);
         next(err);
     }
 }

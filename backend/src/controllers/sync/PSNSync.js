@@ -1,6 +1,7 @@
 import { exchangeAccessCodeForAuthTokens, exchangeNpssoForAccessCode, getProfileFromUserName } from "psn-api";
 import { getAllOwnedGames, getFriendList } from "../allPSNInfo.js";
 import userModel from "../../models/User.js";
+import { uploadImageFromUrl } from "../../utils/imageUpload.js";
 
 export const PSNloginWithNpsso = async (req, res, next) => {
     try {
@@ -19,22 +20,37 @@ export const PSNloginWithNpsso = async (req, res, next) => {
 
         const profileResponse = await getProfileFromUserName(authorization, "me");
         const PSNId = profileResponse.profile.onlineId;
+        const freshAvatarUrl = profileResponse.profile.avatarUrls[0].avatarUrl;
 
-        // 1. Update Linked Accounts
+        // 1. Fetch User and Check for existing account
         const dbUser = await userModel.findById(userId);
         if (!dbUser) return res.status(404).json({ error: "User not found" });
 
         let linkedAccounts = dbUser.linkedAccounts || new Map();
         let psnAccounts = linkedAccounts.get("PSN") || [];
-
         const existingAccIndex = psnAccounts.findIndex(acc => acc.accountId === PSNId);
+        const existingAcc = existingAccIndex > -1 ? psnAccounts[existingAccIndex] : null;
+
+        let avatar = existingAcc?.avatar;
+        let originalAvatarUrl = existingAcc?.originalAvatarUrl;
+
+        // Upload user's account avatar to Cloudinary ONLY if it changed
+        if (freshAvatarUrl && freshAvatarUrl !== originalAvatarUrl) {
+            const result = await uploadImageFromUrl(freshAvatarUrl, "avatars", `psn_user_${PSNId}`);
+            if (result) {
+                avatar = result.secure_url;
+                originalAvatarUrl = freshAvatarUrl;
+            }
+        }
+
         const accountData = {
             accountId: PSNId,
             displayName: PSNId,
             refreshToken: PSNRefreshToken,
             expiresAt: PSNTokenExpiresAt,
             lastSync: new Date(),
-            avatar: profileResponse.profile.avatarUrls[0].avatarUrl
+            avatar: avatar,
+            originalAvatarUrl: originalAvatarUrl
         };
 
         if (existingAccIndex > -1) {
@@ -46,19 +62,28 @@ export const PSNloginWithNpsso = async (req, res, next) => {
         dbUser.linkedAccounts = linkedAccounts;
 
         // 2. Update Friends
-        const friends = await getFriendList(authorization);
+        const friendsList = await getFriendList(authorization, dbUser.friends?.get("PSN") || []);
         if (!dbUser.friends) dbUser.friends = new Map();
 
         let currentPsnFriends = dbUser.friends.get("PSN") || [];
         currentPsnFriends = currentPsnFriends.filter(f => f.linkedAccountId !== PSNId);
 
-        const newFriends = friends.map(f => ({
+        const newFriends = friendsList.map(f => ({
             ...f,
             linkedAccountId: PSNId,
             status: "accepted",
-            source: "PSN"
+            source: "PSN",
+            avatar: f.avatar,
+            originalAvatarUrl: f.originalAvatarUrl
         }));
-        dbUser.friends.set("PSN", [...currentPsnFriends, ...newFriends]);
+
+        // Deduplicate across all PSN accounts for this user
+        const friendsMap = new Map();
+        [...currentPsnFriends, ...newFriends].forEach(f => {
+            friendsMap.set(f.externalId, f);
+        });
+
+        dbUser.friends.set("PSN", Array.from(friendsMap.values()));
 
         // 3. Update Owned Games
         const games = await getAllOwnedGames(authorization);

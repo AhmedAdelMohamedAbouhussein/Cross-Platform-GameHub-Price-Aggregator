@@ -10,6 +10,7 @@ import {
 import http from "http";
 import https from "https";
 import pLimit from "p-limit";
+import { uploadImageFromUrl } from "../utils/imageUpload.js";
 
 // Global TCP keep-alive + 8s socket timeout (same as Steam/Xbox)
 const agent = {
@@ -25,7 +26,7 @@ const friendsLimit = pLimit(FRIENDS_CONCURRENCY);
 
 // -------- FRIEND LIST --------
 
-export const getFriendList = async (authorization) => {
+export const getFriendList = async (authorization, existingFriends = []) => {
     const response = await getUserFriendsAccountIds(authorization, "me", {
         agent
     });
@@ -41,10 +42,26 @@ export const getFriendList = async (authorization) => {
                     { agent }
                 );
 
+                const freshAvatarUrl = profile.avatars[2]?.url || null;
+
+                // Find existing friend data
+                const existingFriend = existingFriends.find(f => f.externalId === friend);
+                let avatarUrl = existingFriend?.avatar;
+                let originalAvatarUrl = existingFriend?.originalAvatarUrl;
+
+                if (freshAvatarUrl && freshAvatarUrl !== originalAvatarUrl) {
+                    const result = await uploadImageFromUrl(freshAvatarUrl, "avatars", `psn_friend_${friend}`);
+                    if (result) {
+                        avatarUrl = result.secure_url;
+                        originalAvatarUrl = freshAvatarUrl;
+                    }
+                }
+
                 return {
                     externalId: friend,
                     displayName: profile.onlineId,
-                    avatar: profile.avatars[2]?.url || null,
+                    avatar: avatarUrl,
+                    originalAvatarUrl: originalAvatarUrl,
                     status: "accepted",
                     source: "psn",
                     friendsSince: null,

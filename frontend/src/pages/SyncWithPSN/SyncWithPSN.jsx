@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import apiClient from "../../utils/apiClient.js";
 import Header from "../../components/Header/Header";
@@ -29,7 +28,6 @@ const STEPS = [
 ];
 
 function SyncWithPSN() {
-    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [mobileAsideOpen, setMobileAsideOpen] = useState(false);
     const [npsso, setNpsso] = useState("");
@@ -44,7 +42,7 @@ function SyncWithPSN() {
         try {
             await apiClient.post(`/sync/psn`, { npsso: npsso.trim() });
             toast.success("PlayStation synced successfully!");
-            navigate("/library");
+            window.location.href = "/library";
         } catch (err) {
             toast.error(err.response?.data?.error || "Sync failed. Double-check your NPSSO value.");
             console.error(err.response?.data?.error || err.message);
@@ -65,7 +63,7 @@ function SyncWithPSN() {
                         const npsso = event.data.npsso;
                         await apiClient.post(`/sync/psn`, { npsso });
                         toast.success("PlayStation synced successfully!");
-                        navigate("/library");
+                        window.location.href = "/MyGameHub/library";
                     } catch (err) {
                         toast.error("Sync failed");
                         console.error(err.response?.data?.error || err.message);

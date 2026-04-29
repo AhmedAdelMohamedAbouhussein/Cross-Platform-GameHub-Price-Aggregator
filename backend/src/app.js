@@ -32,6 +32,7 @@ const app = express();
 await redisClient.connect();
 
 // ── Core middleware ──────────────────────────────────────────────────────────
+
 // Security headers
 app.use(helmet());
 
@@ -39,7 +40,6 @@ app.use(helmet());
 app.use(globalLimiter);
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 app.use(cors(corsOptions));
 app.use(logger);

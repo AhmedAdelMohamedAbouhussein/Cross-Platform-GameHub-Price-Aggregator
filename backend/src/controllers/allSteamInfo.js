@@ -4,6 +4,7 @@ import pLimit from "p-limit";
 import http from "http";
 import https from "https";
 import config from "../config/env.js";
+import { uploadImageFromUrl } from "../utils/imageUpload.js";
 
 const STEAM_API_KEY = config.steam.apiKey;
 
@@ -109,7 +110,7 @@ export async function getUserAchievements(steamId, games) {
 /**
  * Fetch friend list and summaries in chunks with concurrency
  */
-export async function getUserFriendList(steamId) {
+export async function getUserFriendList(steamId, existingFriends = []) {
     try {
         const friendListRes = await axiosClient.get("http://api.steampowered.com/ISteamUser/GetFriendList/v0001/", {
             params: { key: STEAM_API_KEY, steamid: steamId, relationship: "friend" },
@@ -138,15 +139,37 @@ export async function getUserFriendList(steamId) {
         const chunkedResults = await Promise.all(summaryTasks);
         const allPlayers = chunkedResults.flat();
 
-        return allPlayers.map((p) => ({
-            externalId: p.steamid,
-            displayName: p.personaname,
-            profileUrl: p.profileurl,
-            avatar: p.avatarfull,
-            friendsSince: friendsMap.has(p.steamid)
-                ? new Date(Number(friendsMap.get(p.steamid)) * 1000)
-                : null,
-        }));
+        const formattedFriends = await Promise.all(allPlayers.map((p) => 
+            friendsLimit(async () => {
+                const freshAvatarUrl = p.avatarfull;
+                
+                // Find existing friend data
+                const existingFriend = existingFriends.find(f => f.externalId === p.steamid);
+                let avatarUrl = existingFriend?.avatar;
+                let originalAvatarUrl = existingFriend?.originalAvatarUrl;
+
+                if (freshAvatarUrl && freshAvatarUrl !== originalAvatarUrl) {
+                    const result = await uploadImageFromUrl(freshAvatarUrl, "avatars", `steam_friend_${p.steamid}`);
+                    if (result) {
+                        avatarUrl = result.secure_url;
+                        originalAvatarUrl = freshAvatarUrl;
+                    }
+                }
+
+                return {
+                    externalId: p.steamid,
+                    displayName: p.personaname,
+                    profileUrl: p.profileurl,
+                    avatar: avatarUrl,
+                    originalAvatarUrl: originalAvatarUrl,
+                    friendsSince: friendsMap.has(p.steamid)
+                        ? new Date(Number(friendsMap.get(p.steamid)) * 1000)
+                        : null,
+                };
+            })
+        ));
+
+        return formattedFriends;
     } catch (err) {
         console.warn(`Failed to fetch user Friends List: ${err.message}`);
         return [];

@@ -220,7 +220,7 @@ function SignupPage() {
               className="w-full h-[56px] flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest p-3 bg-white/5 text-white border border-white/10 rounded-2xl cursor-pointer transition-all duration-300 hover:bg-white/10 active:scale-[0.98]"
               onClick={() => googleLogin()}
             >
-              <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5" />
+              <img src="https://res.cloudinary.com/dvbmaonhc/image/upload/site_assets/google_logo.webp" alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5" />
               Sign up with Google
             </button>
 

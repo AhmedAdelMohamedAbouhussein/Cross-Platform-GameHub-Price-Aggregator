@@ -112,10 +112,10 @@ export const toggleWishlist = async (req, res, next) => {
             user.wishlist[index].targetStores = targetStores || [];
             user.wishlist[index].storePrices = storePrices;
             if (effectiveItadId) user.wishlist[index].itadId = effectiveItadId;
-            
+
             await user.save();
-            return res.status(200).json({ 
-                message: "Wishlist preferences updated", 
+            return res.status(200).json({
+                message: "Wishlist preferences updated",
                 inWishlist: true,
                 itadId: effectiveItadId
             });
@@ -154,7 +154,7 @@ export const getWishlist = async (req, res, next) => {
 
         // 1. Collect all ITAD IDs for batch fetching and Redis keys
         const itadIds = user.wishlist.map(item => item.itadId).filter(id => !!id);
-        const cacheKeys = user.wishlist.map(item => `game:details:${item.gameId}`);
+        const cacheKeys = user.wishlist.map(item => `game:wishlist:${item.gameId}`);
 
         // 2. Parallel fetch: Prices from ITAD and Details from Redis
         const [priceMap, cachedDetails] = await Promise.all([
@@ -193,7 +193,7 @@ export const getWishlist = async (req, res, next) => {
             // Get live data for this game from our batch result
             const liveData = priceMap[item.itadId] || { deals: [], historyLow: null };
             const allDeals = liveData.deals;
-            
+
             // Enrich storePrices with live data
             const enrichedStorePrices = item.storePrices.map(sp => {
                 const liveDeal = allDeals.find(d => d.shop?.name === sp.storeName);
@@ -210,7 +210,7 @@ export const getWishlist = async (req, res, next) => {
             if (item.targetStores && item.targetStores.length > 0) {
                 relevantDeals = allDeals.filter(d => item.targetStores.includes(d.shop?.name));
             }
-            
+
             relevantDeals.sort((a, b) => (a.price?.amount || 0) - (b.price?.amount || 0));
             const bestDeal = relevantDeals[0];
 

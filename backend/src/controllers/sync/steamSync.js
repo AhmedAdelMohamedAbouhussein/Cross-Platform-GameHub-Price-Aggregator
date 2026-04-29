@@ -5,6 +5,7 @@ import config from '../../config/env.js'
 import userModel from "../../models/User.js"; //TODO
 
 import { getOwnedGames, getUserAchievements, getUserFriendList } from '../allSteamInfo.js'
+import { uploadImageFromUrl } from "../../utils/imageUpload.js";
 
 const APP_FRONTEND_URL = config.frontendUrl;
 const APP_BACKEND_URL = config.appUrl;
@@ -93,22 +94,37 @@ export const steamReturn = (req, res, next) => {
             const userId = req.session.userId;
             const steamId = user._json.steamid;
             const displayName = user.displayName || user._json.personaname;
-            const avatar = user._json.avatarfull;
+            const freshAvatarUrl = user._json.avatarfull;
 
-            // 1. Update Linked Accounts
+            // 1. Fetch User and Check for existing account
             const dbUser = await userModel.findById(userId);
             if (!dbUser) return res.redirect("/");
 
             let linkedAccounts = dbUser.linkedAccounts || new Map();
             let steamAccounts = linkedAccounts.get("Steam") || [];
 
+            const existingAccIndex = steamAccounts.findIndex(acc => acc.accountId === steamId);
+            const existingAcc = existingAccIndex > -1 ? steamAccounts[existingAccIndex] : null;
+
+            let avatar = existingAcc?.avatar;
+            let originalAvatarUrl = existingAcc?.originalAvatarUrl;
+
+            // Upload user's account avatar to Cloudinary ONLY if it changed
+            if (freshAvatarUrl && freshAvatarUrl !== originalAvatarUrl) {
+                const result = await uploadImageFromUrl(freshAvatarUrl, "avatars", `steam_user_${steamId}`);
+                if (result) {
+                    avatar = result.secure_url;
+                    originalAvatarUrl = freshAvatarUrl;
+                }
+            }
+
             const accountData = {
                 accountId: steamId,
                 displayName,
                 avatar,
+                originalAvatarUrl,
                 lastSync: new Date()
             }
-            const existingAccIndex = steamAccounts.findIndex(acc => acc.accountId === steamId);
             if (existingAccIndex > -1) {
                 steamAccounts[existingAccIndex] = accountData;
             } else {
@@ -169,26 +185,33 @@ export const steamReturn = (req, res, next) => {
             dbUser.ownedGames.set("Steam", steamGamesMap);
 
             // 4. Update Friends
-            const friends = await getUserFriendList(steamId);
+            const friendsList = await getUserFriendList(steamId, dbUser.friends?.get("Steam") || []);
             if (!dbUser.friends) dbUser.friends = new Map();
 
             // Filter out existing friends from THIS account to replace them with fresh data
             let currentSteamFriends = dbUser.friends.get("Steam") || [];
             currentSteamFriends = currentSteamFriends.filter(f => f.linkedAccountId !== steamId);
 
-            const newFriends = friends.map(f => ({
-                user: null, // Will be matched during social discovery if they are GameHub users
+            const newFriends = friendsList.map(f => ({
+                user: null, 
                 externalId: f.externalId,
                 linkedAccountId: steamId,
                 displayName: f.displayName,
                 profileUrl: f.profileUrl,
                 friendsSince: f.friendsSince,
                 avatar: f.avatar,
+                originalAvatarUrl: f.originalAvatarUrl,
                 status: "accepted",
                 source: "Steam"
             }));
 
-            dbUser.friends.set("Steam", [...currentSteamFriends, ...newFriends]);
+            // Deduplicate across all Steam accounts for this user
+            const friendsMap = new Map();
+            [...currentSteamFriends, ...newFriends].forEach(f => {
+                friendsMap.set(f.externalId, f);
+            });
+
+            dbUser.friends.set("Steam", Array.from(friendsMap.values()));
 
             // Save everything
             await dbUser.save();

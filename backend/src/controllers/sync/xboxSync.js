@@ -1,6 +1,7 @@
 import axios from 'axios';
 import config from '../../config/env.js'
 import userModel from "../../models/User.js";
+import { uploadImageFromUrl } from "../../utils/imageUpload.js";
 
 
 const APP_FRONTEND_URL = config.frontendUrl;
@@ -101,12 +102,11 @@ export async function xboxReturn(req, res) {
 
         const gamertag = profileRes.data.profileUsers[0].settings.find(s => s.id === "Gamertag")?.value;
 
-        const avatar =
+        const freshAvatarUrl =
             profileRes.data.profileUsers[0].settings.find(s => s.id === "GameDisplayPicRaw")?.value ||
             profileRes.data.profileUsers[0].settings.find(s => s.id === "PublicGamerpic")?.value;
 
-
-        // 1. Update Linked Accounts
+        // 1. Fetch User and Check for existing account
         const dbUser = await userModel.findById(userId);
         if (!dbUser) return res.status(404).json({ error: "User not found" });
 
@@ -114,13 +114,28 @@ export async function xboxReturn(req, res) {
         let xboxAccounts = linkedAccounts.get("Xbox") || [];
 
         const existingAccIndex = xboxAccounts.findIndex(acc => acc.accountId === xuid);
+        const existingAcc = existingAccIndex > -1 ? xboxAccounts[existingAccIndex] : null;
+
+        let avatar = existingAcc?.avatar;
+        let originalAvatarUrl = existingAcc?.originalAvatarUrl;
+
+        // Upload user's account avatar to Cloudinary ONLY if it changed
+        if (freshAvatarUrl && freshAvatarUrl !== originalAvatarUrl) {
+            const result = await uploadImageFromUrl(freshAvatarUrl, "avatars", `xbox_user_${xuid}`);
+            if (result) {
+                avatar = result.secure_url;
+                originalAvatarUrl = freshAvatarUrl;
+            }
+        }
+
         const accountData = {
             accountId: xuid,
             displayName: gamertag,
             refreshToken: msRefreshToken,
             expiresAt: xboxTokenExpiresAt,
             lastSync: new Date(),
-            avatar: avatar
+            avatar: avatar,
+            originalAvatarUrl: originalAvatarUrl
         };
 
         if (existingAccIndex > -1) {
@@ -132,19 +147,28 @@ export async function xboxReturn(req, res) {
         dbUser.linkedAccounts = linkedAccounts;
 
         // 2. Update Friends
-        const friends = await getXboxFriends(xuid, userHash, xstsToken);
+        const friendsList = await getXboxFriends(xuid, userHash, xstsToken, dbUser.friends?.get("Xbox") || []);
         if (!dbUser.friends) dbUser.friends = new Map();
 
         let currentXboxFriends = dbUser.friends.get("Xbox") || [];
         currentXboxFriends = currentXboxFriends.filter(f => f.linkedAccountId !== xuid);
 
-        const newFriends = friends.map(f => ({
+        const newFriends = friendsList.map(f => ({
             ...f,
             linkedAccountId: xuid,
             status: "accepted",
-            source: "Xbox"
+            source: "Xbox",
+            avatar: f.avatar,
+            originalAvatarUrl: f.originalAvatarUrl
         }));
-        dbUser.friends.set("Xbox", [...currentXboxFriends, ...newFriends]);
+
+        // Deduplicate across all Xbox accounts for this user
+        const friendsMap = new Map();
+        [...currentXboxFriends, ...newFriends].forEach(f => {
+            friendsMap.set(f.externalId, f);
+        });
+
+        dbUser.friends.set("Xbox", Array.from(friendsMap.values()));
 
         // 3. Update Owned Games
         const noAchGames = await getXboxOwnedGames(xuid, userHash, xstsToken);
